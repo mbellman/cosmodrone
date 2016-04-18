@@ -28,6 +28,7 @@ function main() {
 		screen.draw.circle(100, 100, 50).fill('red').stroke('green', 2);
 		screen.draw.rectangle(200, 200, 100, 50).fill('blue').stroke('purple', 5);
 		screen.draw.image(pack.getImage('earth.png'), 300, 400);
+		pack.getAudio('coin.mp3').play();
 	});
 
 	$(window).on('resize', onResize);

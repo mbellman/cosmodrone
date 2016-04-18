@@ -1,82 +1,107 @@
 (function(scope){
 	/**
-	 * Instance of a graphic or audio asset
+	 * Instance of an image or audio asset
 	 */
-	function Asset(_type) {
+	function Asset(type) {
 		// Private:
 		var _ = this;
 		var loaded = false;
-		var path, data, type;
 
-		function create() {
-			switch (_type) {
+		function createMedia() {
+			switch (type) {
 				case 'image':
 					return new Image();
 				case 'audio':
 					return new Audio();
+				default:
+					return null;
 			}
 		}
 
-		data = create();
-		type = _type;
+		function checkFailState() {
+			return (
+				(_.type === 'image' && _.media.complete && _.media.naturalWidth === 0) ||
+				(_.type === 'audio' && _.media.error !== null)
+			);
+		}
 
 		// Public:
-		this.getPath = function() {
-			return path;
-		}
-
-		this.getType = function() {
-			return type;
-		}
-
-		this.getObject = function() {
-			return data;
-		}
+		this.path;
+		this.type = type;
+		this.media = createMedia();
 
 		this.from = function(_path) {
 			if (!loaded) {
-				path = _path;
+				_.path = _path;
 			}
 			return _;
 		}
 
 		this.load = function(callback) {
-			data.onload = function(){
-				loaded = true;
-				callback(_);
+			if (!loaded) {
+				function loadComplete() {
+					loaded = true;
+					callback(_);
+				}
+
+				var loadEvent = (_.type === 'image' ? 'onload' : 'oncanplay');
+				_.media[loadEvent] = loadComplete;
+				_.media.src = _.path;
 			}
-			data.src = path;
+			return _;
+		}
+
+		this.fail = function(callback) {
+			if (checkFailState()) {
+				callback(_.path);
+				return _;
+			}
+
+			_.media.onerror = function() {
+				callback(_.path);
+			}
+			return _;
 		}
 	}
 
 	/**
-	 * Instance of the asset bank query system, used to retrieve assets during game
+	 * Instance of a loaded asset library, used to retrieve assets during game
 	 */
-	function AssetManager(path) {
+	function AssetManager(_root) {
 		// Private:
 		var _ = this;
 		var locked = false;
-		var basePath = path;
+		var root = {
+			base: _root,
+			images: '',
+			audio: ''
+		};
 		var data = {
 			image: {},
 			audio: {}
 		};
 
 		// Public:
-		this.store = function(asset) {
-			if (!locked) {
-				data[asset.getType()][asset.getPath()] = asset;
+		this.path = function(type, folder) {
+			if (!locked && typeof root.hasOwnProperty(type)) {
+				root[type] = folder + '/';
 			}
-
 			return _;
 		}
 
-		this.getImage = function(name) {
-			return data.image[basePath + name].getObject();
+		this.store = function(asset) {
+			if (!locked) {
+				data[asset.type][asset.path] = asset;
+			}
+			return _;
 		}
 
-		this.getAudio = function(name) {
-			return data.audio[basePath + name].getObject();
+		this.getImage = function(file) {
+			return data.image[root.base + root.images + file].media;
+		}
+
+		this.getAudio = function(file) {
+			return data.audio[root.base + root.audio + file].media;
 		}
 
 		this.lock = function() {
@@ -86,47 +111,47 @@
 
 	/**
 	 * Instance of the asset loader resource, which can be used to load a list
-	 * of assets into memory and then handle them through the asset manager
+	 * of assets into memory and then handle them through the returned asset manager
 	 */
-	function AssetLoaderInstance() {
+	function AssetLoader() {
 		// Private:
 		var _ = this;
-		var basePath = '';
+		var root = '';
 		var assets;
 		var onProgress = function(){};
+		var onError = function(){};
 		var onComplete = function(){};
 
-		function startLoading() {
-			var graphics = assets.graphics || [];
-			var sounds = assets.sounds || [];
-			var path = './' + basePath + '/';
-			var manager = new AssetManager(path);
-			var assetCount = graphics.length + sounds.length;
+		function loadAssets() {
+			var images = assets.images.files || [];
+			var audio = assets.audio.files || [];
+			var _root = './' + root + '/';
+			var assetManager = new AssetManager(_root).path('images', assets.images.folder).path('audio', assets.audio.folder);
+			var assetCount = images.length + audio.length;
 			var loaded = 0;
 
 			function loadProgress(asset) {
-				manager.store(asset);
+				assetManager.store(asset);
+				onProgress(Math.round(100 * (++loaded / assetCount)));
 
-				if (++loaded >= assetCount) {
-					manager.lock();
-					onComplete(manager);
+				if (loaded >= assetCount) {
+					assetManager.lock();
+					onComplete(assetManager);
 				}
-
-				onProgress(100 * (loaded / assetCount));
 			}
 
-			graphics.forEach(function(graphic){
-				var asset = new Asset('image').from(path + graphic).load(loadProgress);
+			images.forEach(function(file){
+				var asset = new Asset('image').from(_root + assets.images.folder + '/' + file).load(loadProgress).fail(onError);
 			});
 
-			sounds.forEach(function(sound){
-				var asset = new Asset('audio').from(path + sound).load(loadProgress);
+			audio.forEach(function(file){
+				var asset = new Asset('audio').from(_root + assets.audio.folder + '/' + file).load(loadProgress).fail(onError);
 			});
 		}
 
 		// Public:
-		this.root = function(path) {
-			basePath = path;
+		this.root = function(_root) {
+			root = _root;
 			return _;
 		}
 
@@ -140,11 +165,16 @@
 			return _;
 		}
 
+		this.catch = function(callback) {
+			onError = callback || onError;
+			return _;
+		}
+
 		this.then = function(callback) {
 			onComplete = callback || onComplete;
-			startLoading();
+			loadAssets();
 		}
 	}
 
-	scope.AssetLoader = AssetLoaderInstance;
+	scope.AssetLoader = AssetLoader;
 })(window);

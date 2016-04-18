@@ -1,5 +1,5 @@
 /**
- * A simple premade vector graphics toolset for HTML5 Canvas.
+ * A simple vector graphics toolset for the HTML5 Canvas.
  * Instantiate with a target canvas element as the argument.
  */
 function Canvas(element) {
