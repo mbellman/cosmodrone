@@ -8,6 +8,8 @@
 		</style>
 	</head>
 	<body>
+		<div class="debug"></div>
+		<canvas id="prerender"></canvas>
 		<canvas id="game"></canvas>
 		<script src="js/main.js"></script>
 	</body>

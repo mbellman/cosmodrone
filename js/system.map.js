@@ -4,16 +4,16 @@
 function HeightMap() {
 	// Private:
 	var _ = this;
-	var seed = Date.now();
-	var settings = defaultSettings();
+	var seed = hash(Date.now());
+	var settings = defaultsettings();
 	var mean = 0;
-	var distribution = 0;
+	var heightvariance = 0;
 	var map = [];
 
 	/**
 	 * Default generator parameters
 	 */
-	function defaultSettings() {
+	function defaultsettings() {
 		return {
 			// Number of iterations for to subdivide the map
 			iterations: 4,
@@ -31,19 +31,52 @@ function HeightMap() {
 	}
 
 	/**
-	 * Negative-friendly modulus operation
+	 * Converts any string or number into a pseudo-random
+	 * value from the interval [0, 9007199254740991)
 	 */
-	function mod(n, m) {
-		return ((n%m)+m)%m;
+	function hash(value) {
+		value = value.toString();
+		var len = value.length;
+		var code = [];
+		var sum = 0;
+		var output = '';
+		for (var c = 0 ; c < len; c++) {
+			var v = value.charCodeAt(c);
+			code[c] = v;
+			sum += (v+1);
+		}
+		sum *= sum;
+		for (var c = 0 ; c < len ; c++) {
+			var v = code[c];
+			output += ((sum % v) ^ v) % v;
+		}
+		return output % Number.MAX_SAFE_INTEGER;
 	}
 
 	/**
-	 * A random decimal value from [0-1) cubed. Used to
-	 * skew the elevation sampler function toward the
+	 * Takes any number as input and 'hashes' it as a
+	 * pseudo-random number within [0, 9007199254740991)
+	 */
+	function quickhash(value) {
+		return (value * 9999) % Number.MAX_SAFE_INTEGER;
+	}
+
+	/**
+	 * Re-hashes [seed] and uses the result to
+	 * yield a traditional [0, 1) decimal figure
+	 */
+	function prng() {
+		seed = quickhash(seed);
+		return seed / Number.MAX_SAFE_INTEGER;
+	}
+
+	/**
+	 * A pseudo-random decimal value from [0-1) cubed. Used
+	 * to skew the elevation sampler function toward the
 	 * mean by maintaining a smaller-tending deviation.
 	 */
 	function r3() {
-		var r = Math.random();
+		var r = prng();
 		return r*r*r;
 	}
 
@@ -51,7 +84,7 @@ function HeightMap() {
 	 * Inclusive low <-> high random number generator
 	 */
 	function rand(low, high) {
-		return low + Math.floor(Math.random() * (high - low + 1));
+		return low + Math.floor(prng() * (high - low + 1));
 	}
 
 	/**
@@ -62,9 +95,16 @@ function HeightMap() {
 	}
 
 	/**
+	 * Negative-friendly modulus operation
+	 */
+	function mod(n, m) {
+		return ((n%m)+m)%m;
+	}
+
+	/**
 	 * Grab a point at coordinate [y, x]; wraps out-of-bounds coordinates
 	 */
-	function getPoint(y, x) {
+	function getpoint(y, x) {
 		return map[mod(y,map.length)][mod(x,map.length)];
 	}
 
@@ -73,10 +113,22 @@ function HeightMap() {
 	 * for null-only values is specified as not to overwrite
 	 * the initially generated random edges for tileable maps.
 	 */
-	function setPoint(y, x, value) {
+	function setpoint(y, x, value) {
 		if (map[y][x] === null) {
 			map[y][x] = clamp(value, 0, settings.elevation);
 		}
+	}
+
+	/**
+	 * Retrieve elevation values for four adjacent tiles to a point
+	 */
+	function adjacenttiles(y, x) {
+		return {
+			top: getpoint(y-1, x),
+			right: getpoint(y, x+1),
+			bottom: getpoint(y+1, x),
+			left: getpoint(y, x-1)
+		};
 	}
 
 	/**
@@ -101,23 +153,23 @@ function HeightMap() {
 	 */
 	function corners(point, unit) {
 		return average([
-			getPoint(point.y - unit, point.x - unit),
-			getPoint(point.y - unit, point.x + unit),
-			getPoint(point.y + unit, point.x - unit),
-			getPoint(point.y + unit, point.x + unit)
+			getpoint(point.y - unit, point.x - unit),
+			getpoint(point.y - unit, point.x + unit),
+			getpoint(point.y + unit, point.x - unit),
+			getpoint(point.y + unit, point.x + unit)
 		]);
 	}
 
 	/**
-	 * Returns the average elevation of four
-	 * adjacents next to a central point
+	 * Returns the average elevation of four adjacents
+	 * next to a central point [unit] tiles away
 	 */
 	function adjacents(point, unit) {
 		return average([
-			getPoint(point.y, point.x - unit),
-			getPoint(point.y, point.x + unit),
-			getPoint(point.y - unit, point.x),
-			getPoint(point.y + unit, point.x)
+			getpoint(point.y, point.x - unit),
+			getpoint(point.y, point.x + unit),
+			getpoint(point.y - unit, point.x),
+			getpoint(point.y + unit, point.x)
 		]);
 	}
 
@@ -127,7 +179,7 @@ function HeightMap() {
 	 * and the 'average concentration %' parameter
 	 */
 	function sample() {
-		return clamp(mean + Math.round((rand(0,1) == 1 ? -r3()*distribution : r3()*distribution)), 0, settings.elevation);
+		return clamp(mean + Math.round((rand(0,1) == 1 ? -r3()*heightvariance : r3()*heightvariance)), 0, settings.elevation);
 	}
 
 	/**
@@ -180,23 +232,23 @@ function HeightMap() {
 	 * sides of the map and 'stitches' them to the
 	 * opposite ends with slight height adjustments
 	 */
-	function wrap(cornerValue) {
+	function wrapedges(cornerValue) {
 		var topline = randline(cornerValue);
 		var leftline = randline(cornerValue);
 		var size = map.length;
 		for (var p = 0 ; p < topline.length ; p++) {
-			setPoint(0, p, topline[p]);
-			setPoint(size-1, p, topline[p] + offset(null, settings.iterations-1));
+			setpoint(0, p, topline[p]);
+			setpoint(size-1, p, topline[p] + offset(null, settings.iterations-1));
 		}
 		for (var p = 0 ; p < leftline.length ; p++) {
-			setPoint(p, 0, leftline[p]);
-			setPoint(p, size-1, leftline[p] + offset(null, settings.iterations-1));
+			setpoint(p, 0, leftline[p]);
+			setpoint(p, size-1, leftline[p] + offset(null, settings.iterations-1));
 		}
 	}
 
 	// Public:
 	this.seed = function(_seed) {
-		seed = _seed;
+		seed = hash(_seed);
 		return _;
 	}
 
@@ -219,17 +271,17 @@ function HeightMap() {
 		// Generate fractal terrain using diamond-square method
 		var size = Math.pow(2, settings.iterations) + 1;
 		mean = Math.round(settings.elevation * (settings.concentration / 100));
-		distribution = Math.max(mean, settings.elevation - mean);
+		heightvariance = Math.max(mean, settings.elevation - mean);
 
 		map = emptyset(size);
 
 		if (settings.repeat) {
-			wrap(sample());
+			wrapedges(sample());
 		} else {
-			setPoint(0, 0, sample());
-			setPoint(0, size-1, sample());
-			setPoint(size-1, 0, sample());
-			setPoint(size-1, size-1, sample());
+			setpoint(0, 0, sample());
+			setpoint(0, size-1, sample());
+			setpoint(size-1, 0, sample());
+			setpoint(size-1, size-1, sample());
 		}
 
 		for (var step = 1 ; step <= settings.iterations ; step++) {
@@ -244,11 +296,11 @@ function HeightMap() {
 					var center = {y: unit + unit2 * y, x: unit + unit2 * x};
 					var centerHeight = corners(center, unit) + offset(center, step);
 
-					if (Math.random() < 0.75 && step < 4) {
+					if (prng() < 0.75 && step < 4) {
 						centerHeight = sample();
 					}
 
-					setPoint(center.y, center.x, centerHeight);
+					setpoint(center.y, center.x, centerHeight);
 				}
 			}
 
@@ -261,10 +313,10 @@ function HeightMap() {
 					var right = {y: center.y, x: center.x + unit};
 					var bottom = {y: center.y + unit, x: center.x};
 
-					setPoint(top.y, top.x, adjacents(top, unit) + offset(top, step));
-					setPoint(left.y, left.x, adjacents(left, unit) + offset(left, step));
-					setPoint(right.y, right.x, adjacents(right, unit) + offset(right, step));
-					setPoint(bottom.y, bottom.x, adjacents(bottom, unit) + offset(bottom, step));
+					setpoint(top.y, top.x, adjacents(top, unit) + offset(top, step));
+					setpoint(left.y, left.x, adjacents(left, unit) + offset(left, step));
+					setpoint(right.y, right.x, adjacents(right, unit) + offset(right, step));
+					setpoint(bottom.y, bottom.x, adjacents(bottom, unit) + offset(bottom, step));
 				}
 			}
 		}
@@ -272,13 +324,33 @@ function HeightMap() {
 		return _;
 	}
 
-	this.scan = function(handler) {
+	this.size = function() {
+		return map.length;
+	}
+
+	this.scan = function(handler, yRegion, xRegion) {
 		var size = map.length;
-		for (var y = 0 ; y < size ; y++) {
-			for (var x = 0 ; x < size ; x++) {
-				handler(y, x, map[y][x]);
+		xRegion = xRegion || {start: 0, end: size};
+		yRegion = yRegion || {start: 0, end: size};
+		for (var y = yRegion.start ; y < yRegion.end ; y++) {
+			for (var x = xRegion.start ; x < xRegion.end ; x++) {
+				handler(y, x, getpoint(y, x));
 			}
 		}
 		return _;
+	}
+
+	this.tile = function(y, x) {
+		return getpoint(y, x);
+	}
+
+	this.justabove = function(y, x, elevation) {
+		var neighbors = adjacenttiles(y, x);
+		return ((getpoint(y, x) > elevation) && (neighbors.top < elevation || neighbors.right < elevation || neighbors.bottom < elevation || neighbors.left < elevation));	
+	}
+
+	this.justbelow = function(y, x, elevation) {
+		var neighbors = adjacenttiles(y, x);
+		return ((getpoint(y, x) < elevation) && (neighbors.top > elevation || neighbors.right > elevation || neighbors.bottom > elevation || neighbors.left > elevation));
 	}
 }

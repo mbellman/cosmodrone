@@ -37,10 +37,22 @@ function Canvas(element) {
 			ctx.rect(x, y, width, height);
 			return new Shape();
 		},
-		image: function(source, x, y) {
-			ctx.drawImage(source, x, y);
+		image: function(source, x1, y1, width1, height1, x2, y2, width2, height2) {
+			if (arguments.length === 3) {
+				ctx.drawImage(source, x1, y1);
+			} else
+			if (arguments.length === 5) {
+				ctx.drawImage(source, x1, y1, width1, height1);
+			} else
+			if (arguments.length === 9) {
+				ctx.drawImage(source, x1, y1, width1, height1, x2, y2, width2, height2);
+			}
 		}
 	};
+
+	this.clear = function() {
+		ctx.clearRect(0, 0, element.width, element.height);
+	}
 
 	this.getSize = function() {
 		return {
@@ -55,5 +67,7 @@ function Canvas(element) {
 		return _;
 	}
 
-	return _;
+	this.element = function() {
+		return element;
+	}
 }
