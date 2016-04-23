@@ -1,11 +1,12 @@
 // Script imports
 include([
 	'js/jquery-2.2.3.js',
-	'js/graphics.canvas.js',
 	'js/assets.manifest.js',
 	'js/assets.manager.js',
+	'js/graphics.canvas.js',
 	'js/system.vector.js',
 	'js/system.map.js',
+	'js/system.terrain.js',
 	'js/core.game.js'
 ]).then(main);
 

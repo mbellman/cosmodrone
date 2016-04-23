@@ -7,7 +7,7 @@ function HeightMap() {
 	var seed = hash(Date.now());
 	var settings = defaultsettings();
 	var mean = 0;
-	var heightvariance = 0;
+	var heightskew = 0;
 	var map = [];
 
 	/**
@@ -122,7 +122,7 @@ function HeightMap() {
 	/**
 	 * Retrieve elevation values for four adjacent tiles to a point
 	 */
-	function adjacenttiles(y, x) {
+	function getadjacents(y, x) {
 		return {
 			top: getpoint(y-1, x),
 			right: getpoint(y, x+1),
@@ -174,12 +174,12 @@ function HeightMap() {
 	}
 
 	/**
-	 * Returns a randomly generated elevation value skewed
+	 * Returns a randomly picked elevation value skewed
 	 * toward the mean as defined by the max elevation
 	 * and the 'average concentration %' parameter
 	 */
 	function sample() {
-		return clamp(mean + Math.round((rand(0,1) == 1 ? -r3()*heightvariance : r3()*heightvariance)), 0, settings.elevation);
+		return clamp(mean + Math.round((rand(0,1) == 1 ? -r3()*heightskew : r3()*heightskew)), 0, settings.elevation);
 	}
 
 	/**
@@ -268,11 +268,10 @@ function HeightMap() {
 		settings.erosion = clamp(settings.erosion, 0, 10);
 		settings.repeat = (typeof _settings.repeat === 'boolean' ? _settings.repeat : false);
 
-		// Generate fractal terrain using diamond-square method
+		// Generate fractal heightmap using an iterative diamond-square method
 		var size = Math.pow(2, settings.iterations) + 1;
 		mean = Math.round(settings.elevation * (settings.concentration / 100));
-		heightvariance = Math.max(mean, settings.elevation - mean);
-
+		heightskew = Math.max(mean, settings.elevation - mean);
 		map = emptyset(size);
 
 		if (settings.repeat) {
@@ -297,6 +296,7 @@ function HeightMap() {
 					var centerHeight = corners(center, unit) + offset(center, step);
 
 					if (prng() < 0.75 && step < 4) {
+						// Try and force certain tiles toward the mean
 						centerHeight = sample();
 					}
 
@@ -309,14 +309,14 @@ function HeightMap() {
 				for (var x = 0 ; x < tiles ; x++) {
 					var center = {y: unit + unit2 * y, x: unit + unit2 * x};
 					var top = {y: center.y - unit, x: center.x};
-					var left = {y: center.y, x: center.x - unit};
 					var right = {y: center.y, x: center.x + unit};
 					var bottom = {y: center.y + unit, x: center.x};
+					var left = {y: center.y, x: center.x - unit};
 
 					setpoint(top.y, top.x, adjacents(top, unit) + offset(top, step));
-					setpoint(left.y, left.x, adjacents(left, unit) + offset(left, step));
 					setpoint(right.y, right.x, adjacents(right, unit) + offset(right, step));
 					setpoint(bottom.y, bottom.x, adjacents(bottom, unit) + offset(bottom, step));
+					setpoint(left.y, left.x, adjacents(left, unit) + offset(left, step));
 				}
 			}
 		}
@@ -324,33 +324,33 @@ function HeightMap() {
 		return _;
 	}
 
-	this.size = function() {
-		return map.length;
-	}
-
-	this.scan = function(handler, yRegion, xRegion) {
+	this.scan = function(handler, yrange, xrange) {
 		var size = map.length;
-		xRegion = xRegion || {start: 0, end: size};
-		yRegion = yRegion || {start: 0, end: size};
-		for (var y = yRegion.start ; y < yRegion.end ; y++) {
-			for (var x = xRegion.start ; x < xRegion.end ; x++) {
+		xrange = xrange || {start: 0, end: size};
+		yrange = yrange || {start: 0, end: size};
+		for (var y = yrange.start ; y < yrange.end ; y++) {
+			for (var x = xrange.start ; x < xrange.end ; x++) {
 				handler(y, x, getpoint(y, x));
 			}
 		}
 		return _;
 	}
 
+	this.justAbove = function(y, x, limit) {
+		var tile = getadjacents(y, x);
+		return ((getpoint(y, x) > limit) && (tile.top < limit || tile.right < limit || tile.bottom < limit || tile.left < limit));	
+	}
+
+	this.justBelow = function(y, x, limit) {
+		var tile = getadjacents(y, x);
+		return ((getpoint(y, x) < limit) && (tile.top > limit || tile.right > limit || tile.bottom > limit || tile.left > limit));
+	}
+
 	this.tile = function(y, x) {
 		return getpoint(y, x);
 	}
 
-	this.justabove = function(y, x, elevation) {
-		var neighbors = adjacenttiles(y, x);
-		return ((getpoint(y, x) > elevation) && (neighbors.top < elevation || neighbors.right < elevation || neighbors.bottom < elevation || neighbors.left < elevation));	
-	}
-
-	this.justbelow = function(y, x, elevation) {
-		var neighbors = adjacenttiles(y, x);
-		return ((getpoint(y, x) < elevation) && (neighbors.top > elevation || neighbors.right > elevation || neighbors.bottom > elevation || neighbors.left > elevation));
+	this.size = function() {
+		return map.length;
 	}
 }

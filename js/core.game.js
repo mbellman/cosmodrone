@@ -6,9 +6,7 @@ function GameInstance() {
 	var active = false;
 	var running = true;
 	var level = 1;
-	var map;
-	var tilesize = 3;
-	var prerender;
+	var terrain;
 	var bgcamera;
 	var camera;
 	var drone;
@@ -71,73 +69,18 @@ function GameInstance() {
 
 	// ------------- Graphics rendering -------------- //
 
-	function red(elevation) {
-		if (elevation > 40) {
-			if (elevation > 80) {
-				return 155 + elevation;
-			} else
-			if (elevation > 46) {
-				return 80 - elevation;
-			} else {
-				return 220 - elevation;
-			}
-		}
-		return 0;
-	}
-
-	function green(elevation) {
-		if (elevation > 40) {
-			if (elevation > 80) {
-				return 100 + elevation;
-			} else
-			if (elevation > 46) {
-				return 25 + Math.round(2.5*elevation);
-			} else {
-				return 215 - elevation;
-			}
-		}
-		return elevation;
-	}
-
-	function blue(elevation) {
-		if (elevation > 40) {
-			if (elevation > 80) {
-				return 155 + elevation;
-			} else
-			if (elevation > 46) {
-				return Math.round(elevation * 0.6);
-			} else {
-				return 120 - elevation;
-			}
-		}
-		return 135 + 3*elevation;
-	}
-
-	function tilecolor(elevation) {
-		return {
-			r: red(elevation),
-			g: green(elevation),
-			b: blue(elevation)
-		};
-	}
-
-	function rgb(r, g, b) {
-		return 'rgb('+r+','+g+','+b+')';
-	}
-
-	function drawtile(x, y, size, color) {
-		screen.draw.rectangle(x, y, size, size).fill(rgb(color.r, color.g, color.b));
-	}
-
 	function renderBG() {
-		var mapsize = map.size();
+		var mapsize = terrain.size();
+		var tilesize = terrain.tileSize();
+		// Background camera coordinates in tile space
 		var bgtx = mod(Math.floor(bgcamera.position().x / tilesize), mapsize);
 		var bgty = mod(Math.floor(bgcamera.position().y / tilesize), mapsize);
+		// Chunk 'pointer'
 		var tile = {x: 0, y: 0};
+		// Threshold for screen coverage
 		var tilestodraw = {x: Math.ceil(viewport.width/tilesize) + 2, y: Math.ceil(viewport.height/tilesize) + 2};
+		// Sub-tile offset based on the background camera's pixel position
 		var offset = {x: tilesize - mod(bgcamera.position().x, tilesize), y: tilesize - mod(bgcamera.position().y, tilesize)};
-
-		var renders = 0;
 
 		while (tile.x < tilestodraw.x || tile.y < tilestodraw.y) {
 			// Remaining tiles on the map from tile.x/tile.y offset
@@ -154,8 +97,10 @@ function GameInstance() {
 				height: tilesize*Math.min(remaining.y, empty.y)
 			};
 
-			screen.draw.image(prerender.element(), clip.x, clip.y, clip.width, clip.height, draw.x, draw.y, clip.width, clip.height);
+			// Draw the chunk
+			screen.draw.image(terrain.prerender, clip.x, clip.y, clip.width, clip.height, draw.x, draw.y, clip.width, clip.height);
 
+			// Advance the chunk 'pointer' to determine what and where to draw on the next cycle
 			tile.x += clip.width/tilesize;
 			if (tile.x >= tilestodraw.x) {
 				tile.y += clip.height/tilesize;
@@ -163,26 +108,7 @@ function GameInstance() {
 					tile.x = 0;
 				}
 			}
-
-			renders++;
 		}
-
-		Debug.print('Renders: ', renders);
-	}
-
-	function prerenderMap() {
-		prerender = new Canvas(document.getElementById('prerender')).setSize(tilesize*map.size(), tilesize*map.size());
-		map.scan(function(y, x, elevation){
-			if (map.justabove(y, x, 40)) {
-				var color = {r: 250, g: 220, b: 120};
-			} else
-			if (map.justbelow(y, x, 40)) {
-				var color = {r: 75, g: 180, b: 230};
-			} else {
-				var color = tilecolor(elevation);
-			}
-			prerender.draw.rectangle(tilesize*x, tilesize*y, tilesize, tilesize).fill(rgb(color.r, color.g, color.b));
-		});
 	}
 
 	// ------------- Update loop -------------- //
@@ -214,16 +140,13 @@ function GameInstance() {
 
 	// Public:
 	this.init = function() {
-		map = new HeightMap();
-		map.generate({
-			iterations: 9,
+		terrain = new Terrain().build({
+			iterations: 10,
 			elevation: 100,
-			smoothness: 6,
-			concentration: 50,
+			concentration: 30,
+			smoothness: 7,
 			repeat: true
-		});
-
-		prerenderMap();
+		}).setTileSize(2).render();
 
 		bgcamera = new Camera().setVelocity(30, 6);
 		camera = new Camera();
