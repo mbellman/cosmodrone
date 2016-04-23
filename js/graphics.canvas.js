@@ -12,14 +12,14 @@ function Canvas(element) {
 		var __ = this;
 
 		this.fill = function(color) {
-			ctx.fillStyle = color || '#000';
+			if (color !== null) ctx.fillStyle = color;
 			ctx.fill();
 			return __;
 		}
 
 		this.stroke = function(color, thickness) {
-			ctx.lineWidth = (isNaN(thickness) ? 1 : thickness);
-			ctx.strokeStyle = color || '#000';
+			if (thickness !== null) ctx.lineWidth = (isNaN(thickness) ? 1 : thickness);
+			if (color !== null) ctx.strokeStyle = color;
 			ctx.stroke();
 			return __;
 		}

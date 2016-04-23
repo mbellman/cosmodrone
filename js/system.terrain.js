@@ -7,7 +7,7 @@ function Terrain() {
 	var tilesize;
 	var heightmap;
 	var tempmap;
-	var lightangle = 'sw';
+	var lightangle;
 	var color = {
 		presets: {
 			beach: {r: 230, g: 210, b: 100},
@@ -113,6 +113,11 @@ function Terrain() {
 		return _;
 	}
 
+	this.light = function(_light) {
+		lightangle = _light;
+		return _;
+	}
+
 	this.build = function(settings) {
 		heightmap = new HeightMap();
 		heightmap.generate(settings);
@@ -129,6 +134,9 @@ function Terrain() {
 	}
 
 	this.render = function() {
+		if (typeof lightangle === 'undefined') {
+			lightangle = 'n';
+		}
 		render();
 		return _;
 	}

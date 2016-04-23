@@ -146,7 +146,7 @@ function GameInstance() {
 			concentration: 30,
 			smoothness: 2,
 			repeat: true
-		}).setTileSize(2).render();
+		}).light('se').setTileSize(1).render();
 
 		bgcamera = new Camera().setVelocity(30, 6);
 		camera = new Camera();
