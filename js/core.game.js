@@ -141,10 +141,10 @@ function GameInstance() {
 	// Public:
 	this.init = function() {
 		terrain = new Terrain().build({
-			iterations: 10,
+			iterations: 9,
 			elevation: 100,
 			concentration: 30,
-			smoothness: 7,
+			smoothness: 2,
 			repeat: true
 		}).setTileSize(2).render();
 
