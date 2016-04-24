@@ -187,7 +187,7 @@ function HeightMap() {
 	 * taking the 'smoothness' parameter and magnitude, which
 	 * tapers off with fractal iterations, into account
 	 */
-	function offset(point, magnitude) {
+	function offset(magnitude) {
 		magnitude = (magnitude < 1 ? 1 : magnitude);
 		return Math.round(rand(-8, 8) * settings.smoothness / magnitude);
 	}
@@ -221,7 +221,7 @@ function HeightMap() {
 				var point = unit + unit2*p;
 				var left = line[point - unit];
 				var right = line[point + unit];
-				line[point] = average([left, right]) + offset(null, step);
+				line[point] = average([left, right]) + offset(step);
 			}
 		}
 		return line;
@@ -238,11 +238,34 @@ function HeightMap() {
 		var size = map.length;
 		for (var p = 0 ; p < topline.length ; p++) {
 			setpoint(0, p, topline[p]);
-			setpoint(size-1, p, topline[p] + offset(null, settings.iterations-1));
+			setpoint(size-1, p, topline[p] + offset(settings.iterations-1));
 		}
 		for (var p = 0 ; p < leftline.length ; p++) {
 			setpoint(p, 0, leftline[p]);
-			setpoint(p, size-1, leftline[p] + offset(null, settings.iterations-1));
+			setpoint(p, size-1, leftline[p] + offset(settings.iterations-1));
+		}
+	}
+
+	/**
+	 * Instance of a single tile's data, with chainable methods
+	 */
+	function Tile(y, x, value) {
+		// Private:
+		var _ = this;
+
+		// Public:
+		this.x = x;
+		this.y = y;
+		this.value = value;
+
+		this.justAbove = function(limit) {
+			var neighbor = getadjacents(_.y, _.x);
+			return (_.value > limit && (neighbor.top <= limit || neighbor.right <= limit || neighbor.bottom <= limit || neighbor.left <= limit));
+		}
+
+		this.justBelow = function(limit) {
+			var neighbor = getadjacents(_.y, _.x);
+			return (_.value < limit && (neighbor.top >= limit || neighbor.right >= limit || neighbor.bottom >= limit || neighbor.left >= limit));
 		}
 	}
 
@@ -262,7 +285,7 @@ function HeightMap() {
 			}
 		}
 
-		settings.iterations = clamp(settings.iterations, 1, 10);
+		settings.iterations = clamp(settings.iterations, 1, 12);
 		settings.concentration = clamp(settings.concentration, 0, 100);
 		settings.smoothness = clamp(settings.smoothness, 1, 20);
 		settings.erosion = clamp(settings.erosion, 0, 10);
@@ -293,14 +316,14 @@ function HeightMap() {
 			for (var y = 0 ; y < tiles ; y++) {
 				for (var x = 0 ; x < tiles ; x++) {
 					var center = {y: unit + unit2 * y, x: unit + unit2 * x};
-					var centerHeight = corners(center, unit) + offset(center, step);
+					var centerheight = corners(center, unit) + offset(step);
 
 					if (prng() < 0.75 && step < 4) {
 						// Try and force certain tiles toward the mean
-						centerHeight = sample();
+						centerheight = sample();
 					}
 
-					setpoint(center.y, center.x, centerHeight);
+					setpoint(center.y, center.x, centerheight);
 				}
 			}
 
@@ -313,10 +336,10 @@ function HeightMap() {
 					var bottom = {y: center.y + unit, x: center.x};
 					var left = {y: center.y, x: center.x - unit};
 
-					setpoint(top.y, top.x, adjacents(top, unit) + offset(top, step));
-					setpoint(right.y, right.x, adjacents(right, unit) + offset(right, step));
-					setpoint(bottom.y, bottom.x, adjacents(bottom, unit) + offset(bottom, step));
-					setpoint(left.y, left.x, adjacents(left, unit) + offset(left, step));
+					setpoint(top.y, top.x, adjacents(top, unit) + offset(step));
+					setpoint(right.y, right.x, adjacents(right, unit) + offset(step));
+					setpoint(bottom.y, bottom.x, adjacents(bottom, unit) + offset(step));
+					setpoint(left.y, left.x, adjacents(left, unit) + offset(step));
 				}
 			}
 		}
@@ -336,18 +359,16 @@ function HeightMap() {
 		return _;
 	}
 
-	this.justAbove = function(y, x, limit) {
-		var tile = getadjacents(y, x);
-		return ((getpoint(y, x) > limit) && (tile.top < limit || tile.right < limit || tile.bottom < limit || tile.left < limit));	
-	}
-
-	this.justBelow = function(y, x, limit) {
-		var tile = getadjacents(y, x);
-		return ((getpoint(y, x) < limit) && (tile.top > limit || tile.right > limit || tile.bottom > limit || tile.left > limit));
+	this.data = function() {
+		return map;
 	}
 
 	this.tile = function(y, x) {
-		return getpoint(y, x);
+		return new Tile(y, x, getpoint(y,x));
+	}
+
+	this.heightRange = function() {
+		return settings.elevation;
 	}
 
 	this.size = function() {

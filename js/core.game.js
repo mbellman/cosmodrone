@@ -98,7 +98,7 @@ function GameInstance() {
 			};
 
 			// Draw the chunk
-			screen.draw.image(terrain.prerender, clip.x, clip.y, clip.width, clip.height, draw.x, draw.y, clip.width, clip.height);
+			screen.draw.image(terrain.canvas, clip.x, clip.y, clip.width, clip.height, draw.x, draw.y, clip.width, clip.height);
 
 			// Advance the chunk 'pointer' to determine what and where to draw on the next cycle
 			tile.x += clip.width/tilesize;
@@ -141,10 +141,10 @@ function GameInstance() {
 	// Public:
 	this.init = function() {
 		terrain = new Terrain().build({
-			iterations: 9,
-			elevation: 100,
-			concentration: 30,
-			smoothness: 2,
+			iterations: 10,
+			elevation: 200,
+			concentration: 35,
+			smoothness: 4,
 			repeat: true
 		}).light('se').setTileSize(1).render();
 

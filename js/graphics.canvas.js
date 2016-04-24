@@ -50,6 +50,22 @@ function Canvas(element) {
 		}
 	};
 
+	this.data = {
+		create: function(width, height) {
+			width = width || element.width;
+			height = height || element.height;
+			return ctx.createImageData(width, height);
+		},
+		get: function(x, y, width, height) {
+			return ctx.getImageData(x, y, width, height);
+		},
+		put: function(data, x, y) {
+			x = x || 0;
+			y = y || 0;
+			ctx.putImageData(data, x, y);
+		}
+	};
+
 	this.clear = function() {
 		ctx.clearRect(0, 0, element.width, element.height);
 	}
