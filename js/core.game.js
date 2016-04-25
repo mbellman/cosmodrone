@@ -152,7 +152,7 @@ function GameInstance() {
 		.setTileSize(1)
 		.render();
 
-		bgcamera = new Camera().setVelocity(8, 1);
+		bgcamera = new Camera().setVelocity(20, 2);
 		camera = new Camera();
 		drone = new Drone();
 

@@ -30,26 +30,26 @@ function Terrain() {
 			reef: {r: 10, g: 150, b: 160}
 		},
 		elevation: {
-			red: function(v) {
-				if (v < sealine) return 30 + Math.round(v/4);
-				if (v <= sealine+5) return 180 - 2*v;
-				if (v <= treeline) return 80-v;
-				if (v <= 80) return 140 - v;
-				return 120+v;
+			red: function(e) {
+				if (e < sealine) return 30 + Math.round(e/4);
+				if (e <= sealine+5) return 180 - 2*e;
+				if (e <= treeline) return 80-e;
+				if (e <= 80) return 140 - e;
+				return 120+e;
 			},
-			green: function(v) {
-				if (v < sealine) return 50 + Math.round(v/4);
-				if (v <= sealine+5) return 180-v;
-				if (v <= treeline) return 10 + Math.round(2*v);
-				if (v <= 80) return 140-v;
-				return 100+v;
+			green: function(e) {
+				if (e < sealine) return 50 + Math.round(e/4);
+				if (e <= sealine+5) return 180-e;
+				if (e <= treeline) return 10 + Math.round(2*e);
+				if (e <= 80) return 140-e;
+				return 100+e;
 			},
-			blue: function(v) {
-				if (v < sealine) return 30 + Math.round(v/4);
-				if (v <= sealine+5) return 66-v;
-				if (v <= treeline) return Math.round(0.6*v);
-				if (v <= 80) return 100-v;
-				return 120+v;
+			blue: function(e) {
+				if (e < sealine) return 30 + Math.round(e/4);
+				if (e <= sealine+5) return 66-e;
+				if (e <= treeline) return Math.round(0.6*e);
+				if (e <= 80) return 100-e;
+				return 120+e;
 			}
 		},
 		temperature: {
@@ -62,14 +62,28 @@ function Terrain() {
 			green: function(t, e) {
 				if (e >= 80) return 0;
 				if (e > treeline) return -50+t;
-				if (e < sealine) return 15+e;
+				if (e < sealine) return 25+e;
 				return -125+t;
 			},
 			blue: function(t, e) {
 				if (e >= 80) return 0;
 				if (e > treeline) return -65+t;
-				if (e < sealine) return 5+e;
+				if (e < sealine) return 20+e;
 				return Math.round(t/25);
+			}
+		},
+		time: {
+			red: function(h) {
+				if (h > 4) return -1 * Math.round(0.0001*Math.pow(h-12, 6));
+				return -140;
+			},
+			green: function(h) {
+				if (h > 4) return -1 * Math.round(0.03*Math.pow(h-12, 4));
+				return -100;
+			},
+			blue: function(h) {
+				if (h > 4) return -1 * Math.round(Math.pow(h-12, 2));
+				return -50;
 			}
 		}
 	};
@@ -203,20 +217,28 @@ function Terrain() {
 	}
 
 	function settime(hour) {
-		timecanvas.draw.image(ogcanvas.element());
-		return;
-		/*
 		hour = (hour < 0 ? 0 : (hour > 24 ? 24 : hour));
-		var lightlevel = Math.abs(12-hour);
+
+		var lightlevel = 12 - Math.abs(12-hour);
+		var twilight = (lightlevel === 5);
+		var night = (lightlevel < 5);
+		var r = color.time.red(lightlevel);
+		var g = color.time.green(lightlevel);
+		var b = color.time.blue(lightlevel);
+
 		var og = ogcanvas.data.get();
 		for (var p = 0 ; p < og.data.length ; p += 4) {
-			var avg = Math.round((og.data[p] + og.data[p+1] + og.data[p+2])/3);
-			og.data[p] = avg - 12*lightlevel;
-			og.data[p+1] = avg - 11*lightlevel;
-			og.data[p+2] = avg - 8*lightlevel;
+			var avg = Math.round((og.data[p] + og.data[p+1] + og.data[p+2])/3) - 15*(4-lightlevel);
+
+			var red = og.data[p];
+			var green = og.data[p+1];
+			var blue = og.data[p+2];
+
+			og.data[p] = r + (twilight ? Math.round((red+avg)/2) : (night ? avg : red));
+			og.data[p+1] = g + (twilight ? Math.round((green+avg)/2) : (night ? avg : green));
+			og.data[p+2] = b + (twilight ? Math.round((blue+avg)/2) : (night ? avg : blue));
 		}
 		timecanvas.data.put(og);
-		*/
 	}
 
 	// Public:
@@ -260,7 +282,7 @@ function Terrain() {
 			lightangle = 'n';
 		}
 		render();
-		settime(2);
+		settime(12);
 		return _;
 	}
 
