@@ -105,7 +105,11 @@ function HeightMap() {
 	 * Grab a point at coordinate [y, x]; wraps out-of-bounds coordinates
 	 */
 	function getpoint(y, x) {
-		return map[mod(y,map.length)][mod(x,map.length)];
+		if (y < 0) y = 0;
+		if (y > map.length-1) y = map.length-1;
+		if (x < 0) x = 0;
+		if (x > map.length-1) x = map.length-1;
+		return map[y][x];
 	}
 
 	/**
@@ -293,6 +297,7 @@ function HeightMap() {
 
 		// Generate fractal heightmap using an iterative diamond-square method
 		var size = Math.pow(2, settings.iterations) + 1;
+		var offsetlimit = Math.max(4, settings.iterations);
 		mean = Math.round(settings.elevation * (settings.concentration / 100));
 		heightskew = Math.max(mean, settings.elevation - mean);
 		map = emptyset(size);
@@ -309,16 +314,16 @@ function HeightMap() {
 		for (var step = 1 ; step <= settings.iterations ; step++) {
 			// Get subdivided tile size for this iteration
 			var unit = Math.pow(2, (settings.iterations-step));
-			var unit2 = unit * 2;
+			var unit2 = 2*unit;
 			var tiles = Math.pow(2, (step-1));
 
 			// Diamond (center elevation)
 			for (var y = 0 ; y < tiles ; y++) {
 				for (var x = 0 ; x < tiles ; x++) {
 					var center = {y: unit + unit2 * y, x: unit + unit2 * x};
-					var centerheight = corners(center, unit) + offset(step);
+					var centerheight = corners(center, unit) + (step >= offsetlimit ? 0 : offset(step));
 
-					if (prng() < 0.75 && step < 4) {
+					if (prng() < 0.75 && step < Math.max(settings.iterations-5, 4)) {
 						// Try and force certain tiles toward the mean
 						centerheight = sample();
 					}
@@ -336,10 +341,12 @@ function HeightMap() {
 					var bottom = {y: center.y + unit, x: center.x};
 					var left = {y: center.y, x: center.x - unit};
 
-					setpoint(top.y, top.x, adjacents(top, unit) + offset(step));
-					setpoint(right.y, right.x, adjacents(right, unit) + offset(step));
-					setpoint(bottom.y, bottom.x, adjacents(bottom, unit) + offset(step));
-					setpoint(left.y, left.x, adjacents(left, unit) + offset(step));
+					var _offset = (step >= offsetlimit ? 0 : offset(step));
+
+					setpoint(top.y, top.x, adjacents(top, unit) + _offset);
+					setpoint(right.y, right.x, adjacents(right, unit) + _offset);
+					setpoint(bottom.y, bottom.x, adjacents(bottom, unit) + _offset);
+					setpoint(left.y, left.x, adjacents(left, unit) + _offset);
 				}
 			}
 		}

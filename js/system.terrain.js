@@ -4,12 +4,15 @@
 function Terrain() {
 	// Private:
 	var _ = this;
-	var canvas;
+	var ogcanvas;
+	var timecanvas;
 	var tilesize;
 	var heightmap;
 	var tempmap;
 	var lightangle;
-	// dy and dx for coordinate directions
+	var sealine = 40;
+	var treeline = 65;
+	// dy and dx for light angle directions
 	var direction = {
 		n: {y: -1, x: 0},
 		s: {y: 1, x: 0},
@@ -28,40 +31,45 @@ function Terrain() {
 		},
 		elevation: {
 			red: function(v) {
-				if (v < 40) return 30 + Math.round(v/3);
-				if (v <= 46) return 180 - 2*v;
-				if (v <= 65) return 80-v;
-				if (v <= 80) return 120-v;
+				if (v < sealine) return 30 + Math.round(v/4);
+				if (v <= sealine+5) return 180 - 2*v;
+				if (v <= treeline) return 80-v;
+				if (v <= 80) return 140 - v;
 				return 120+v;
 			},
 			green: function(v) {
-				if (v < 40) return 50 + Math.round(v/3);
-				if (v <= 46) return 180-v;
-				if (v <= 65) return 10 + Math.round(2*v);
-				if (v <= 80) return v;
+				if (v < sealine) return 50 + Math.round(v/4);
+				if (v <= sealine+5) return 180-v;
+				if (v <= treeline) return 10 + Math.round(2*v);
+				if (v <= 80) return 140-v;
 				return 100+v;
 			},
 			blue: function(v) {
-				if (v < 40) return 40 + Math.round(v/3);
-				if (v <= 46) return 66-v;
-				if (v <= 65) return Math.round(0.6*v);
-				if (v <= 80) return Math.round(v/4);
+				if (v < sealine) return 30 + Math.round(v/4);
+				if (v <= sealine+5) return 66-v;
+				if (v <= treeline) return Math.round(0.6*v);
+				if (v <= 80) return 100-v;
 				return 120+v;
 			}
 		},
 		temperature: {
 			red: function(t, e) {
-				if (e < 40) return 5+e;
-				return -80+t;
+				if (e >= 80) return 0;
+				if (e > treeline) return -55+t;
+				if (e < sealine) return 5+e;
+				return -70+t;
 			},
 			green: function(t, e) {
-				if (e < 40) return 15+e;
-				if (t > 30 && t < 60) return -75+t;
-				return -100+t;
+				if (e >= 80) return 0;
+				if (e > treeline) return -50+t;
+				if (e < sealine) return 15+e;
+				return -125+t;
 			},
 			blue: function(t, e) {
-				if (e < 40) return 5+e;
-				return Math.round(t/10);
+				if (e >= 80) return 0;
+				if (e > treeline) return -65+t;
+				if (e < sealine) return 5+e;
+				return Math.round(t/25);
 			}
 		}
 	};
@@ -92,7 +100,7 @@ function Terrain() {
 		var elevation = data[y][x];
 		var dy = direction[lightangle].y;
 		var dx = direction[lightangle].x;
-		for (var i = 0 ; i < 10 ; i++) {
+		for (var i = 0 ; i < 6 ; i++) {
 			var _y = y + dy*i;
 			var _x = x + dx*i;
 			var height = data[mod(_y, data.length)][mod(_x, data.length)];
@@ -128,7 +136,7 @@ function Terrain() {
 	 */
 	function render() {
 		// Create image buffer
-		var image = canvas.data.create();
+		var image = ogcanvas.data.create();
 		// Saving info for elevation map
 		var height = {
 			data: heightmap.data(),
@@ -142,30 +150,34 @@ function Terrain() {
 		};
 		// For scaling any arbitrary elevation range to [0-100]
 		var ratio = 100 / height.range;
-		var sealevel = Math.round(40/ratio);
+		var sealevel = Math.round(sealine/ratio);
+
+		var t = Date.now();
 
 		heightmap.scan(function(y, x, elevation){
-			// Scale elevation to [0-100] for use by the coloration formulas
-			var _elevation = Math.round(elevation * ratio);
+			// Scale elevation to [0-100] for use by the tile coloration formulas
+			var _elevation = Math.round(elevation*ratio);
 			// Get temperature and lighting info for this tile
 			var tx = mod(y, temp.size);
 			var ty = mod(x, temp.size);
-			var temperature = temp.data[ty][tx];
-			var sun = (_elevation > 40 && sunlit(height.data, y, x));
+			var temperature = 5+temp.data[ty][tx];
+			var sun = (_elevation < sealine ? false : _elevation < sealine+6 || sunlit(height.data, y, x));
 
-			// Determine coloration
+			// Determine tile coloration
 			var hue = {
 				r: color.elevation.red(_elevation) + color.temperature.red(temperature, _elevation) + (sun ? 0 : -60),
 				g: color.elevation.green(_elevation) + color.temperature.green(temperature, _elevation) + (sun ? 0 : -80),
 				b: color.elevation.blue(_elevation) + color.temperature.blue(temperature, _elevation) + (sun ? 0 : -20)
-			}
+			};
 
 			// Override coloration on specific tiles
-			if (tilejustabove(height.data, y, x, sealevel)) {
-				hue = color.presets.beach;
-			} else
-			if (tilejustbelow(height.data, y, x, sealevel)) {
-				hue = color.presets.reef;
+			if (_elevation > sealine-6 && _elevation < sealine+6) {
+				if (tilejustabove(height.data, y, x, sealevel)) {
+					hue = color.presets.beach;
+				} else
+				if (tilejustbelow(height.data, y, x, sealevel)) {
+					hue = color.presets.reef;
+				}
 			}
 
 			// Top left pixel to start at
@@ -185,7 +197,26 @@ function Terrain() {
 		});
 
 		// Write image buffer data back into the canvas
-		canvas.data.put(image);
+		ogcanvas.data.put(image);
+
+		console.log((Date.now() - t) + 'ms render');
+	}
+
+	function settime(hour) {
+		timecanvas.draw.image(ogcanvas.element());
+		return;
+		/*
+		hour = (hour < 0 ? 0 : (hour > 24 ? 24 : hour));
+		var lightlevel = Math.abs(12-hour);
+		var og = ogcanvas.data.get();
+		for (var p = 0 ; p < og.data.length ; p += 4) {
+			var avg = Math.round((og.data[p] + og.data[p+1] + og.data[p+2])/3);
+			og.data[p] = avg - 12*lightlevel;
+			og.data[p+1] = avg - 11*lightlevel;
+			og.data[p+2] = avg - 8*lightlevel;
+		}
+		timecanvas.data.put(og);
+		*/
 	}
 
 	// Public:
@@ -193,29 +224,34 @@ function Terrain() {
 
 	this.setTileSize = function(size) {
 		tilesize = size;
-		canvas.setSize(tilesize*heightmap.size(), tilesize*heightmap.size());
+		ogcanvas.setSize(tilesize*heightmap.size(), tilesize*heightmap.size());
+		timecanvas.setSize(ogcanvas.getSize().width, ogcanvas.getSize().height);
 		return _;
 	}
 
-	this.light = function(_light) {
+	this.setLightSource = function(_light) {
 		lightangle = _light;
 		return _;
 	}
 
 	this.build = function(settings) {
 		var t = Date.now();
+		// Generate an elevation map
 		heightmap = new HeightMap();
-		heightmap.generate(settings);
+		heightmap.seed('height').generate(settings);
+		// Generate a temperature map
 		tempmap = new HeightMap();
 		tempmap.generate({
-			iterations: settings.iterations,
+			iterations: Math.min(settings.iterations-1, 10),
 			elevation: 100,
 			smoothness: 2,
+			concentration: 75,
 			repeat: true
 		});
-		console.log((Date.now() - t) + 'ms');
-		canvas = new Canvas(document.createElement('canvas'));
-		_.canvas = canvas.element();
+		console.log((Date.now() - t) + 'ms generation');
+		ogcanvas = new Canvas(document.createElement('canvas'));
+		timecanvas = new Canvas(document.createElement('canvas'));
+		_.canvas = timecanvas.element();
 		return _;
 	}
 
@@ -224,7 +260,12 @@ function Terrain() {
 			lightangle = 'n';
 		}
 		render();
+		settime(2);
 		return _;
+	}
+
+	this.setTime = function(hour) {
+		settime(hour);
 	}
 
 	this.size = function() {

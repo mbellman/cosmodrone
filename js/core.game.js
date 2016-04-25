@@ -140,15 +140,19 @@ function GameInstance() {
 
 	// Public:
 	this.init = function() {
-		terrain = new Terrain().build({
-			iterations: 10,
+		terrain = new Terrain()
+		.build({
+			iterations: 11,
 			elevation: 200,
 			concentration: 35,
-			smoothness: 4,
+			smoothness: 6,
 			repeat: true
-		}).light('se').setTileSize(1).render();
+		})
+		.setLightSource('sw')
+		.setTileSize(1)
+		.render();
 
-		bgcamera = new Camera().setVelocity(30, 6);
+		bgcamera = new Camera().setVelocity(8, 1);
 		camera = new Camera();
 		drone = new Drone();
 

@@ -38,6 +38,9 @@ function Canvas(element) {
 			return new Shape();
 		},
 		image: function(source, x1, y1, width1, height1, x2, y2, width2, height2) {
+			if (arguments.length === 1) {
+				ctx.drawImage(source, 0, 0);
+			} else
 			if (arguments.length === 3) {
 				ctx.drawImage(source, x1, y1);
 			} else
@@ -57,6 +60,10 @@ function Canvas(element) {
 			return ctx.createImageData(width, height);
 		},
 		get: function(x, y, width, height) {
+			x = x || 0;
+			y = y || 0;
+			width = width || element.width;
+			height = height || element.height;
 			return ctx.getImageData(x, y, width, height);
 		},
 		put: function(data, x, y) {
