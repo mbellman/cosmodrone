@@ -279,20 +279,6 @@ function Terrain()
 	// Public:
 	this.canvas;
 
-	this.setTileSize = function(size)
-	{
-		tilesize = size;
-		ogcanvas.setSize(tilesize*heightmap.size(), tilesize*heightmap.size());
-		timecanvas.setSize(ogcanvas.getSize().width, ogcanvas.getSize().height);
-		return _;
-	}
-
-	this.setLightSource = function(_light)
-	{
-		lightangle = _light;
-		return _;
-	}
-
 	this.build = function(settings)
 	{
 		var t = Date.now();
@@ -318,16 +304,30 @@ function Terrain()
 		return _;
 	}
 
-	this.render = function()
+	this.setTileSize = function(size)
 	{
-		if (typeof lightangle === 'undefined') lightangle = 'n';
-		render();
+		tilesize = size;
+		ogcanvas.setSize(tilesize*heightmap.size(), tilesize*heightmap.size());
+		timecanvas.setSize(ogcanvas.getSize().width, ogcanvas.getSize().height);
+		return _;
+	}
+
+	this.setLightSource = function(_light)
+	{
+		lightangle = _light;
 		return _;
 	}
 
 	this.setTime = function(hour)
 	{
 		set_time(hour);
+		return _;
+	}
+
+	this.render = function()
+	{
+		if (typeof lightangle === 'undefined') lightangle = 'n';
+		render();
 		return _;
 	}
 

@@ -69,15 +69,17 @@ function GameInstance()
 	/**
 	 * Prerender variants of the terrain to reflect midday, sunset, early evening, and night
 	 */
-	function prerender_terrains()
+	function prerender_terrain_variants()
 	{
 		var t = Date.now();
-		[12, 19, 20, 0].forEach(function(h, i)
+		var times = [12, 19, 20, 0];
+
+		for (var i = 0 ; i < times.length ; i++)
 		{
-			terrain.setTime(h);
+			terrain.setTime(times[i]);
 			terrains.push(new Canvas(document.createElement('canvas')).setSize(terrain.size(), terrain.size()));
 			terrains[i].draw.image(terrain.canvas);
-		});
+		}
 		console.log((Date.now() - t) + 'ms prerender');
 	}
 
@@ -85,10 +87,12 @@ function GameInstance()
 	 * Places a new time-of-day background in
 	 * front with opacity 0 and fades it in
 	 */
-	function fade_bg()
+	function advance_bg_cycle()
 	{
+		// Switch background screens
 		frontbg = bit_flip(frontbg);
 
+		// Update time-of-day cycle
 		if (evening)
 		{
 			if (++activeterrain > terrains.length-1)
@@ -109,11 +113,23 @@ function GameInstance()
 		var newbg = 'bg' + frontbg;
 		var oldbg = 'bg' + bit_flip(frontbg);
 
+		// Swap the actual screen elements
 		$(screen[oldbg].element()).css('z-index', '1');
-		$(screen[newbg].element()).css({
-			'opacity' : '0',
-			'z-index' : '2'
-		}).animate({opacity: 1}, {duration: 6000, easing: 'linear', complete: fade_bg});
+		$(screen[newbg].element()).css(
+			{
+				'opacity' : '0',
+				'z-index' : '2'
+			}
+		).animate(
+			{
+				opacity: 1
+			},
+			{
+				duration: 6000,
+				easing: 'linear',
+				complete: advance_bg_cycle
+			}
+		);
 	}
 
 	// ------------- Graphics rendering -------------- //
@@ -125,26 +141,26 @@ function GameInstance()
 	{
 		var mapsize = terrain.size();
 		var tilesize = terrain.tileSize();
-		// Current tile the background camera is on
-		var bgtile =
-		{
-			x: mod(Math.floor(bgcamera.position().x / tilesize), mapsize),
-			y: mod(Math.floor(bgcamera.position().y / tilesize), mapsize)
-		};
-		// Current tile offset 'pointer'
-		var tile =
+		// Tile offset 'pointer'
+		var tile_offset =
 		{
 			x: 0,
 			y: 0
 		};
 		// Tiles needed for screen coverage
-		var tilestodraw =
+		var tiles_to_draw =
 		{
 			x: Math.ceil(viewport.width/tilesize) + 2,
 			y: Math.ceil(viewport.height/tilesize) + 2
 		};
+		// Current tile the background camera is on
+		var bg_tile_offset =
+		{
+			x: mod(Math.floor(bgcamera.position().x / tilesize), mapsize),
+			y: mod(Math.floor(bgcamera.position().y / tilesize), mapsize)
+		};
 		// Sub-tile offset based on the background camera's pixel position
-		var pixeloffset =
+		var bg_pixel_offset =
 		{
 			x: tilesize - mod(bgcamera.position().x, tilesize),
 			y: tilesize - mod(bgcamera.position().y, tilesize)
@@ -156,50 +172,50 @@ function GameInstance()
 		var newterrain = terrains[activeterrain].element();
 		var oldterrain = terrains[terrainbefore].element();
 
-		while (tile.x < tilestodraw.x || tile.y < tilestodraw.y)
+		while (tile_offset.x < tiles_to_draw.x || tile_offset.y < tiles_to_draw.y)
 		{
 			// Remaining tiles to the end of the map from current offset
-			var maplimit =
+			var map_limit =
 			{
-				x: mapsize - ((tile.x + bgtile.x) % mapsize),
-				y: mapsize - ((tile.y + bgtile.y) % mapsize)
+				x: mapsize - ((tile_offset.x + bg_tile_offset.x) % mapsize),
+				y: mapsize - ((tile_offset.y + bg_tile_offset.y) % mapsize)
 			};
 			// Remaining tiles needed to fill the screen
-			var screenlimit =
+			var screen_limit =
 			{
-				x: tilestodraw.x - tile.x,
-				y: tilestodraw.y - tile.y
+				x: tiles_to_draw.x - tile_offset.x,
+				y: tiles_to_draw.y - tile_offset.y
 			};
 			// Position to draw the next map chunk at
-			var draw =
+			var draw_offset =
 			{
-				x: Math.floor(tile.x*tilesize + pixeloffset.x - tilesize),
-				y: Math.floor(tile.y*tilesize + pixeloffset.y - tilesize)
+				x: Math.floor(tile_offset.x*tilesize + bg_pixel_offset.x - tilesize),
+				y: Math.floor(tile_offset.y*tilesize + bg_pixel_offset.y - tilesize)
 			};
 			// Clipping parameters for next map chunk
 			var clip =
 			{
-				x: tilesize * ((tile.x + bgtile.x) % mapsize),
-				y: tilesize * ((tile.y + bgtile.y) % mapsize),
-				width: tilesize * Math.min(maplimit.x, screenlimit.x),
-				height: tilesize * Math.min(maplimit.y, screenlimit.y)
+				x: tilesize * ((tile_offset.x + bg_tile_offset.x) % mapsize),
+				y: tilesize * ((tile_offset.y + bg_tile_offset.y) % mapsize),
+				width: tilesize * Math.min(map_limit.x, screen_limit.x),
+				height: tilesize * Math.min(map_limit.y, screen_limit.y)
 			};
 
 			// Draw the map chunk
-			screen[newbg].draw.image(newterrain, clip.x, clip.y, clip.width, clip.height, draw.x, draw.y, clip.width, clip.height);
-			screen[oldbg].draw.image(oldterrain, clip.x, clip.y, clip.width, clip.height, draw.x, draw.y, clip.width, clip.height);
+			screen[newbg].draw.image(newterrain, clip.x, clip.y, clip.width, clip.height, draw_offset.x, draw_offset.y, clip.width, clip.height);
+			screen[oldbg].draw.image(oldterrain, clip.x, clip.y, clip.width, clip.height, draw_offset.x, draw_offset.y, clip.width, clip.height);
 
 			// Advance the tile 'pointer' to determine
 			// what and where to draw on the next cycle
-			tile.x += clip.width/tilesize;
+			tile_offset.x += clip.width/tilesize;
 
-			if (tile.x >= tilestodraw.x)
+			if (tile_offset.x >= tiles_to_draw.x)
 			{
-				tile.y += clip.height/tilesize;
+				tile_offset.y += clip.height/tilesize;
 
-				if (tile.y < tilestodraw.y)
+				if (tile_offset.y < tiles_to_draw.y)
 				{
-					tile.x = 0;
+					tile_offset.x = 0;
 				}
 			}
 		}
@@ -257,7 +273,7 @@ function GameInstance()
 		.setTime(12);
 
 		// Prerender terrain at different times of day
-		prerender_terrains();
+		prerender_terrain_variants();
 
 		bgcamera = new Camera().setVelocity(20, 2);
 		camera = new Camera();
@@ -273,7 +289,7 @@ function GameInstance()
 			active = true;
 			time = Date.now();
 			loop();
-			fade_bg();
+			advance_bg_cycle();
 		}
 
 		if (!running)
