@@ -88,20 +88,6 @@ function HeightMap() {
 	}
 
 	/**
-	 * Keep a value within a certain range
-	 */
-	function clamp(value, min, max) {
-		return (value > max ? max : (value < min ? min : value));
-	}
-
-	/**
-	 * Negative-friendly modulus operation
-	 */
-	function mod(n, m) {
-		return ((n%m)+m)%m;
-	}
-
-	/**
 	 * Grab a point at coordinate [y, x]; wraps out-of-bounds coordinates
 	 */
 	function getpoint(y, x) {

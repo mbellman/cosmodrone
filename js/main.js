@@ -4,6 +4,7 @@ include([
 	'js/assets.manifest.js',
 	'js/assets.manager.js',
 	'js/graphics.canvas.js',
+	'js/system.tools.js',
 	'js/system.vector.js',
 	'js/system.map.js',
 	'js/system.terrain.js',

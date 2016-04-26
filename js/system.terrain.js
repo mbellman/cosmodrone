@@ -89,13 +89,6 @@ function Terrain() {
 	};
 
 	/**
-	 * Negative-friendly modulus operation
-	 */
-	function mod(n, m) {
-		return ((n%m)+m)%m;
-	}
-
-	/**
 	 * Return adjacent tile elevations from height map data
 	 */
 	function adjacents(data, y, x) {
