@@ -1,26 +1,31 @@
 // Script imports
-include([
-	'js/jquery-2.2.3.js',
-	'js/assets.manifest.js',
-	'js/assets.manager.js',
-	'js/graphics.canvas.js',
-	'js/system.tools.js',
-	'js/system.vector.js',
-	'js/system.map.js',
-	'js/system.terrain.js',
-	'js/core.game.js'
-]).then(main);
+include(
+	[
+		'js/jquery-2.2.3.js',
+		'js/assets.manifest.js',
+		'js/assets.manager.js',
+		'js/graphics.canvas.js',
+		'js/system.tools.js',
+		'js/system.vector.js',
+		'js/system.map.js',
+		'js/system.terrain.js',
+		'js/core.game.js'
+	]
+).then(main);
 
 // Global variables
 var viewport;
-var screen = {
-	bg1: null,
-	bg2: null
+var screen =
+{
+	bg0: null,
+	bg1: null
 };
 
 // Initialization
-function main() {
-	viewport = {
+function main()
+{
+	viewport =
+	{
 		width: $(window).width(),
 		height: $(window).height()
 	};
@@ -30,10 +35,12 @@ function main() {
 	new AssetLoader()
 	.root('assets')
 	.load(AssetManifest)
-	.progress(function(percent){
+	.progress(function(percent)
+	{
 		console.log('Loading...' + percent + '%');
 	})
-	.then(function(pack){
+	.then(function(pack)
+	{
 		var game = new GameInstance();
 		game.init().start();
 	});
@@ -41,13 +48,22 @@ function main() {
 	$(window).on('resize', onResize);
 }
 
-function onResize() {
+function onResize()
+{
 	viewport.width = $(window).width();
 	viewport.height = $(window).height();
-	screen.setSize(viewport.width, viewport.height);
+
+	for (var s in screen)
+	{
+		if (screen.hasOwnProperty(s))
+		{
+			screen[s].setSize(viewport.width, viewport.height);
+		}
+	}
 }
 
-function createScreens() {
+function createScreens()
+{
 	// Backgrounds (for planet surface, starfield, etc.)
 	screen.bg0 = new Canvas(document.createElement('canvas')).setSize(viewport.width, viewport.height);
 	screen.bg1 = new Canvas(document.createElement('canvas')).setSize(viewport.width, viewport.height);

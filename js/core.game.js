@@ -1,4 +1,5 @@
-function GameInstance() {
+function GameInstance()
+{
 	// Private:
 
 	var _ = this;
@@ -26,27 +27,31 @@ function GameInstance() {
 	/**
 	 * A controllable camera instance
 	 */
-	function Camera() {
+	function Camera()
+	{
 		// Private:
 		var _ = this;
 		var position = new Vec2();
 		var velocity = new Vec2();
 
 		// Public:
-		this.position = function() {
+		this.position = function()
+		{
 			return {
 				x: position.x,
 				y: position.y
 			};
 		}
 
-		this.setVelocity = function(x, y) {
+		this.setVelocity = function(x, y)
+		{
 			velocity.x = x;
 			velocity.y = y;
 			return _;
 		}
 
-		this.update = function(dt) {
+		this.update = function(dt)
+		{
 			position.add(velocity, dt);
 		}
 	}
@@ -54,7 +59,8 @@ function GameInstance() {
 	/**
 	 * The player drone
 	 */
-	function Drone() {
+	function Drone()
+	{
 
 	}
 
@@ -63,9 +69,11 @@ function GameInstance() {
 	/**
 	 * Prerender variants of the terrain to reflect midday, sunset, early evening, and night
 	 */
-	function prerender_terrains() {
+	function prerender_terrains()
+	{
 		var t = Date.now();
-		[12, 19, 20, 0].forEach(function(h, i){
+		[12, 19, 20, 0].forEach(function(h, i)
+		{
 			terrain.setTime(h);
 			terrains.push(new Canvas(document.createElement('canvas')).setSize(terrain.size(), terrain.size()));
 			terrains[i].draw.image(terrain.canvas);
@@ -77,16 +85,22 @@ function GameInstance() {
 	 * Places a new time-of-day background in
 	 * front with opacity 0 and fades it in
 	 */
-	function fade_bg() {
+	function fade_bg()
+	{
 		frontbg = bit_flip(frontbg);
 
-		if (evening) {
-			if (++activeterrain > terrains.length-1) {
+		if (evening)
+		{
+			if (++activeterrain > terrains.length-1)
+			{
 				evening = false;
 				activeterrain--;
 			}
-		} else {
-			if (--activeterrain < 0) {
+		}
+		else
+		{
+			if (--activeterrain < 0)
+			{
 				evening = true;
 				activeterrain++;
 			}
@@ -107,26 +121,31 @@ function GameInstance() {
 	/**
 	 * Draw prerendered terrain
 	 */
-	function render_bg() {
+	function render_bg()
+	{
 		var mapsize = terrain.size();
 		var tilesize = terrain.tileSize();
 		// Current tile the background camera is on
-		var bgtile = {
+		var bgtile =
+		{
 			x: mod(Math.floor(bgcamera.position().x / tilesize), mapsize),
 			y: mod(Math.floor(bgcamera.position().y / tilesize), mapsize)
 		};
 		// Current tile offset 'pointer'
-		var tile = {
+		var tile =
+		{
 			x: 0,
 			y: 0
 		};
 		// Tiles needed for screen coverage
-		var tilestodraw = {
+		var tilestodraw =
+		{
 			x: Math.ceil(viewport.width/tilesize) + 2,
 			y: Math.ceil(viewport.height/tilesize) + 2
 		};
 		// Sub-tile offset based on the background camera's pixel position
-		var pixeloffset = {
+		var pixeloffset =
+		{
 			x: tilesize - mod(bgcamera.position().x, tilesize),
 			y: tilesize - mod(bgcamera.position().y, tilesize)
 		};
@@ -137,24 +156,29 @@ function GameInstance() {
 		var newterrain = terrains[activeterrain].element();
 		var oldterrain = terrains[terrainbefore].element();
 
-		while (tile.x < tilestodraw.x || tile.y < tilestodraw.y) {
-			// Remaining tiles on the map from the tile.x/tile.y offset
-			var maplimit = {
+		while (tile.x < tilestodraw.x || tile.y < tilestodraw.y)
+		{
+			// Remaining tiles to the end of the map from current offset
+			var maplimit =
+			{
 				x: mapsize - ((tile.x + bgtile.x) % mapsize),
 				y: mapsize - ((tile.y + bgtile.y) % mapsize)
 			};
 			// Remaining tiles needed to fill the screen
-			var screenlimit = {
+			var screenlimit =
+			{
 				x: tilestodraw.x - tile.x,
 				y: tilestodraw.y - tile.y
 			};
 			// Position to draw the next map chunk at
-			var draw = {
+			var draw =
+			{
 				x: Math.floor(tile.x*tilesize + pixeloffset.x - tilesize),
 				y: Math.floor(tile.y*tilesize + pixeloffset.y - tilesize)
 			};
 			// Clipping parameters for next map chunk
-			var clip = {
+			var clip =
+			{
 				x: tilesize * ((tile.x + bgtile.x) % mapsize),
 				y: tilesize * ((tile.y + bgtile.y) % mapsize),
 				width: tilesize * Math.min(maplimit.x, screenlimit.x),
@@ -168,9 +192,13 @@ function GameInstance() {
 			// Advance the tile 'pointer' to determine
 			// what and where to draw on the next cycle
 			tile.x += clip.width/tilesize;
-			if (tile.x >= tilestodraw.x) {
+
+			if (tile.x >= tilestodraw.x)
+			{
 				tile.y += clip.height/tilesize;
-				if (tile.y < tilestodraw.y){
+
+				if (tile.y < tilestodraw.y)
+				{
 					tile.x = 0;
 				}
 			}
@@ -179,18 +207,23 @@ function GameInstance() {
 
 	// ------------- Update loop -------------- //
 
-	function update(dt) {
+	function update(dt)
+	{
 		bgcamera.update(dt);
 	}
 
-	function render() {
+	function render()
+	{
 		screen.bg1.clear();
 		render_bg();
 	}
 
-	function loop() {
-		if (active) {
-			if (running) {
+	function loop()
+	{
+		if (active)
+		{
+			if (running)
+			{
 				var newtime = Date.now();
 				var dt = (newtime - time) / 1000;
 
@@ -205,22 +238,25 @@ function GameInstance() {
 	}
 
 	// Public:
-	this.init = function() {
+	this.init = function()
+	{
 		// Base terrain
 		terrain = new Terrain()
-		.build({
-			iterations: 11,
-			elevation: 200,
-			concentration: 35,
-			smoothness: 6,
-			repeat: true
-		})
+		.build(
+			{
+				iterations: 11,
+				elevation: 200,
+				concentration: 35,
+				smoothness: 6,
+				repeat: true
+			}
+		)
 		.setLightSource('sw')
 		.setTileSize(1)
 		.render()
 		.setTime(12);
 
-		// Terrain lit at different times of day
+		// Prerender terrain at different times of day
 		prerender_terrains();
 
 		bgcamera = new Camera().setVelocity(20, 2);
@@ -230,26 +266,31 @@ function GameInstance() {
 		return _;
 	}
 
-	this.start = function() {
-		if (!active) {
+	this.start = function()
+	{
+		if (!active)
+		{
 			active = true;
 			time = Date.now();
 			loop();
 			fade_bg();
 		}
 
-		if (!running) {
+		if (!running)
+		{
 			running = true;
 		}
 
 		return _;
 	}
 
-	this.stop = function() {
+	this.stop = function()
+	{
 		active = false;
 	}
 
-	this.pause = function() {
+	this.pause = function()
+	{
 		running = false;
 	}
 }
