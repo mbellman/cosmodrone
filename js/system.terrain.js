@@ -4,8 +4,8 @@
 function Terrain() {
 	// Private:
 	var _ = this;
-	var ogcanvas;
-	var timecanvas;
+	var ogcanvas;					// Primary, normal-lit terrain rendering
+	var timecanvas;					// Time-of-day render
 	var tilesize;
 	var heightmap;
 	var tempmap;
@@ -212,6 +212,7 @@ function Terrain() {
 
 		// Write image buffer data back into the canvas
 		ogcanvas.data.put(image);
+		timecanvas.data.put(image);
 
 		console.log((Date.now() - t) + 'ms render');
 	}
@@ -219,6 +220,7 @@ function Terrain() {
 	function settime(hour) {
 		hour = (hour < 0 ? 0 : (hour > 24 ? 24 : hour));
 
+		var og = ogcanvas.data.get();
 		var lightlevel = 12 - Math.abs(12-hour);
 		var twilight = (lightlevel === 5);
 		var night = (lightlevel < 5);
@@ -226,7 +228,6 @@ function Terrain() {
 		var g = color.time.green(lightlevel);
 		var b = color.time.blue(lightlevel);
 
-		var og = ogcanvas.data.get();
 		for (var p = 0 ; p < og.data.length ; p += 4) {
 			var avg = Math.round((og.data[p] + og.data[p+1] + og.data[p+2])/3) - 15*(4-lightlevel);
 
@@ -238,6 +239,7 @@ function Terrain() {
 			og.data[p+1] = g + (twilight ? Math.round((green+avg)/2) : (night ? avg : green));
 			og.data[p+2] = b + (twilight ? Math.round((blue+avg)/2) : (night ? avg : blue));
 		}
+
 		timecanvas.data.put(og);
 	}
 
@@ -271,6 +273,7 @@ function Terrain() {
 			repeat: true
 		});
 		console.log((Date.now() - t) + 'ms generation');
+		// Target for primary lighting render
 		ogcanvas = new Canvas(document.createElement('canvas'));
 		timecanvas = new Canvas(document.createElement('canvas'));
 		_.canvas = timecanvas.element();
@@ -282,12 +285,12 @@ function Terrain() {
 			lightangle = 'n';
 		}
 		render();
-		settime(12);
 		return _;
 	}
 
 	this.setTime = function(hour) {
 		settime(hour);
+		return _;
 	}
 
 	this.size = function() {

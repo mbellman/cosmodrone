@@ -9,7 +9,9 @@
 	</head>
 	<body>
 		<div class="debug"></div>
-		<canvas id="game"></canvas>
+		<div id="game" class="fill">
+			<div id="bg" class="fill"></div>
+		</div>
 		<script src="js/main.js"></script>
 	</body>
 </html>

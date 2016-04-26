@@ -11,7 +11,11 @@ include([
 ]).then(main);
 
 // Global variables
-var viewport, screen;
+var viewport;
+var screen = {
+	bg1: null,
+	bg2: null
+};
 
 // Initialization
 function main() {
@@ -20,7 +24,7 @@ function main() {
 		height: $(window).height()
 	};
 
-	screen = new Canvas($('#game')[0]).setSize(viewport.width, viewport.height);
+	createScreens();
 
 	new AssetLoader()
 	.root('assets')
@@ -40,4 +44,16 @@ function onResize() {
 	viewport.width = $(window).width();
 	viewport.height = $(window).height();
 	screen.setSize(viewport.width, viewport.height);
+}
+
+function createScreens() {
+	// Backgrounds (for planet surface, starfield, etc.)
+	screen.bg0 = new Canvas(document.createElement('canvas')).setSize(viewport.width, viewport.height);
+	screen.bg1 = new Canvas(document.createElement('canvas')).setSize(viewport.width, viewport.height);
+
+	$('#game #bg')
+	.append(screen.bg0.element())
+	.append(screen.bg1.element())
+	.find('canvas')
+	.addClass('fill');
 }
