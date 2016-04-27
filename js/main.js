@@ -7,6 +7,7 @@ include(
 		'js/graphics.canvas.js',
 		'js/system.tools.js',
 		'js/system.vector.js',
+		'js/system.rng.js',
 		'js/system.map.js',
 		'js/system.terrain.js',
 		'js/core.game.js'
@@ -65,8 +66,8 @@ function onResize()
 function createScreens()
 {
 	// Backgrounds (for planet surface, starfield, etc.)
-	screen.bg0 = new Canvas(document.createElement('canvas')).setSize(viewport.width, viewport.height);
-	screen.bg1 = new Canvas(document.createElement('canvas')).setSize(viewport.width, viewport.height);
+	screen.bg0 = new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
+	screen.bg1 = new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
 
 	$('#game #bg')
 	.append(screen.bg0.element())

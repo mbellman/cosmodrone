@@ -39,3 +39,10 @@ function cycle_forward(value, max) {
 function cycle_back(value, max) {
 	return (value > max ? 0 : value);
 }
+
+/**
+ * Shorthand for element creation + manipulation
+ */
+function Element(type) {
+	return document.createElement(type);
+}

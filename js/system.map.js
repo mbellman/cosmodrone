@@ -5,7 +5,7 @@ function HeightMap()
 {
 	// Private:
 	var _ = this;
-	var seed = hash_code(Date.now());			// Default seed value
+	var Generator = new RNG();					// Deterministic PRNG
 	var settings = default_settings();			// Store default settings
 	var mean = 0;								// Average elevation; recalculated upon initialization with parameters
 	var heightskew = 0;							// Max amount of skew for random height sampler; recalculated upon initialization (see: sample())
@@ -45,83 +45,14 @@ function HeightMap()
 	}
 
 	/**
-	 * Converts any string or number into a pseudo-random
-	 * value from the interval [0, 9007199254740991)
-	 */
-	function hash_code(value)
-	{
-		value = value.toString();
-
-		var len = value.length;
-		var code = [];
-		var sum = 0;
-		var output = '';
-
-		// Build a list of the input's character codes
-		// and sum up the values with a minimum of 1
-		for (var c = 0 ; c < len; c++)
-		{
-			var v = value.charCodeAt(c);
-			code[c] = v;
-			sum += (v+1);
-		}
-
-		// Square the character code sum for obfuscation
-		sum *= sum;
-		
-		// Crunch numbers on the sum a little bit and
-		// append the value, as a string, to [output]
-		for (var c = 0 ; c < len ; c++)
-		{
-			var v = code[c];
-			output += ((sum % v) ^ v) % v;
-		}
-
-		return output % Number.MAX_SAFE_INTEGER;
-	}
-
-	/**
-	 * Takes any number as input and 're-hashes' it as a
-	 * pseudo-random number within [0, 9007199254740991).
-	 * This scheme does NOT yield a consequential degree
-	 * of uncertainty or unpredictability about the result,
-	 * but when run repeatedly on larger numbers on the
-	 * order of 10^13 - 10^15 the distribution is uniform
-	 * and chaotic enough that it can be used to facilitate
-	 * a convincing range of outcomes and variations.
-	 */
-	function rehash_number(value)
-	{
-		return (value * 9999) % Number.MAX_SAFE_INTEGER;
-	}
-
-	/**
-	 * Re-hashes [seed] and uses the result to
-	 * yield a traditional [0, 1) decimal figure
-	 */
-	function prng()
-	{
-		seed = rehash_number(seed);
-		return seed / Number.MAX_SAFE_INTEGER;
-	}
-
-	/**
 	 * A pseudo-random decimal value from [0-1) cubed. Used
 	 * to skew the elevation sampler function toward the
 	 * mean by providing a smaller-tending multiplier.
 	 */
 	function r3()
 	{
-		var r = prng();
+		var r = Generator.random();
 		return r*r*r;
-	}
-
-	/**
-	 * Inclusive low-to-high pseudo-random number generator
-	 */
-	function rand(low, high)
-	{
-		return low + Math.floor(prng() * (high - low + 1));
 	}
 
 	/**
@@ -224,7 +155,7 @@ function HeightMap()
 	 */
 	function sample()
 	{
-		var value = mean + Math.round((rand(0,1) === 1 ? -r3()*heightskew : r3()*heightskew));
+		var value = mean + Math.round((Generator.random(0,1) === 1 ? -r3()*heightskew : r3()*heightskew));
 		return clamp(value, 0, settings.elevation);
 	}
 
@@ -236,7 +167,7 @@ function HeightMap()
 	function offset(magnitude)
 	{
 		magnitude = (magnitude < 1 ? 1 : magnitude);
-		return Math.round(rand(-8, 8) * settings.smoothness / magnitude);
+		return Math.round(Generator.random(-8, 8) * settings.smoothness / magnitude);
 	}
 
 	/**
@@ -340,7 +271,7 @@ function HeightMap()
 	// Public:
 	this.seed = function(_seed)
 	{
-		seed = hash_code(_seed);
+		Generator.seed(_seed);
 		return _;
 	}
 
@@ -360,9 +291,10 @@ function HeightMap()
 		settings.repeat = _settings.repeat || settings.repeat;
 		normalize_settings();
 
-		// Generate fractal heightmap using an iterative diamond-square method
+		// Start heightmap generation
 		var size = Math.pow(2, settings.iterations) + 1;
 		var offsetlimit = Math.max(4, settings.iterations);
+
 		mean = Math.round(settings.elevation * (settings.concentration / 100));
 		heightskew = Math.max(mean, settings.elevation - mean);
 		map = empty_map(size);
@@ -394,7 +326,7 @@ function HeightMap()
 					var center = {y: unit + unit2*y, x: unit + unit2*x};
 					var centerheight = corners(center, unit) + (step >= offsetlimit ? 0 : offset(step));
 
-					if (prng() < 0.75 && step < Math.max(settings.iterations-5, 4))
+					if (Generator.random() < 0.75 && step < Math.max(settings.iterations-5, 4))
 					{
 						// Try and force certain tiles toward the mean
 						centerheight = sample();

@@ -67,17 +67,18 @@ function GameInstance()
 	// ------------- Environmental/ambient effects -------------- //
 
 	/**
-	 * Prerender variants of the terrain to reflect midday, sunset, early evening, and night
+	 * Prerender variants of the terrain to
+	 * reflect important hours of the day
 	 */
 	function prerender_terrain_variants()
 	{
 		var t = Date.now();
-		var times = [12, 19, 20, 0];
+		var times = [12, 19, 20, 0, 4, 6];
 
 		for (var i = 0 ; i < times.length ; i++)
 		{
 			terrain.setTime(times[i]);
-			terrains.push(new Canvas(document.createElement('canvas')).setSize(terrain.size(), terrain.size()));
+			terrains.push(new Canvas(new Element('canvas')).setSize(terrain.size(), terrain.size()));
 			terrains[i].draw.image(terrain.canvas);
 		}
 		console.log((Date.now() - t) + 'ms prerender');
@@ -93,21 +94,9 @@ function GameInstance()
 		frontbg = bit_flip(frontbg);
 
 		// Update time-of-day cycle
-		if (evening)
+		if (++activeterrain > terrains.length-1)
 		{
-			if (++activeterrain > terrains.length-1)
-			{
-				evening = false;
-				activeterrain--;
-			}
-		}
-		else
-		{
-			if (--activeterrain < 0)
-			{
-				evening = true;
-				activeterrain++;
-			}
+			activeterrain = 0;
 		}
 
 		var newbg = 'bg' + frontbg;
@@ -168,7 +157,7 @@ function GameInstance()
 		// Information for time-of-day rendering sources/targets
 		var newbg = 'bg' + frontbg;
 		var oldbg = 'bg' + bit_flip(frontbg);
-		var terrainbefore = clamp((evening ? activeterrain-1 : activeterrain+1), 0, terrains.length-1);
+		var terrainbefore = cycle_forward(activeterrain-1, terrains.length-1);
 		var newterrain = terrains[activeterrain].element();
 		var oldterrain = terrains[terrainbefore].element();
 
@@ -275,7 +264,7 @@ function GameInstance()
 		// Prerender terrain at different times of day
 		prerender_terrain_variants();
 
-		bgcamera = new Camera().setVelocity(20, 2);
+		bgcamera = new Camera().setVelocity(0, 0);
 		camera = new Camera();
 		drone = new Drone();
 
