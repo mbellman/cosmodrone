@@ -264,7 +264,7 @@ function GameInstance()
 		// Prerender terrain at different times of day
 		prerender_terrain_variants();
 
-		bgcamera = new Camera().setVelocity(0, 0);
+		bgcamera = new Camera().setVelocity(20, 2);
 		camera = new Camera();
 		drone = new Drone();
 

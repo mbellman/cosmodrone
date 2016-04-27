@@ -8,7 +8,7 @@ function HeightMap()
 	var Generator = new RNG();					// Deterministic PRNG
 	var settings = default_settings();			// Store default settings
 	var mean = 0;								// Average elevation; recalculated upon initialization with parameters
-	var heightskew = 0;							// Max amount of skew for random height sampler; recalculated upon initialization (see: sample())
+	var height_skew = 0;						// Max amount of skew for random height sampler; recalculated upon initialization (see: sample())
 	var map = [];								// Height map data
 
 	/**
@@ -155,7 +155,7 @@ function HeightMap()
 	 */
 	function sample()
 	{
-		var value = mean + Math.round((Generator.random(0,1) === 1 ? -r3()*heightskew : r3()*heightskew));
+		var value = mean + Math.round((Generator.random(0,1) === 1 ? -r3()*height_skew : r3()*height_skew));
 		return clamp(value, 0, settings.elevation);
 	}
 
@@ -296,7 +296,7 @@ function HeightMap()
 		var offsetlimit = Math.max(4, settings.iterations);
 
 		mean = Math.round(settings.elevation * (settings.concentration / 100));
-		heightskew = Math.max(mean, settings.elevation - mean);
+		height_skew = Math.max(mean, settings.elevation - mean);
 		map = empty_map(size);
 
 		if (settings.repeat)
