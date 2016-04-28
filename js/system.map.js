@@ -176,11 +176,9 @@ function HeightMap()
 	function empty_map(size)
 	{
 		var set = new Array(size);
-
 		for (var i = 0 ; i < size ; i++)
 		{
 			set[i] = new Array(size);
-
 			for (var j = 0 ; j < size ; j++)
 			{
 				set[i][j] = null;

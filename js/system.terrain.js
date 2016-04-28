@@ -5,30 +5,18 @@ function Terrain()
 {
 	// Private:
 	var _ = this;
-	var Generator = new RNG();		// Deterministic PRNG
-	var og_canvas;					// Default terrain rendering
-	var time_canvas;				// Time-of-day rendering
-	var tile_size;					// Pixel size of map tiles
-	var height_map;					// Terrain elevation map
-	var temp_map;					// Terrain temperature map
-	var light_angle;				// Direction of light source
-	var city_probability;			// Prevalence of cities
-	var city_max_size;				// Largest city size
-	var sea_line = 40;				// Sea level as a percent of max elevation
-	var tree_line = 65;				// Height at which to reduce green as a percent of max elevation
+	var Generator = new RNG();                // Deterministic PRNG
+	var og_canvas;                            // Default terrain rendering
+	var time_canvas;                          // Time-of-day rendering
+	var tile_size;                            // Pixel size of map tiles
+	var height_map;                           // Terrain elevation map
+	var temp_map;                             // Terrain temperature map
+	var light_angle;                          // Angle of light source
+	var city_count = 400;                     // Number of cities
+	var max_city_size = 40;                   // Largest city size (in approximate diameter)
+	var sea_line = 40;                        // Sea level as a percent of max elevation
+	var tree_line = 65;                       // Height at which to reduce green as a percent of max elevation
 
-	// dy and dx for light angle directions
-	var direction =
-	{
-		n: {y: -1, x: 0},
-		s: {y: 1, x: 0},
-		e: {y: 0, x: 1},
-		w: {y: 0, x: -1},
-		nw: {y: -1, x: -1},
-		ne: {y: -1, x: 1},
-		sw: {y: 1, x: -1},
-		se: {y: 1, x: 1}
-	};
 	// Tile color formulas based on elevation, temperature, and time of day
 	var color =
 	{
@@ -36,8 +24,8 @@ function Terrain()
 		{
 			beach: {r: 200, g: 180, b: 70},
 			reef: {r: 10, g: 150, b: 160},
-			city: {r: 90, g: 90, b: 90},
-			city2: {r: 255, g: 250, b: 220}
+			city: {r: 80, g: 80, b: 80},
+			city2: {r: 255, g: 250, b: 205}
 		},
 		elevation:
 		{
@@ -72,21 +60,21 @@ function Terrain()
 			{
 				if (e >= 80) return 0;
 				if (e > tree_line) return -55+t;
-				if (e < sea_line) return 5+e;
+				if (e < sea_line) return 95-t-(sea_line-e);
 				return -70+t;
 			},
 			green: function(t, e)
 			{
 				if (e >= 80) return 0;
 				if (e > tree_line) return -50+t;
-				if (e < sea_line) return 25+e;
+				if (e < sea_line) return 110-Math.round(t/2)-(sea_line-e);
 				return -125+t;
 			},
 			blue: function(t, e)
 			{
 				if (e >= 80) return 0;
 				if (e > tree_line) return -65+t;
-				if (e < sea_line) return 20+e;
+				if (e < sea_line) return 70-Math.round(t/3)-(sea_line-e);
 				return Math.round(t/25);
 			}
 		},
@@ -111,30 +99,38 @@ function Terrain()
 	};
 
 	/**
+	 * Return formatted RGB string from three color parts
+	 */
+	function rgb(r, g, b)
+	{
+		return 'rgb('+r+','+g+','+b+')';
+	}
+
+	/**
 	 * Return coordinates for adjacent tiles
 	 */
-	function adjacent_coordinates(y, x, wrap)
+	function adjacent_coordinates(y, x, map_size)
 	{
 		return {
 			top:
 			{
-				y: mod(y-1, wrap),
-				x: mod(x, wrap)
+				y: mod(y-1, map_size),
+				x: mod(x, map_size)
 			},
 			right:
 			{
-				y: mod(y, wrap),
-				x: mod(x+1, wrap)
+				y: mod(y, map_size),
+				x: mod(x+1, map_size)
 			},
 			bottom:
 			{
-				y: mod(y+1, wrap),
-				x: mod(x, wrap)
+				y: mod(y+1, map_size),
+				x: mod(x, map_size)
 			},
 			left:
 			{
-				y: mod(y, wrap),
-				x: mod(x-1, wrap)
+				y: mod(y, map_size),
+				x: mod(x-1, map_size)
 			}
 		}
 	}
@@ -160,14 +156,14 @@ function Terrain()
 	function tile_is_lit(data, y, x)
 	{
 		var elevation = data[y][x];
-		var dy = direction[light_angle].y;
-		var dx = direction[light_angle].x;
+		var map_size = data.length;
 
 		for (var i = 0 ; i < 6 ; i++)
 		{
-			var _y = y + dy*i;
-			var _x = x + dx*i;
-			var height = data[mod(_y, data.length)][mod(_x, data.length)];
+			var _y = Math.round(y - Math.sin(light_angle)*(i+1));
+			var _x = Math.round(x + Math.cos(light_angle)*(i+1));
+
+			var height = data[mod(_y, map_size)][mod(_x, map_size)];
 
 			if (height > elevation+i) return false;
 		}
@@ -183,7 +179,11 @@ function Terrain()
 	{
 		var elevation = data[y][x];
 		var neighbor = adjacents(data, y, x);
-		return (elevation > limit && (neighbor.top <= limit || neighbor.right <= limit || neighbor.bottom <= limit || neighbor.left <= limit));
+
+		return (
+			elevation > limit &&
+			(neighbor.top <= limit || neighbor.right <= limit || neighbor.bottom <= limit || neighbor.left <= limit)
+		);
 	}
 
 	/**
@@ -194,37 +194,148 @@ function Terrain()
 	{
 		var elevation = data[y][x];
 		var neighbor = adjacents(data, y, x);
-		return (elevation < limit && (neighbor.top >= limit || neighbor.right >= limit || neighbor.bottom >= limit || neighbor.left >= limit));
+
+		return (
+			elevation < limit &&
+			(neighbor.top >= limit || neighbor.right >= limit || neighbor.bottom >= limit || neighbor.left >= limit)
+		);
 	}
 
 	/**
-	 * Determine whether a map tile should be rendered as a city
+	 * Generates a pseudo-random city structure
 	 */
-	function tile_is_city(data, y, x, sea_level, tree_level, recursion_level)
+	function generate_city(size)
 	{
-		if (--recursion_level > 0)
-		{
-			var coords = adjacent_coordinates(y, x, data.length);
+		// Force odd-sized area for easy center handling
+		size = (size % 2 === 0 ? size+1 : size);
 
-			return (
-				tile_is_city(data, y, x, sea_level, tree_level, 0) &&
-				(
-					tile_is_city(data, coords.top.y, coords.top.x, sea_level, tree_level, recursion_level) ||
-					tile_is_city(data, coords.right.y, coords.right.x, sea_level, tree_level, recursion_level) ||
-					tile_is_city(data, coords.bottom.y, coords.bottom.x, sea_level, tree_level, recursion_level) ||
-					tile_is_city(data, coords.left.y, coords.left.x, sea_level, tree_level, recursion_level)
-				)
-			);
+		// Set up an empty 2D array of size [size]
+		// filled with 5s to express max density
+		// (the density of a tile determines its
+		// luminosity during night renderings)
+		var structure = new Array(size);
+		for (var y = 0 ; y < size ; y++)
+		{
+			structure[y] = new Array(size);
+			for (var x = 0 ; x < size ; x++)
+			{
+				structure[y][x] = 5;
+			}
 		}
-		else
-		{
-			var elevation = data[y][x];
-			var neighbor = adjacents(data, y, x);
 
-			return (
-				(elevation === sea_level+5) ||
-				(elevation < tree_level && neighbor.left === neighbor.right && neighbor.left === neighbor.top && neighbor.left === neighbor.bottom)
-			);
+		// Return 1x1 or 2x2 cities as-is
+		if (size < 3)
+		{
+			return structure;
+		}
+
+		// For larger cities, gradually reduce
+		// the density in a controlled manner as
+		// we radiate outward from the center
+		var radius = Math.floor(size/2);
+		var spokes = Generator.random(5, 8);
+
+		for (var y = 0 ; y < size ; y++)
+		{
+			for (var x = 0 ; x < size ; x++)
+			{
+				var dx = radius-x;
+				var dy = radius-y;
+				var center_distance = Math.sqrt(dx*dx + dy*dy);
+				var ratio = center_distance/radius;
+				var angle = Math.atan2(dx, dy);
+
+				// Create periodic "rings" around the center hub
+				if (center_distance < radius && Math.sin((center_distance - 2*Generator.random())) > 0.6)
+				{
+					structure[y][x] = Math.round(Generator.random(1, 5) * (1-(ratio/2)));
+					continue;
+				}
+
+				// Create periodic "spokes" from the center outward
+				if (center_distance < radius && Math.sin(spokes*angle) > 0.6)
+				{
+					structure[y][x] = Math.round(Generator.random(1, 5) * (1-(0.75*ratio)));
+					continue;
+				}
+
+				// Perform random density reduction on remaining tiles
+				structure[y][x] -= clamp(Math.ceil(5 * ratio), 0, 5) + Generator.random(0, 2);
+			}
+		}
+
+		return structure;
+	}
+
+	/**
+	 * Generates [city_count] city areas on the map
+	 */
+	function generate_cities(sea_level, tree_level)
+	{
+		var height_data = height_map.data();
+		var map_size = height_data.length;
+		var total = 0;
+
+		while (total <= city_count)
+		{
+			// Pick a random spot for the city
+			var location =
+			{
+				y: Generator.random(0, map_size-1),
+				x: Generator.random(0, map_size-1)
+			};
+
+			// Skew more cities toward the coastal regions
+			var elevation = height_data[location.y][location.x];
+			var last_quarter = total > Math.max(Math.round(city_count*0.75), 5);
+			var minimum = sea_level+2;
+			var maximum = (last_quarter ? tree_level-5 : sea_level+6);
+
+			// Check to see if a city can exist here
+			if (elevation < minimum || elevation > maximum)
+			{
+				continue;
+			}
+
+			// Pick a random size (within range) and generate the layout
+			var r = Generator.random();
+			var city_size = 1 + Math.ceil((r*r*r) * Generator.random(0, max_city_size));
+			var city_layout = generate_city(city_size);
+
+			// Draw the layout directly onto og_canvas
+			for (var y = 0 ; y < city_layout.length ; y++)
+			{
+				for (var x = 0 ; x < city_layout.length ; x++)
+				{
+					var tile =
+					{
+						y: mod(location.y+y, map_size),
+						x: mod(location.x+x, map_size)
+					};
+
+					// Regardless of the overall city layout,
+					// only draw on tiles above sea level
+					if (height_data[tile.y][tile.x] >= sea_level)
+					{
+						var color_reduction = 6 * (5 - city_layout[y][x]);
+
+						var hue =
+						{
+							r: color.presets.city.r - color_reduction,
+							g: color.presets.city.g - color_reduction,
+							b: color.presets.city.b - color_reduction
+						};
+
+						// Only draw tiles above a certain density
+						if (city_layout[y][x] > 0)
+						{
+							og_canvas.draw.rectangle(tile.x, tile.y, 1, 1).fill(rgb(hue.r, hue.g, hue.b));
+						}
+					}
+				}
+			}
+
+			total++;
 		}
 	}
 
@@ -243,7 +354,7 @@ function Terrain()
 			size: height_map.size()
 		};
 		// Saving info for temperature map
-		var temp =
+		var climate =
 		{
 			data: temp_map.data(),
 			size: temp_map.size()
@@ -261,9 +372,9 @@ function Terrain()
 			// Scale elevation to [0-100] for use by the tile coloration formulas
 			var _elevation = Math.round(elevation*ratio);
 			// Get temperature and lighting info for this tile
-			var tx = mod(y, temp.size);
-			var ty = mod(x, temp.size);
-			var temperature = 5+temp.data[ty][tx];
+			var tx = mod(y, climate.size);
+			var ty = mod(x, climate.size);
+			var temperature = 5 + climate.data[ty][tx];
 			var sun = (_elevation < sea_line ? false : _elevation < sea_line+6 || tile_is_lit(height.data, y, x));
 
 			// Determine tile coloration
@@ -288,23 +399,6 @@ function Terrain()
 				}
 			}
 
-			// Override coloration on "city" tiles (determined
-			// arbitrarily within the tile_is_city() function)
-			if (_elevation > sea_line+2 && _elevation < tree_line)
-			{
-				if (tile_is_city(height.data, y, x, sea_level, tree_level, 2))
-				{
-					var altitude = _elevation-sea_line;
-
-					hue =
-					{
-						r: color.presets.city.r - altitude,
-						g: color.presets.city.g - altitude,
-						b: color.presets.city.b - altitude
-					};
-				}
-			}
-
 			// Top left pixel to start at
 			var p = 4*(y*height.size*tile_size*tile_size + x*tile_size);
 
@@ -325,7 +419,10 @@ function Terrain()
 
 		// Write image buffer data back into the canvas
 		og_canvas.data.put(image);
-		time_canvas.data.put(image);
+		// Generate random city centers separately from the heightmap
+		generate_cities(sea_level, tree_level);
+		// Take the composited heightmap
+		time_canvas.data.put(og_canvas.data.get());
 
 		console.log((Date.now() - t) + 'ms render');
 	}
@@ -338,12 +435,14 @@ function Terrain()
 	{
 		hour = (hour < 0 ? 0 : (hour > 24 ? 24 : hour));
 
+		// Various conditions and presets
 		var light = og_canvas.data.get();
 		var light_level = 12 - Math.abs(12-hour);
-		var city_light_reduction = 30 * (mod(hour-5, 24) - 16);
+		var city_light_reduction = 30 * (mod(hour-8, 24) - 16);
 		var twilight = (light_level === 5);
 		var night = (light_level < 5);
 
+		// Default light level color
 		var r = color.time.red(light_level);
 		var g = color.time.green(light_level);
 		var b = color.time.blue(light_level);
@@ -354,9 +453,10 @@ function Terrain()
 			var green = light.data[p+1];
 			var blue = light.data[p+2];
 
+			// Account for city lights during the nighttime
 			if (night && (red > 0 && red === green && red === blue))
 			{
-				var altitude_light_reduction = Math.pow(clamp(85-red, 0, 85), 2);
+				var altitude_light_reduction = Math.pow(clamp(75-red, 0, 75), 2);
 
 				light.data[p] = color.presets.city2.r - city_light_reduction - altitude_light_reduction;
 				light.data[p+1] = color.presets.city2.g - city_light_reduction - altitude_light_reduction;
@@ -365,6 +465,7 @@ function Terrain()
 				continue;
 			}
 
+			// Normal light coloration
 			var average = Math.round((red + green + blue) / 3) - 15*(4 - light_level);
 
 			light.data[p] = r + (twilight ? Math.round((red + average) / 2) : (night ? average : red));
@@ -400,6 +501,8 @@ function Terrain()
 		og_canvas = new Canvas(new Element('canvas'));
 		time_canvas = new Canvas(new Element('canvas'));
 		_.canvas = time_canvas.element();
+		// Seed the PRNG
+		Generator.seed('height');
 		return _;
 	}
 
@@ -411,9 +514,9 @@ function Terrain()
 		return _;
 	}
 
-	this.setLightSource = function(_light)
+	this.setLightAngle = function(angle)
 	{
-		light_angle = _light;
+		light_angle = Math.PI/180 * angle;
 		return _;
 	}
 
@@ -425,7 +528,7 @@ function Terrain()
 
 	this.render = function()
 	{
-		if (typeof light_angle === 'undefined') light_angle = 'n';
+		if (isNaN(light_angle)) light_angle = Math.PI/2;
 		render();
 		return _;
 	}

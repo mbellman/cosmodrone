@@ -256,7 +256,7 @@ function GameInstance()
 				repeat: true
 			}
 		)
-		.setLightSource('sw')
+		.setLightAngle(60)
 		.setTileSize(1)
 		.render()
 		.setTime(12);
