@@ -245,6 +245,7 @@ function GameInstance()
 	// Public:
 	this.init = function()
 	{
+		var t = Date.now();
 		// Base terrain
 		terrain = new Terrain()
 		.build(
@@ -256,13 +257,15 @@ function GameInstance()
 				repeat: true
 			}
 		)
-		.setLightAngle(60)
+		.setLightAngle(35)
 		.setTileSize(1)
 		.render()
 		.setTime(12);
 
 		// Prerender terrain at different times of day
 		prerender_terrain_variants();
+
+		console.log('Total init time: ' + (Date.now() - t) + 'ms');
 
 		bgcamera = new Camera().setVelocity(20, 2);
 		camera = new Camera();

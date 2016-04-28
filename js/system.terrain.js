@@ -13,7 +13,8 @@ function Terrain()
 	var temp_map;                             // Terrain temperature map
 	var light_angle;                          // Angle of light source
 	var city_count = 400;                     // Number of cities
-	var max_city_size = 40;                   // Largest city size (in approximate diameter)
+	var max_city_size = 50;                   // Largest city size (in approximate diameter)
+	var city_chunks = [];                     // Regional chunks containing local cities
 	var sea_line = 40;                        // Sea level as a percent of max elevation
 	var tree_line = 65;                       // Height at which to reduce green as a percent of max elevation
 
@@ -24,7 +25,7 @@ function Terrain()
 		{
 			beach: {r: 200, g: 180, b: 70},
 			reef: {r: 10, g: 150, b: 160},
-			city: {r: 80, g: 80, b: 80},
+			city: {r: 70, g: 70, b: 70},
 			city2: {r: 255, g: 250, b: 205}
 		},
 		elevation:
@@ -115,24 +116,99 @@ function Terrain()
 			top:
 			{
 				y: mod(y-1, map_size),
-				x: mod(x, map_size)
+				x: x
 			},
 			right:
 			{
-				y: mod(y, map_size),
+				y: y,
 				x: mod(x+1, map_size)
 			},
 			bottom:
 			{
 				y: mod(y+1, map_size),
-				x: mod(x, map_size)
+				x: x
 			},
 			left:
 			{
-				y: mod(y, map_size),
+				y: y,
 				x: mod(x-1, map_size)
 			}
 		}
+	}
+
+	/**
+	 * Return [y,x] index for neighboring city chunks
+	 */
+	function neighbor_chunks(y, x, chunks)
+	{
+		return [
+			// Self
+			{
+				y: y,
+				x: x
+			},
+			// North
+			{
+				y: mod(y-1, chunks),
+				x: x
+			},
+			// South
+			{
+				y: mod(y+1, chunks),
+				x: x
+			},
+			// East
+			{
+				y: y,
+				x: mod(x+1, chunks)
+			},
+			// West
+			{
+				y: y,
+				x: mod(x-1, chunks)
+			},
+			// Northwest
+			{
+				y: mod(y-1, chunks),
+				x: mod(x-1, chunks)
+			},
+			// Northeast
+			{
+				y: mod(y-1, chunks),
+				x: mod(x+1, chunks)
+			},
+			// Southwest
+			{
+				y: mod(y+1, chunks),
+				x: mod(x-1, chunks)
+			},
+			// Southeast
+			{
+				y: mod(x+1, chunks),
+				x: mod(x+1, chunks)
+			}
+		];
+	}
+
+	/**
+	 * Returns an array of square chunks
+	 * representing regions of a heightmap
+	 */
+	function map_to_chunks(map_size, chunk_size)
+	{
+		var size = Math.ceil(map_size/chunk_size);
+		var chunks = new Array(size);
+
+		for (var y = 0 ; y < size ; y++)
+		{
+			chunks[y] = new Array(size);
+			for (var x = 0 ; x < size ; x++)
+			{
+				chunks[y][x] = [];
+			}
+		}
+
+		return chunks;
 	}
 
 	/**
@@ -202,7 +278,7 @@ function Terrain()
 	}
 
 	/**
-	 * Generates a pseudo-random city structure
+	 * Generates a pseudo-random city layout
 	 */
 	function generate_city(size)
 	{
@@ -213,58 +289,42 @@ function Terrain()
 		// filled with 5s to express max density
 		// (the density of a tile determines its
 		// luminosity during night renderings)
-		var structure = new Array(size);
+		var layout = new Array(size);
 		for (var y = 0 ; y < size ; y++)
 		{
-			structure[y] = new Array(size);
+			layout[y] = new Array(size);
 			for (var x = 0 ; x < size ; x++)
 			{
-				structure[y][x] = 5;
+				layout[y][x] = 5;
 			}
 		}
 
 		// Return 1x1 or 2x2 cities as-is
 		if (size < 3)
 		{
-			return structure;
+			return layout;
 		}
 
-		// For larger cities, gradually reduce
-		// the density in a controlled manner as
-		// we radiate outward from the center
-		var radius = Math.floor(size/2);
-		var spokes = Generator.random(5, 8);
+		// Start on larger cities by gradually
+		// reducing density from city center
+		var center = Math.round(size/2);
 
 		for (var y = 0 ; y < size ; y++)
 		{
 			for (var x = 0 ; x < size ; x++)
 			{
-				var dx = radius-x;
-				var dy = radius-y;
+				var dx = center-x;
+				var dy = center-y;
 				var center_distance = Math.sqrt(dx*dx + dy*dy);
-				var ratio = center_distance/radius;
-				var angle = Math.atan2(dx, dy);
 
-				// Create periodic "rings" around the center hub
-				if (center_distance < radius && Math.sin((center_distance - 2*Generator.random())) > 0.6)
-				{
-					structure[y][x] = Math.round(Generator.random(1, 5) * (1-(ratio/2)));
-					continue;
-				}
-
-				// Create periodic "spokes" from the center outward
-				if (center_distance < radius && Math.sin(spokes*angle) > 0.6)
-				{
-					structure[y][x] = Math.round(Generator.random(1, 5) * (1-(0.75*ratio)));
-					continue;
-				}
-
-				// Perform random density reduction on remaining tiles
-				structure[y][x] -= clamp(Math.ceil(5 * ratio), 0, 5) + Generator.random(0, 2);
+				layout[y][x] -= Math.round(5 * (center_distance/center)) + Generator.random(0, 2);
 			}
 		}
 
-		return structure;
+		// Introduce random roads
+		// ...
+
+		return layout;
 	}
 
 	/**
@@ -275,6 +335,10 @@ function Terrain()
 		var height_data = height_map.data();
 		var map_size = height_data.length;
 		var total = 0;
+		// Size of square partitioned city regions
+		var chunk_size = 100;
+
+		city_chunks = map_to_chunks(map_size, chunk_size);
 
 		while (total <= city_count)
 		{
@@ -287,12 +351,12 @@ function Terrain()
 
 			// Skew more cities toward the coastal regions
 			var elevation = height_data[location.y][location.x];
-			var last_quarter = total > Math.max(Math.round(city_count*0.75), 5);
-			var minimum = sea_level+2;
-			var maximum = (last_quarter ? tree_level-5 : sea_level+6);
+			var is_last_quarter = total > Math.max(Math.round(city_count*0.75), 5);
+			var min_elevation = sea_level+2;
+			var max_elevation = (is_last_quarter ? tree_level-20 : sea_level+6);
 
 			// Check to see if a city can exist here
-			if (elevation < minimum || elevation > maximum)
+			if (elevation < min_elevation || elevation > max_elevation)
 			{
 				continue;
 			}
@@ -335,8 +399,158 @@ function Terrain()
 				}
 			}
 
+			// Store city location in its respective chunk
+			var city_y = location.y + Math.round(city_size/2);
+			var city_x = location.x + Math.round(city_size/2);
+
+			var chunk =
+			{
+				y: Math.floor(city_y / chunk_size),
+				x: Math.floor(city_x / chunk_size)
+			};
+
+			city_chunks[chunk.y][chunk.x].push(
+				{
+					y: city_y,
+					x: city_x,
+					size: city_size
+				}
+			);
+
 			total++;
 		}
+	}
+
+	/**
+	 * Returns the closest distance between two cities
+	 */
+	function proper_distance(city1, city2)
+	{
+		var map_size = height_map.data().length;
+
+		// Direct coordinate distance
+		var dx1 = city2.x - city1.x;
+		var dy1 = city2.y - city1.y;
+		var dist1 = Math.sqrt(dx1*dx1 + dy1*dy1);
+
+		// Distance from wrapping across x
+		var dx2 = (map_size - city2.x) + city1.x;
+		var dy2 = dy1;
+		var dist2 = Math.sqrt(dx2*dx2 + dy2*dy2);
+
+		// Distance from wrapping across y
+		var dx3 = dx1;
+		var dy3 = (map_size - city2.y) + city1.y;
+		var dist3 = Math.sqrt(dx3*dx3 + dy3*dy3);
+
+		// Distance from wrapping across x and y
+		var dx4 = dx2;
+		var dy4 = dy3;
+		var dist4 = Math.sqrt(dx4*dx4 + dy4*dy4);
+
+		return minimum(dist1, dist2, dist3, dist4);
+	}
+
+	/**
+	 * Draws a highway between two cities
+	 */
+	function generate_road_between(city1, city2, distance, height_data, sea_level)
+	{
+		var map_size = height_data.length;
+
+		var move_y = (city2.y - city1.y) < (map_size - city2.y + city1.y) ? 1 : -1;
+		var move_x = (city2.x - city1.x) < (map_size - city2.x + city1.x) ? 1 : -1;
+
+		var dx = Math.min(city2.x - city1.x, (map_size - city2.x) + city1.x);
+		var dy = Math.min(city2.y - city1.y, (map_size - city2.y) + city1.y);
+
+		var d = 0;
+		var offset =
+		{
+			y: Generator.random(-1, 1),
+			x: Generator.random(-1, 1)
+		};
+
+		while(d < distance)
+		{
+			var ratio = d/distance;
+			var remoteness = Math.sin(Math.PI * ratio);
+
+			var position =
+			{
+				y: mod(city1.y + Math.round(move_y * dy * ratio) + offset.y, map_size),
+				x: mod(city1.x + Math.round(move_x * dx * ratio) + offset.x, map_size)
+			};
+
+			if (height_data[position.y][position.x] > sea_level)
+			{
+				var color_reduction = Math.round(25 * remoteness);
+
+				var hue =
+				{
+					r: color.presets.city.r - color_reduction,
+					g: color.presets.city.g - color_reduction,
+					b: color.presets.city.b - color_reduction
+				};
+
+				og_canvas.draw.rectangle(position.x, position.y, 1, 1).fill(rgb(hue.r, hue.g, hue.b));
+			}
+
+			d += 1 + Math.floor(3*remoteness);
+
+			offset.y += Generator.random(-1, 1);
+			offset.x += Generator.random(-1, 1);
+		}
+	}
+
+	/**
+	 * Generates highways between nearby cities
+	 */
+	function generate_roads(sea_level)
+	{
+		var height_data = height_map.data();
+		var chunks = city_chunks.length;
+
+		var t = Date.now();
+		var roads = 0;
+
+		// Iterate over all chunk regions
+		for (var y = 0 ; y < chunks ; y++)
+		{
+			for (var x = 0 ; x < chunks ; x++)
+			{
+				var chunk = city_chunks[y][x];
+				var neighbor = neighbor_chunks(y, x, chunks);
+
+				// Iterate over cities in this chunk
+				for (var c = 0 ; c < chunk.length ; c++)
+				{
+					var city1 = chunk[c];
+
+					// Now iterate over all neighboring city chunks
+					// (including self) and check city distances
+					for (var n = 0 ; n < neighbor.length ; n++)
+					{
+						var neighbor_cities = city_chunks[neighbor[n].y][neighbor[n].x];
+
+						// Finally iterate over all cities from a neighbor chunk
+						for (var c2 = 0 ; c2 < neighbor_cities.length ; c2++)
+						{
+							var city2 = neighbor_cities[c2];
+							var city_distance = proper_distance(city1, city2);
+
+							if (city_distance < 100 && city2.x > city1.x && (Math.abs(city2.size - city1.size) < 10 || Generator.random() < 0.2))
+							{
+								roads++;
+								generate_road_between(city1, city2, city_distance, height_data, sea_level);
+							}
+						}
+					}
+				}
+			}
+		}
+
+		console.log(roads + ' roads in ' + (Date.now()-t) + 'ms');
 	}
 
 	/**
@@ -385,7 +599,7 @@ function Terrain()
 				b: color.elevation.blue(_elevation) + color.temperature.blue(temperature, _elevation) + (sun ? 0 : -20)
 			};
 
-			// Override coloration on shoreline tiles
+			// Special coloration for shoreline tiles
 			if (_elevation > sea_line-6 && _elevation < sea_line+6)
 			{
 				if (tile_just_above(height.data, y, x, sea_level))
@@ -397,6 +611,19 @@ function Terrain()
 				{
 					hue = color.presets.reef;
 				}
+			}
+
+			// Coloration for coastal towns and roads
+			if (_elevation > sea_line+2 && _elevation < sea_line+6 && Generator.random() < 0.2)
+			{
+				var light_reduction = Generator.random(0, 20) + (_elevation !== sea_line+4 ? 20 : 0);
+
+				hue =
+				{
+					r: color.presets.city.r - light_reduction,
+					g: color.presets.city.g - light_reduction,
+					b: color.presets.city.b - light_reduction
+				};
 			}
 
 			// Top left pixel to start at
@@ -419,8 +646,10 @@ function Terrain()
 
 		// Write image buffer data back into the canvas
 		og_canvas.data.put(image);
-		// Generate random city centers separately from the heightmap
+		// Generate random city centers and
+		// roads separately from the heightmap
 		generate_cities(sea_level, tree_level);
+		generate_roads(sea_level);
 		// Take the composited heightmap
 		time_canvas.data.put(og_canvas.data.get());
 
@@ -453,19 +682,19 @@ function Terrain()
 			var green = light.data[p+1];
 			var blue = light.data[p+2];
 
-			// Account for city lights during the nighttime
+			//  Nighttime city lighting
 			if (night && (red > 0 && red === green && red === blue))
 			{
-				var altitude_light_reduction = Math.pow(clamp(75-red, 0, 75), 2);
+				var density_light_reduction = Math.pow(clamp(65-red, 0, 65), 2);
 
-				light.data[p] = color.presets.city2.r - city_light_reduction - altitude_light_reduction;
-				light.data[p+1] = color.presets.city2.g - city_light_reduction - altitude_light_reduction;
-				light.data[p+2] = color.presets.city2.b - city_light_reduction - altitude_light_reduction;
+				light.data[p] = color.presets.city2.r - city_light_reduction - density_light_reduction;
+				light.data[p+1] = color.presets.city2.g - city_light_reduction - density_light_reduction;
+				light.data[p+2] = color.presets.city2.b - city_light_reduction - density_light_reduction;
 
 				continue;
 			}
 
-			// Normal light coloration
+			// Normal lighting
 			var average = Math.round((red + green + blue) / 3) - 15*(4 - light_level);
 
 			light.data[p] = r + (twilight ? Math.round((red + average) / 2) : (night ? average : red));

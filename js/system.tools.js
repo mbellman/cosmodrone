@@ -20,6 +20,21 @@ function clamp(value, min, max) {
 }
 
 /**
+ * Return the smallest of all numerical arguments
+ */
+function minimum() {
+	var min = Number.POSITIVE_INFINITY;
+
+	for (var n = 0 ; n < arguments.length ; n++) {
+		if (arguments[n] < min) {
+			min = arguments[n];
+		}
+	}
+
+	return min;
+}
+
+/**
  * Returns 0 if 1 and vice versa
  */
 function bit_flip(bit) {
