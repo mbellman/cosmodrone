@@ -9,6 +9,7 @@ function GameInstance()
 	// Loop state variables
 	var active = false;
 	var running = true;
+	var loaded = false;
 	// Game variables
 	var level = 1;
 	// Core objects
@@ -22,7 +23,9 @@ function GameInstance()
 	var frontbg = 0;
 	var activeterrain = 0;
 
-	// ------------- Game-specific classes and objects -------------- //
+	// ------------------------------------------------------------- //
+	// ------------- Game-specific classes and objects ------------- //
+	// ------------------------------------------------------------- //
 
 	/**
 	 * A controllable camera instance
@@ -64,24 +67,63 @@ function GameInstance()
 
 	}
 
-	// ------------- Environmental/ambient effects -------------- //
+	// --------------------------------------------------------- //
+	// ------------- Environmental/ambient effects ------------- //
+	// --------------------------------------------------------- //
+
+	/**
+	 * Prerender a single terrain variant at a
+	 * specific hour with a completion callback
+	 */
+	function prerender_terrain_variant(hour, callback)
+	{
+		terrain.setTime(hour);
+		terrains.push(new Canvas(new Element('canvas')).setSize(terrain.size(), terrain.size()));
+		terrains[terrains.length-1].draw.image(terrain.canvas);
+
+		callback = callback || function(){};
+		callback();
+	}
 
 	/**
 	 * Prerender variants of the terrain to
 	 * reflect important hours of the day
 	 */
-	function prerender_terrain_variants()
+	function prerender_terrain_variants(parameters)
 	{
-		var t = Date.now();
-		var times = [12, 19, 20, 0, 4, 6];
+		var times = parameters.times || [12];
+		var total = times.length;
+		var t = 0;
 
-		for (var i = 0 ; i < times.length ; i++)
+		parameters.progress = parameters.progress || function(){};
+		parameters.complete = parameters.complete || function(){};
+
+		terrains.length = 0;
+
+		/**
+		 * Temporary function for rendering the
+		 * next terrain variant on a delay as to
+		 * avoid halting the primary JS process
+		 */
+		function INTERNAL_prerender_next()
 		{
-			terrain.setTime(times[i]);
-			terrains.push(new Canvas(new Element('canvas')).setSize(terrain.size(), terrain.size()));
-			terrains[i].draw.image(terrain.canvas);
+			if (t < total)
+			{
+				var hour = times[t];
+
+				setTimeout(function(){
+					prerender_terrain_variant(hour, INTERNAL_prerender_next);
+					if (++t <= total) parameters.progress(t, total);
+				}, 100);
+
+				return;
+			}
+
+			parameters.complete();
 		}
-		console.log((Date.now() - t) + 'ms prerender');
+
+		// Start rendering first variant
+		INTERNAL_prerender_next();
 	}
 
 	/**
@@ -121,10 +163,12 @@ function GameInstance()
 		);
 	}
 
-	// ------------- Graphics rendering -------------- //
+	// ---------------------------------------------- //
+	// ------------- Graphics rendering ------------- //
+	// ---------------------------------------------- //
 
 	/**
-	 * Draw prerendered terrain
+	 * Tile the prerendered background terrain across the screen
 	 */
 	function render_bg()
 	{
@@ -210,7 +254,9 @@ function GameInstance()
 		}
 	}
 
-	// ------------- Update loop -------------- //
+	// --------------------------------------- //
+	// ------------- Update loop ------------- //
+	// --------------------------------------- //
 
 	function update(dt)
 	{
@@ -227,7 +273,7 @@ function GameInstance()
 	{
 		if (active)
 		{
-			if (running)
+			if (running && loaded)
 			{
 				var newtime = Date.now();
 				var dt = (newtime - time) / 1000;
@@ -259,17 +305,28 @@ function GameInstance()
 		)
 		.setLightAngle(35)
 		.setTileSize(1)
-		.render()
-		.setTime(12);
+		.render();
 
 		// Prerender terrain at different times of day
-		prerender_terrain_variants();
+		prerender_terrain_variants(
+			{
+				times: [12, 19, 20, 0, 4, 6],
+				progress: function(rendered, total)
+				{
+					console.log('Prerendering...' + rendered + '/' + total + '...');
+				},
+				complete: function()
+				{
+					console.log('Total init time: ' + (Date.now() - t) + 'ms');
 
-		console.log('Total init time: ' + (Date.now() - t) + 'ms');
+					bgcamera = new Camera().setVelocity(20, 2);
+					camera = new Camera();
+					drone = new Drone();
 
-		bgcamera = new Camera().setVelocity(20, 2);
-		camera = new Camera();
-		drone = new Drone();
+					loaded = true;
+				}
+			}
+		);
 
 		return _;
 	}
