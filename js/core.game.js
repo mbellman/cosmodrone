@@ -77,8 +77,11 @@ function GameInstance()
 	 */
 	function prerender_terrain_variant(hour, callback)
 	{
+		var map_size = terrain.getSize();
+		var tile_size = terrain.getTileSize();
+
 		terrain.setTime(hour);
-		terrains.push(new Canvas(new Element('canvas')).setSize(terrain.getSize(), terrain.getSize()));
+		terrains.push(new Canvas(new Element('canvas')).setSize(tile_size*map_size, tile_size*map_size));
 		terrains[terrains.length-1].draw.image(terrain.canvas);
 
 		callback = callback || function(){};
@@ -151,7 +154,7 @@ function GameInstance()
 				'opacity' : '0',
 				'z-index' : '2'
 			}
-		).animate(
+		).stop().animate(
 			{
 				opacity: 1
 			},
@@ -172,8 +175,8 @@ function GameInstance()
 	 */
 	function render_bg()
 	{
-		var mapsize = terrain.getSize();
-		var tilesize = terrain.getTileSize();
+		var tile_size = terrain.getTileSize();
+		var map_size = terrain.getSize();
 		// Tile offset 'pointer'
 		var tile_offset =
 		{
@@ -183,20 +186,20 @@ function GameInstance()
 		// Tiles needed for screen coverage
 		var tiles_to_draw =
 		{
-			x: Math.ceil(viewport.width/tilesize) + 2,
-			y: Math.ceil(viewport.height/tilesize) + 2
+			x: Math.ceil(viewport.width/tile_size) + 2,
+			y: Math.ceil(viewport.height/tile_size) + 2
 		};
 		// Current tile the background camera is on
 		var bg_tile_offset =
 		{
-			x: mod(Math.floor(bgcamera.position().x / tilesize), mapsize),
-			y: mod(Math.floor(bgcamera.position().y / tilesize), mapsize)
+			x: mod(Math.floor(bgcamera.position().x / tile_size), map_size),
+			y: mod(Math.floor(bgcamera.position().y / tile_size), map_size)
 		};
 		// Sub-tile offset based on the background camera's pixel position
 		var bg_pixel_offset =
 		{
-			x: tilesize - mod(bgcamera.position().x, tilesize),
-			y: tilesize - mod(bgcamera.position().y, tilesize)
+			x: tile_size - mod(bgcamera.position().x, tile_size),
+			y: tile_size - mod(bgcamera.position().y, tile_size)
 		};
 		// Information for time-of-day rendering sources/targets
 		var newbg = 'bg' + frontbg;
@@ -210,8 +213,8 @@ function GameInstance()
 			// Remaining tiles to the end of the map from current offset
 			var map_limit =
 			{
-				x: mapsize - ((tile_offset.x + bg_tile_offset.x) % mapsize),
-				y: mapsize - ((tile_offset.y + bg_tile_offset.y) % mapsize)
+				x: map_size - ((tile_offset.x + bg_tile_offset.x) % map_size),
+				y: map_size - ((tile_offset.y + bg_tile_offset.y) % map_size)
 			};
 			// Remaining tiles needed to fill the screen
 			var screen_limit =
@@ -222,16 +225,16 @@ function GameInstance()
 			// Position to draw the next map chunk at
 			var draw_offset =
 			{
-				x: Math.floor(tile_offset.x*tilesize + bg_pixel_offset.x - tilesize),
-				y: Math.floor(tile_offset.y*tilesize + bg_pixel_offset.y - tilesize)
+				x: Math.floor(tile_size * tile_offset.x + bg_pixel_offset.x - tile_size),
+				y: Math.floor(tile_size * tile_offset.y + bg_pixel_offset.y - tile_size)
 			};
 			// Clipping parameters for next map chunk
 			var clip =
 			{
-				x: tilesize * ((tile_offset.x + bg_tile_offset.x) % mapsize),
-				y: tilesize * ((tile_offset.y + bg_tile_offset.y) % mapsize),
-				width: tilesize * Math.min(map_limit.x, screen_limit.x),
-				height: tilesize * Math.min(map_limit.y, screen_limit.y)
+				x: tile_size * ((tile_offset.x + bg_tile_offset.x) % map_size),
+				y: tile_size * ((tile_offset.y + bg_tile_offset.y) % map_size),
+				width: tile_size * Math.min(map_limit.x, screen_limit.x),
+				height: tile_size * Math.min(map_limit.y, screen_limit.y)
 			};
 
 			// Draw the map chunk
@@ -240,11 +243,11 @@ function GameInstance()
 
 			// Advance the tile 'pointer' to determine
 			// what and where to draw on the next cycle
-			tile_offset.x += clip.width/tilesize;
+			tile_offset.x += clip.width/tile_size;
 
 			if (tile_offset.x >= tiles_to_draw.x)
 			{
-				tile_offset.y += clip.height/tilesize;
+				tile_offset.y += clip.height/tile_size;
 
 				if (tile_offset.y < tiles_to_draw.y)
 				{
@@ -260,12 +263,12 @@ function GameInstance()
 
 	function update(dt)
 	{
+		console.log(dt);
 		bgcamera.update(dt);
 	}
 
 	function render()
 	{
-		screen.bg1.clear();
 		render_bg();
 	}
 
@@ -297,15 +300,15 @@ function GameInstance()
 		.build(
 			{
 				iterations: 11,
-				elevation: 200,
+				elevation: 250,
 				concentration: 35,
-				smoothness: 6,
+				smoothness: 8,
 				repeat: true
 			}
 		)
-		.setLightAngle(35)
-		.setCityCount(200)
-		.setMaxCitySize(60)
+		.setLightAngle(225)
+		.setCityCount(100)
+		.setMaxCitySize(50)
 		.setTileSize(1)
 		.render();
 
@@ -321,9 +324,11 @@ function GameInstance()
 				{
 					console.log('Total init time: ' + (Date.now() - t) + 'ms');
 
-					bgcamera = new Camera().setVelocity(10, 1);
+					bgcamera = new Camera().setVelocity(25, 2);
 					camera = new Camera();
 					drone = new Drone();
+
+					if (active && running) advance_bg_cycle();
 
 					loaded = true;
 				}
@@ -340,7 +345,8 @@ function GameInstance()
 			active = true;
 			time = Date.now();
 			loop();
-			advance_bg_cycle();
+
+			if (loaded) advance_bg_cycle();
 		}
 
 		if (!running)
