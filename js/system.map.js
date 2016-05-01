@@ -291,7 +291,6 @@ function HeightMap()
 
 		// Start heightmap generation
 		var size = Math.pow(2, settings.iterations) + 1;
-		var offsetlimit = Math.max(4, settings.iterations);
 
 		mean = Math.round(settings.elevation * (settings.concentration / 100));
 		height_skew = Math.max(mean, settings.elevation - mean);
@@ -322,7 +321,7 @@ function HeightMap()
 				for (var x = 0 ; x < tiles ; x++)
 				{
 					var center = {y: unit + unit2*y, x: unit + unit2*x};
-					var centerheight = corners(center, unit) + (step >= offsetlimit ? 0 : offset(step));
+					var centerheight = corners(center, unit) + (step === settings.iterations ? 0 : offset(step));
 
 					if (Generator.random() < 0.75 && step < Math.max(settings.iterations-5, 4))
 					{
@@ -345,7 +344,7 @@ function HeightMap()
 					var bottom = {y: center.y + unit, x: center.x};
 					var left = {y: center.y, x: center.x - unit};
 
-					var _offset = (step >= offsetlimit ? 0 : offset(step));
+					var _offset = (step === settings.iterations ? 0 : offset(step));
 
 					set_point(top.y, top.x, adjacents(top, unit) + _offset);
 					set_point(right.y, right.x, adjacents(right, unit) + _offset);
@@ -380,17 +379,17 @@ function HeightMap()
 		return map;
 	}
 
-	this.size = function()
-	{
-		return map.length;
-	}
-
 	this.tile = function(y, x)
 	{
 		return new Tile(y, x, get_point(y,x));
 	}
 
-	this.heightRange = function()
+	this.getSize = function()
+	{
+		return map.length;
+	}
+
+	this.getHeightRange = function()
 	{
 		return settings.elevation;
 	}

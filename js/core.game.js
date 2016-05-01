@@ -78,7 +78,7 @@ function GameInstance()
 	function prerender_terrain_variant(hour, callback)
 	{
 		terrain.setTime(hour);
-		terrains.push(new Canvas(new Element('canvas')).setSize(terrain.size(), terrain.size()));
+		terrains.push(new Canvas(new Element('canvas')).setSize(terrain.getSize(), terrain.getSize()));
 		terrains[terrains.length-1].draw.image(terrain.canvas);
 
 		callback = callback || function(){};
@@ -172,8 +172,8 @@ function GameInstance()
 	 */
 	function render_bg()
 	{
-		var mapsize = terrain.size();
-		var tilesize = terrain.tileSize();
+		var mapsize = terrain.getSize();
+		var tilesize = terrain.getTileSize();
 		// Tile offset 'pointer'
 		var tile_offset =
 		{
@@ -292,7 +292,7 @@ function GameInstance()
 	this.init = function()
 	{
 		var t = Date.now();
-		// Base terrain
+		// Generate and render background terrain
 		terrain = new Terrain()
 		.build(
 			{
@@ -304,6 +304,8 @@ function GameInstance()
 			}
 		)
 		.setLightAngle(35)
+		.setCityCount(200)
+		.setMaxCitySize(60)
 		.setTileSize(1)
 		.render();
 
@@ -319,7 +321,7 @@ function GameInstance()
 				{
 					console.log('Total init time: ' + (Date.now() - t) + 'ms');
 
-					bgcamera = new Camera().setVelocity(20, 2);
+					bgcamera = new Camera().setVelocity(10, 1);
 					camera = new Camera();
 					drone = new Drone();
 
