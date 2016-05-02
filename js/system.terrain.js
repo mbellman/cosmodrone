@@ -29,8 +29,8 @@ function Terrain()
 	{
 		presets:
 		{
-			beach: {r: 200, g: 180, b: 70},
-			reef: {r: 10, g: 150, b: 160},
+			beach: {r: 180, g: 170, b: 80},
+			reef: {r: 10, g: 140, b: 130},
 			city: {r: 50, g: 50, b: 50},
 			city2: {r: 255, g: 250, b: 170}
 		},
@@ -493,10 +493,8 @@ function Terrain()
 	function generate_road_between(city1, city2, distance, height_data, sea_level)
 	{
 		var map_size = height_data.length;
-
 		var move_y = (city2.y - city1.y) < (map_size - city2.y + city1.y) ? 1 : -1;
 		var move_x = (city2.x - city1.x) < (map_size - city2.x + city1.x) ? 1 : -1;
-
 		var dx = Math.min(city2.x - city1.x, (map_size - city2.x) + city1.x);
 		var dy = Math.min(city2.y - city1.y, (map_size - city2.y) + city1.y);
 
@@ -643,7 +641,7 @@ function Terrain()
 			// Special coloration for shoreline tiles
 			if (_elevation > sea_line-6 && _elevation < sea_line+6)
 			{
-				if (tile_just_above(height.data, y, x, sea_level))
+				if (tile_just_above(height.data, y, x, sea_level-1))
 				{
 					hue = color.presets.beach;
 				}

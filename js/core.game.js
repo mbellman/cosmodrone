@@ -159,7 +159,7 @@ function GameInstance()
 				opacity: 1
 			},
 			{
-				duration: 6000,
+				duration: 30000,
 				easing: 'linear',
 				complete: advance_bg_cycle
 			}
@@ -263,7 +263,6 @@ function GameInstance()
 
 	function update(dt)
 	{
-		console.log(dt);
 		bgcamera.update(dt);
 	}
 
@@ -306,10 +305,10 @@ function GameInstance()
 				repeat: true
 			}
 		)
-		.setLightAngle(225)
-		.setCityCount(100)
+		.setLightAngle(220)
+		.setCityCount(200)
 		.setMaxCitySize(50)
-		.setTileSize(1)
+		.setTileSize(2)
 		.render();
 
 		// Prerender terrain at different times of day
@@ -324,7 +323,7 @@ function GameInstance()
 				{
 					console.log('Total init time: ' + (Date.now() - t) + 'ms');
 
-					bgcamera = new Camera().setVelocity(25, 2);
+					bgcamera = new Camera().setVelocity(15, 3);
 					camera = new Camera();
 					drone = new Drone();
 
