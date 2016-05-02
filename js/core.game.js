@@ -1,4 +1,4 @@
-function GameInstance()
+function GameInstance(assets)
 {
 	// Private:
 
@@ -307,7 +307,7 @@ function GameInstance()
 		)
 		.setLightAngle(220)
 		.setCityCount(200)
-		.setMaxCitySize(50)
+		.setMaxCitySize(30)
 		.setTileSize(2)
 		.render();
 

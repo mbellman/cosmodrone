@@ -31,7 +31,7 @@ function Terrain()
 		{
 			beach: {r: 180, g: 170, b: 80},
 			reef: {r: 10, g: 140, b: 130},
-			city: {r: 50, g: 50, b: 50},
+			city: {r: 70, g: 70, b: 70},
 			city2: {r: 255, g: 250, b: 170}
 		},
 		elevation:
@@ -256,7 +256,7 @@ function Terrain()
 		var elevation = data[y][x];
 		var map_size = data.length;
 
-		for (var i = 0 ; i < 6 ; i++)
+		for (var i = 0 ; i < 10 ; i++)
 		{
 			var _y = Math.round(y - Math.sin(light_angle)*(i+1));
 			var _x = Math.round(x + Math.cos(light_angle)*(i+1));
@@ -737,7 +737,7 @@ function Terrain()
 			if (is_night && is_city)
 			{
 				// Nighttime city lighting
-				var density_light_reduction = Math.pow(clamp(45-city_color.red, 0, 45), 2);
+				var density_light_reduction = Math.pow(clamp(65-city_color.red, 0, 65), 2);
 				var dlr_3q = Math.round(0.75 * density_light_reduction);
 
 				composite_color.red = color.presets.city2.r - city_light_reduction - density_light_reduction;
@@ -747,9 +747,9 @@ function Terrain()
 			else
 			{
 				// Daytime lighting
-				var red = (is_city ? Math.round((terrain_color.red + city_color.red) / 2) : terrain_color.red) + cloud_color.red;
-				var green = (is_city ? Math.round((terrain_color.green + city_color.green) / 2) : terrain_color.green) + cloud_color.green;
-				var blue = (is_city ? Math.round((terrain_color.blue + city_color.blue) / 2) : terrain_color.blue) + cloud_color.blue;
+				var red = (is_city ? city_color.red : terrain_color.red) + cloud_color.red;
+				var green = (is_city ? city_color.green : terrain_color.green) + cloud_color.green;
+				var blue = (is_city ? city_color.blue : terrain_color.blue) + cloud_color.blue;
 				var average = Math.round((red + green + blue) / 3) - 15*(4 - light_level);
 
 				composite_color.red = lighting.red + (is_twilight ? Math.round((red + average) / 2) : (is_night ? average : red));

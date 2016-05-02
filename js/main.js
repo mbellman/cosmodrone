@@ -42,7 +42,7 @@ function main()
 	})
 	.then(function(pack)
 	{
-		var game = new GameInstance();
+		var game = new GameInstance(pack);
 		game.init().start();
 	});
 

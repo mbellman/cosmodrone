@@ -4,19 +4,60 @@ var size = 200;
 function generate_clouds(type) {
 	canvas.clear();
 
-	var step = 20;
-	var step_size = Math.round(size/step);
-	var step_canvas = new Canvas(document.createElement('canvas')).setSize(step_size, step_size);
+	var composite = new Canvas(document.createElement('canvas')).setSize(size, size);
+	var noise_levels = [];
+	var noise_data = [];
 
-	for (var y = 0 ; y < step_size ; y++) {
-		for (var x = 0 ; x < step_size ; x++) {
-			if (Math.random() < 0.5) {
-				step_canvas.draw.rectangle(x, y, 1, 1).fill('#FFF');
+	for (var i = 0 ; i < 6 ; i++) {
+		var square_size = Math.pow(2,i);
+		var canvas_size = Math.round(size/square_size);
+		var noise_canvas = new Canvas(document.createElement('canvas')).setSize(canvas_size, canvas_size);
+		var color = 255 - 30*(5-i);
+		noise_canvas.draw.rectangle(0, 0, canvas_size, canvas_size).fill('#000');
+
+		for (var y = 0 ; y < canvas_size ; y++) {
+			for (var x = 0 ; x < canvas_size ; x++) {
+				if (Math.random() < 0.4) {
+					noise_canvas.draw.rectangle(x, y, 1, 1).fill('rgb('+color+','+color+','+color+')');
+				}
+			}
+		}
+
+		var full_canvas = new Canvas(document.createElement('canvas')).setSize(size, size);
+		full_canvas.draw.image(noise_canvas.element(), 0, 0, size, size);
+		noise_levels.push(full_canvas);
+		noise_data.push(full_canvas.data.get());
+	}
+
+	var canvas_image = canvas.data.get();
+	var noise_count = noise_levels.length;
+
+	for (var y = 0 ; y < size ; y++) {
+		for (var x = 0 ; x < size ; x++) {
+			var color = 0;
+			var alpha = 0;
+			var pixel = 4 * (y*size + x);
+
+			for (var n = 0 ; n < noise_count ; n++) {
+				color += noise_data[n].data[pixel];
+				alpha += noise_data[n].data[pixel+3];
+			}
+
+			var dx = (size/2) - x;
+			var dy = (size/2) - y;
+			var center_dist = Math.round(Math.sqrt(dx*dx + dy*dy));
+			var average = Math.round(color/noise_count) - Math.round(300/size) * Math.round(0.3*center_dist);
+
+			if (average > 70) {
+				canvas_image.data[pixel] = 130 + average;
+				canvas_image.data[pixel+1] = 130 + average;
+				canvas_image.data[pixel+2] = 160 + average;
+				canvas_image.data[pixel+3] = 255;
 			}
 		}
 	}
 
-	canvas.draw.image(step_canvas.element(), 0, 0, size, size);
+	canvas.data.put(canvas_image);
 }
 
 // DOM stuff
