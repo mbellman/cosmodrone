@@ -10,28 +10,21 @@ include(
 		'js/system.rng.js',
 		'js/system.map.js',
 		'js/system.terrain.js',
+		'js/core.components.js',
 		'js/core.game.js'
 	]
 ).then(main);
 
 // Global variables
-var viewport;
-var screen =
-{
-	bg0: null,
-	bg1: null
-};
+var viewport = {};
+var screen = {};
+var game;
 
 // Initialization
 function main()
 {
-	viewport =
-	{
-		width: $(window).width(),
-		height: $(window).height()
-	};
-
 	createScreens();
+	onResize();
 
 	new AssetLoader()
 	.root('assets')
@@ -42,11 +35,41 @@ function main()
 	})
 	.then(function(pack)
 	{
-		var game = new GameInstance(pack);
+		game = new GameInstance(pack);
 		game.init().start();
 	});
 
 	$(window).on('resize', onResize);
+}
+
+function fullSizeScreen()
+{
+	return new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
+}
+
+function createScreens()
+{
+	// Backgrounds (for planet surface, starfield, etc.)
+	screen.bg0 = fullSizeScreen();
+	screen.bg1 = fullSizeScreen();
+	screen.clouds = fullSizeScreen();
+	screen.clouds.element().style.zIndex = '3';
+
+	$('#game #bg')
+	.append(screen.bg0.element())
+	.append(screen.bg1.element())
+	.append(screen.clouds.element());
+
+	// Primary game scene
+	screen.game = fullSizeScreen();
+
+	$('#game')
+	.append(screen.game.element());
+
+	// Apply CSS to various screens
+	$('#game')
+	.find('canvas')
+	.addClass('fill');
 }
 
 function onResize()
@@ -61,19 +84,4 @@ function onResize()
 			screen[s].setSize(viewport.width, viewport.height);
 		}
 	}
-}
-
-function createScreens()
-{
-	// Backgrounds (for planet surface, starfield, etc.)
-	screen.bg0 = new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
-	screen.bg1 = new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
-	screen.clouds = new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
-
-	$('#game #bg')
-	.append(screen.bg0.element())
-	.append(screen.bg1.element())
-	.append(screen.clouds.element())
-	.find('canvas')
-	.addClass('fill');
 }

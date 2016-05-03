@@ -53,17 +53,17 @@ function generate_clouds(type) {
 			var average = Math.round(color/noise_count) - Math.round(300/size) * Math.round(0.4*center_dist);
 
 			if (average > 70) {
-				var adj = Math.round(1.5 * average);
+				var adj = Math.round(2 * average);
 
-				canvas_image.data[pixel] = 90 + adj;
-				canvas_image.data[pixel+1] = 90 + adj;
-				canvas_image.data[pixel+2] = 120 + adj;
+				canvas_image.data[pixel] = 30 + adj;
+				canvas_image.data[pixel+1] = 30 + adj;
+				canvas_image.data[pixel+2] = 60 + adj;
 				canvas_image.data[pixel+3] = 255;
 
-				shadow_image.data[pixel] = 60;
-				shadow_image.data[pixel+1] = 60;
-				shadow_image.data[pixel+2] = 90;
-				shadow_image.data[pixel+3] = 100;
+				shadow_image.data[pixel] = 0;
+				shadow_image.data[pixel+1] = 0;
+				shadow_image.data[pixel+2] = 20;
+				shadow_image.data[pixel+3] = 190;
 			}
 		}
 	}

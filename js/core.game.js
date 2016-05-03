@@ -16,58 +16,16 @@ function GameInstance(assets)
 	var terrain;
 	var terrains = [];
 	var clouds = [];
+	var cloud_variants = 1;
 	// Core game objects
 	var bg_camera;
 	var camera;
 	var drone;
 	// System state variables
-	var evening = true;
 	var front_bg = 0;
 	var active_terrain = 0;
-
-	// ------------------------------------------------------------- //
-	// ------------- Game-specific classes and objects ------------- //
-	// ------------------------------------------------------------- //
-
-	/**
-	 * A controllable camera instance
-	 */
-	function Camera()
-	{
-		// Private:
-		var _ = this;
-		var position = new Vec2();
-		var velocity = new Vec2();
-
-		// Public:
-		this.position = function()
-		{
-			return {
-				x: position.x,
-				y: position.y
-			};
-		}
-
-		this.setVelocity = function(x, y)
-		{
-			velocity.x = x;
-			velocity.y = y;
-			return _;
-		}
-
-		this.update = function(dt)
-		{
-			position.add(velocity, dt);
-		}
-	}
-
-	/**
-	 * The player drone
-	 */
-	function Drone()
-	{
-
-	}
+	// Entity list
+	var entities = [];
 
 	// --------------------------------------------------------- //
 	// ------------- Environmental/ambient effects ------------- //
@@ -168,6 +126,25 @@ function GameInstance(assets)
 		);
 	}
 
+	/**
+	 * Spawns the initial cloud cover layer
+	 */
+	function spawn_clouds()
+	{
+		var tile_size = terrain.getTileSize();
+		var map_size = terrain.getSize();
+
+		for (var c = 0 ; c < 10 ; c++)
+		{
+			var point = new MovingPoint().setVelocity(-15*1.05, -2*1.05).setPosition(c * 600, c * 20);
+			var cloud = new Cloud().setType(random(1, cloud_variants));
+			var entity = new Entity().add(point).add(cloud);
+
+			clouds.push(entity);
+			entities.push(entity);
+		}
+	}
+
 	// ---------------------------------------------- //
 	// ------------- Graphics rendering ------------- //
 	// ---------------------------------------------- //
@@ -194,14 +171,14 @@ function GameInstance(assets)
 		// Current tile the background camera is on
 		var bg_tile_offset =
 		{
-			x: mod(Math.floor(bg_camera.position().x / tile_size), map_size),
-			y: mod(Math.floor(bg_camera.position().y / tile_size), map_size)
+			x: mod(Math.floor(bg_camera.getPosition().x / tile_size), map_size),
+			y: mod(Math.floor(bg_camera.getPosition().y / tile_size), map_size)
 		};
 		// Sub-tile offset based on the background camera's pixel position
 		var bg_pixel_offset =
 		{
-			x: tile_size - mod(bg_camera.position().x, tile_size),
-			y: tile_size - mod(bg_camera.position().y, tile_size)
+			x: tile_size - mod(bg_camera.getPosition().x, tile_size),
+			y: tile_size - mod(bg_camera.getPosition().y, tile_size)
 		};
 		// Information for time-of-day rendering sources/targets
 		var new_bg = 'bg' + front_bg;
@@ -227,8 +204,8 @@ function GameInstance(assets)
 			// Position to draw the next map chunk at
 			var draw_offset =
 			{
-				x: Math.floor(tile_size * tile_offset.x + bg_pixel_offset.x - tile_size),
-				y: Math.floor(tile_size * tile_offset.y + bg_pixel_offset.y - tile_size)
+				x: tile_size * tile_offset.x + bg_pixel_offset.x - tile_size,
+				y: tile_size * tile_offset.y + bg_pixel_offset.y - tile_size
 			};
 			// Clipping parameters for next map chunk
 			var clip =
@@ -264,7 +241,46 @@ function GameInstance(assets)
 	 */
 	function render_clouds()
 	{
+		var tile_size = terrain.getTileSize();
 
+		var offset =
+		{
+			x: tile_size * 4,
+			y: tile_size * 4
+		};
+
+		for (var c = 0 ; c < clouds.length ; c++)
+		{
+			var cloud = clouds[c];
+			var position = cloud.get(MovingPoint).getPosition();
+			var type = cloud.get(Cloud).getType();
+
+			screen.clouds.draw.image(assets.getImage('shadows/' + type + '.png'), position.x + offset.x, position.y + offset.y);
+		}
+
+		for (var c = 0 ; c < clouds.length ; c++)
+		{
+			var cloud = clouds[c];
+			var position = cloud.get(MovingPoint).getPosition();
+			var type = cloud.get(Cloud).getType();
+
+			screen.clouds.draw.image(assets.getImage('clouds/' + type + '.png'), position.x, position.y);
+		}
+	}
+
+	/**
+	 * Renders remaining game objects to the game screen
+	 */
+	function render_game()
+	{
+		for (var e = 0 ; e < entities.length ; e++)
+		{
+			if (entities[e].has(GameSprite))
+			{
+				// TODO: Render the entity using its GameSprite
+				// coordinates offset by [camera]
+			}
+		}
 	}
 
 	// --------------------------------------- //
@@ -273,7 +289,10 @@ function GameInstance(assets)
 
 	function update(dt)
 	{
-		bg_camera.update(dt);
+		for (var e = 0 ; e < entities.length ; e++)
+		{
+			entities[e].update(dt);
+		}
 	}
 
 	function render()
@@ -283,6 +302,8 @@ function GameInstance(assets)
 		// Cloud layer
 		screen.clouds.clear();
 		render_clouds();
+		// Game objects
+		render_game();
 	}
 
 	function loop()
@@ -291,13 +312,13 @@ function GameInstance(assets)
 		{
 			if (running && loaded)
 			{
-				var newtime = Date.now();
-				var dt = (newtime - time) / 1000;
+				var new_time = Date.now();
+				var dt = (new_time - time) / 1000;
 
 				update(dt);
 				render();
 
-				time = newtime;
+				time = new_time;
 			}
 
 			setTimeout(loop, frametime);
@@ -305,15 +326,22 @@ function GameInstance(assets)
 	}
 
 	/**
-	 * Finish loading level and start game
+	 * Finish initialization and start game
 	 */
 	function load()
 	{
-		bg_camera = new Camera().setVelocity(15, 3);
-		camera = new Camera();
+		bg_camera = new MovingPoint().setVelocity(15, 2);
+		camera = new MovingPoint();
 		drone = new Drone();
 
-		if (active && running) advance_bg_cycle();
+		entities.push(new Entity().add(bg_camera));
+		entities.push(new Entity().add(camera));
+		entities.push(new Entity().add(drone));
+
+		if (active && running)
+		{
+			advance_bg_cycle();
+		}
 
 		loaded = true;
 	}
@@ -338,6 +366,8 @@ function GameInstance(assets)
 		.setMaxCitySize(30)
 		.setTileSize(2)
 		.render();
+
+		spawn_clouds();
 
 		// Prerender terrain at different times of day
 		prerender_terrain_variants(
@@ -366,7 +396,10 @@ function GameInstance(assets)
 			time = Date.now();
 			loop();
 
-			if (loaded) advance_bg_cycle();
+			if (loaded)
+			{
+				advance_bg_cycle();
+			}
 		}
 
 		if (!running)
