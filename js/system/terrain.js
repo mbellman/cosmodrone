@@ -19,6 +19,8 @@ function Terrain()
 	var city_chunks = [];                     // Regional chunks containing local cities
 	var sea_line = 40;                        // Sea level as a percent of max elevation
 	var tree_line = 65;                       // Height at which to reduce green as a percent of max elevation
+	var biome_line = 48;                      // Temperature at which trees no longer grow above [sea_line+5]
+	var shore_biome_line = 42;                // Below [sea_line+5], trees will grow if the temperature is between this value and value+4
 
 	var init = false;                         // Whether or not the terrain has been generated yet via build()
 	var init_timeout;                         // If render() is called before [init] is true, this interval will poll
@@ -29,8 +31,8 @@ function Terrain()
 	{
 		presets:
 		{
-			beach: {r: 180, g: 170, b: 80},
-			reef: {r: 10, g: 140, b: 130},
+			beach: {r: 190, g: 170, b: 80},
+			reef: {r: 0, g: 120, b: 100},
 			city: {r: 90, g: 90, b: 90},
 			city2: {r: 255, g: 250, b: 170}
 		},
@@ -39,24 +41,24 @@ function Terrain()
 			red: function(e)
 			{
 				if (e < sea_line) return 20 + Math.round(e/4);
-				if (e <= sea_line+5) return 215 - 2*e;
+				if (e <= sea_line+5) return 180;
 				if (e <= tree_line) return 125-e;
-				if (e <= 80) return 165;
+				if (e <= 80) return 175;
 				return 120+e;
 			},
 			green: function(e)
 			{
 				if (e < sea_line) return Math.max(30, 60 - (4*sea_line - 4*e));
-				if (e <= sea_line+5) return 215-e;
+				if (e <= sea_line+5) return 150;
 				if (e <= tree_line) return 85+e;
-				if (e <= 80) return 145;
-				return 100+e;
+				if (e <= 80) return 140;
+				return 95+e;
 			},
 			blue: function(e)
 			{
 				if (e < sea_line) return 35 + Math.round(e/10);
-				if (e <= sea_line+5) return 75-e;
-				if (e <= tree_line) return -10 + Math.round(0.6*e);
+				if (e <= sea_line+5) return 105;
+				if (e <= tree_line) return Math.round(0.6*e);
 				if (e <= 80) return 110;
 				return 115+e;
 			}
@@ -67,26 +69,31 @@ function Terrain()
 			{
 				if (e >= 80) return 0;
 				if (e > tree_line) return -55;
+				if (e > sea_line+5 && t > biome_line) return -20 + Math.round(t/2);
+				if (e > sea_line+5) return -90+t;
+				if (e > sea_line && t > shore_biome_line && t < shore_biome_line+4) return -235+t+e;
 				if (e < sea_line) return 20 - t - (sea_line-e);
-				if (t > 60 && e > sea_line+5) return -35+t;
-				return -70+t;
+				return -55;
 			},
 			green: function(t, e)
 			{
 				if (e >= 80) return 0;
 				if (e > tree_line) return -50;
+				if (e > sea_line+5 && t > biome_line) return 30 + Math.round(-2.5*e) + Math.round(t/2);
+				if (e > sea_line+5) return -120 + t;
+				if (e > sea_line && t > shore_biome_line && t < shore_biome_line+4) return -180+t+e;
 				if (e < sea_line) return 50 - Math.round(t/2) - (sea_line-e);
-				if (t > 60 && e > sea_line+5) return 20 + Math.round(-2.5*e) + t;
-				if (e > sea_line+5) return -130 + Math.round(1.5*t);
-				return -120+t;
+				return -55;
 			},
 			blue: function(t, e)
 			{
 				if (e >= 80) return 0;
 				if (e > tree_line) return -65;
+				if (e > sea_line+5 && t > biome_line) return -30 + (sea_line+5) + Math.round(t/2) - e;
+				if (e > sea_line+5) return -50 + Math.round(t/25);
+				if (e > sea_line && t > shore_biome_line && t < shore_biome_line+4) return -265+t+e;
 				if (e < sea_line) return 30 - Math.round(t/3) - (sea_line-e);
-				if (t > 60 && e > sea_line+5) return -50 + (sea_line+5) + t - e;
-				return Math.round(t/25);
+				return -65;
 			}
 		},
 		time:
@@ -256,16 +263,16 @@ function Terrain()
 		var elevation = data[y][x];
 		var map_size = data.length;
 
-		for (var i = 0 ; i < 10 ; i++)
+		for (var i = 0 ; i < 3 ; i++)
 		{
 			var _y = Math.round(y - Math.sin(light_angle)*(i+1));
 			var _x = Math.round(x + Math.cos(light_angle)*(i+1));
 			var height = data[mod(_y, map_size)][mod(_x, map_size)];
 
-			if (height > elevation+i) return false;
+			if (height < elevation+i) return true;
 		}
 
-		return true;
+		return false;
 	}
 
 	/**
@@ -634,9 +641,9 @@ function Terrain()
 			// Determine tile coloration
 			var hue =
 			{
-				r: color.elevation.red(_elevation) + color.temperature.red(temperature, _elevation) + (sun ? 0 : -20),
-				g: color.elevation.green(_elevation) + color.temperature.green(temperature, _elevation) + (sun ? 0 : -20),
-				b: color.elevation.blue(_elevation) + color.temperature.blue(temperature, _elevation) + (sun ? 0 : -5)
+				r: color.elevation.red(_elevation) + color.temperature.red(temperature, _elevation) + (sun ? 0 : -25),
+				g: color.elevation.green(_elevation) + color.temperature.green(temperature, _elevation) + (sun ? 0 : -25),
+				b: color.elevation.blue(_elevation) + color.temperature.blue(temperature, _elevation)// + (sun ? 0 : 0)
 			};
 
 			// Special coloration for shoreline tiles
@@ -644,12 +651,15 @@ function Terrain()
 			{
 				if (tile_just_above(height.data, y, x, sea_level-1))
 				{
-					hue = color.presets.beach;
+					hue.r += 20;
+					hue.g += 20;// = color.presets.beach;
 				}
 				else
 				if (tile_just_below(height.data, y, x, sea_level))
 				{
-					hue = color.presets.reef;
+					//hue = color.presets.reef;
+					hue.g += 50;
+					hue.b += 40;
 				}
 			}
 

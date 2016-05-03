@@ -91,7 +91,7 @@ function GameInstance(assets)
 			.configure(
 				{
 					iterations: 11,
-					elevation: 250,
+					elevation: 200,
 					concentration: 35,
 					smoothness: 8,
 					repeat: true,

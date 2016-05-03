@@ -10,8 +10,9 @@ include(
 		'js/system/rng.js',
 		'js/system/map.js',
 		'js/system/terrain.js',
-		'js/system/background.js',
+		'js/core/entity.js',
 		'js/core/components.js',
+		'js/core/background.js',
 		'js/core/game.js'
 	]
 ).then(main);
