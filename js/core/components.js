@@ -84,10 +84,13 @@ function Entity()
 	}
 }
 
+// ------------------------------------------------------------------------- //
+// ------------------------------------------------------------------------- //
+
 /**
  * A sprite to be rendered on the game screen
  */
-function GameSprite()
+function Sprite()
 {
 
 }
@@ -103,19 +106,17 @@ function MovingPoint()
 	var velocity = new Vec2();
 
 	// Public:
-	this.getPosition = function()
+	this.update = function(dt)
 	{
-		return {
-			x: position.x,
-			y: position.y
-		};
+		position.add(velocity, dt);
 	}
 
-	this.setVelocity = function(x, y)
+	this.getPosition = function(round)
 	{
-		velocity.x = x;
-		velocity.y = y;
-		return _;
+		return {
+			x: (!!round ? Math.floor(position.x) : position.x),
+			y: (!!round ? Math.floor(position.y) : position.y)
+		};
 	}
 
 	this.setPosition = function(x, y)
@@ -125,9 +126,11 @@ function MovingPoint()
 		return _;
 	}
 
-	this.update = function(dt)
+	this.setVelocity = function(x, y)
 	{
-		position.add(velocity, dt);
+		velocity.x = x;
+		velocity.y = y;
+		return _;
 	}
 }
 
@@ -141,6 +144,8 @@ function Cloud()
 	var type = 0;
 
 	// Public:
+	this.update = function(dt){}
+
 	this.getType = function()
 	{
 		return type;
@@ -151,8 +156,6 @@ function Cloud()
 		type = _type;
 		return _;
 	}
-
-	this.update = function(dt){}
 }
 
 /**

@@ -2,16 +2,17 @@
 include(
 	[
 		'js/jquery-2.2.3.js',
-		'js/assets.manifest.js',
-		'js/assets.manager.js',
-		'js/graphics.canvas.js',
-		'js/system.tools.js',
-		'js/system.vector.js',
-		'js/system.rng.js',
-		'js/system.map.js',
-		'js/system.terrain.js',
-		'js/core.components.js',
-		'js/core.game.js'
+		'js/assets/manifest.js',
+		'js/assets/manager.js',
+		'js/graphics/canvas.js',
+		'js/system/tools.js',
+		'js/system/vector.js',
+		'js/system/rng.js',
+		'js/system/map.js',
+		'js/system/terrain.js',
+		'js/system/background.js',
+		'js/core/components.js',
+		'js/core/game.js'
 	]
 ).then(main);
 
@@ -54,6 +55,7 @@ function createScreens()
 	screen.bg1 = fullSizeScreen();
 	screen.clouds = fullSizeScreen();
 	screen.clouds.element().style.zIndex = '3';
+	screen.clouds.element().style.opacity = '0.8';
 
 	$('#game #bg')
 	.append(screen.bg0.element())

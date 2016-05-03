@@ -5,11 +5,11 @@ function HeightMap()
 {
 	// Private:
 	var _ = this;
-	var Generator = new RNG();					// Deterministic PRNG
-	var settings = default_settings();			// Store default settings
-	var mean = 0;								// Average elevation; recalculated upon initialization with parameters
-	var height_skew = 0;						// Max amount of skew for random height sampler; recalculated upon initialization (see: sample())
-	var map = [];								// Height map data
+	var Generator = new RNG();                  // Deterministic PRNG
+	var settings = default_settings();          // Store default settings
+	var mean = 0;                               // Average elevation; recalculated upon initialization with parameters
+	var height_skew = 0;                        // Max amount of skew for random height sampler; recalculated upon initialization (see: sample())
+	var map = [];                               // Height map data
 
 	/**
 	 * Default generator parameters
@@ -17,17 +17,17 @@ function HeightMap()
 	function default_settings()
 	{
 		return {
-			// Number of iterations for to subdivide the map
-			iterations: 4,
-			// Maximum elevation of points on the map
+			// Number of subdivisions for the heightmap fractal
+			iterations: 6,
+			// Maximum elevation for the heightmap
 			elevation: 50,
 			// Average point elevation as a percentage of the maximum
 			concentration: 50,
-			// Smoothness of the landscape, as a value from 1 - 10
-			smoothness: 3,
+			// Smoothness of the landscape, as a value from 1 - 20
+			smoothness: 4,
 			// Iterations of erosive processes after the primary landscape is formed
 			erosion: 1,
-			// Whether or not the opposite edges of the map should connect
+			// Whether or not to wrap the edges of the heightmap
 			repeat: false
 		};
 	}

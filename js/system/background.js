@@ -1,41 +1,69 @@
-function GameInstance(assets)
+/**
+ * A drifting planetary background layer beneath the game scene
+ */
+function Background(assets)
 {
 	// Private:
-
 	var _ = this;
-	// Framerate/dt variables
-	var frametime = 1000 / 60;
-	var time;
-	// Loop state variables
-	var active = false;
-	var running = true;
 	var loaded = false;
-	// Game variables
-	var level = 1;
-	// Terrain objects
 	var terrain;
 	var terrains = [];
 	var clouds = [];
 	var cloud_variants = 1;
-	// Core game objects
 	var bg_camera;
-	var camera;
-	var drone;
-	// System state variables
 	var front_bg = 0;
 	var active_terrain = 0;
-	// Entity list
-	var entities = [];
-
-	// --------------------------------------------------------- //
-	// ------------- Environmental/ambient effects ------------- //
-	// --------------------------------------------------------- //
+	var configuration = default_configuration();
 
 	/**
-	 * Prerender a single terrain variant at a
-	 * specific hour with a completion callback
+	 * Default background configuration
 	 */
-	function prerender_terrain_variant(hour, callback)
+	function default_configuration()
+	{
+		return {
+			// Number of subdivisions for the heightmap fractal
+			iterations: 6,
+			// Maximum elevation for the heightmap
+			elevation: 50,
+			// Average heightmap point elevation as a percentage of the maximum
+			concentration: 50,
+			// Smoothness of the landscape, as a value from 1 - 20
+			smoothness: 4,
+			// Iterations of erosive processes after the primary heightmap is formed
+			erosion: 1,
+			// Whether or not to wrap the edges of the heightmap
+			repeat: true,
+			// Angle of the terrain's light source
+			lightAngle: 220,
+			// Number of cities across the landscape
+			cities: 5,
+			// Maximum city size
+			maxCitySize: 4,
+			// Pixel size to draw each background tile at
+			tileSize: 2,
+			// List of hours to prerender terrain variants from
+			hours: [12],
+			// Time in milliseconds for terrain time-of-day transitions
+			cycleSpeed: 20000,
+			// Velocity to scroll background scene at in pixels per second
+			scrollSpeed:
+			{
+				x: 0,
+				y: 0
+			},
+			// Whether or not to snap rendering to the nearest whole pixel value
+			pixelSnapping: false
+		};
+	};
+
+	// ---------------------------------------------- //
+	// ------------- Initial generation ------------- //
+	// ---------------------------------------------- //
+
+	/**
+	 * Prerender a single terrain variant at a specific hour
+	 */
+	function prerender_terrain_variant(hour)
 	{
 		var map_size = terrain.getSize();
 		var tile_size = terrain.getTileSize();
@@ -43,9 +71,6 @@ function GameInstance(assets)
 		terrain.setTime(hour);
 		terrains.push(new Canvas(new Element('canvas')).setSize(tile_size*map_size, tile_size*map_size));
 		terrains[terrains.length-1].draw.image(terrain.canvas);
-
-		callback = callback || function(){};
-		callback();
 	}
 
 	/**
@@ -75,8 +100,14 @@ function GameInstance(assets)
 				var hour = times[t];
 
 				setTimeout(function(){
-					prerender_terrain_variant(hour, INTERNAL_prerender_next);
-					if (++t <= total) parameters.progress(t, total);
+					prerender_terrain_variant(hour);
+
+					if (++t <= total)
+					{
+						parameters.progress(t, total);
+					}
+
+					INTERNAL_prerender_next();
 				}, 100);
 
 				return;
@@ -90,7 +121,31 @@ function GameInstance(assets)
 	}
 
 	/**
-	 * Places a new time-of-day background in
+	 * Spawns the initial cloud cover layer
+	 *
+	 * TODO: Distribute and vary the clouds properly
+	 */
+	function spawn_clouds()
+	{
+		var tile_size = terrain.getTileSize();
+		var map_size = terrain.getSize();
+
+		for (var c = 0 ; c < 10 ; c++)
+		{
+			var point = new MovingPoint().setVelocity(1.05 * configuration.scrollSpeed.x, 1.05 * configuration.scrollSpeed.y).setPosition(c * 600, c * 20);
+			var cloud = new Cloud().setType(random(1, cloud_variants));
+			var entity = new Entity().add(point).add(cloud);
+
+			clouds.push(entity);
+		}
+	}
+
+	// ---------------------------------------- //
+	// ------------- Render cycle ------------- //
+	// ---------------------------------------- //
+
+	/**
+	 * Sets the new time-of-day background in
 	 * front with opacity 0 and fades it in
 	 */
 	function advance_bg_cycle()
@@ -119,35 +174,12 @@ function GameInstance(assets)
 				opacity: 1
 			},
 			{
-				duration: 30000,
+				duration: configuration.cycleSpeed,
 				easing: 'linear',
 				complete: advance_bg_cycle
 			}
 		);
 	}
-
-	/**
-	 * Spawns the initial cloud cover layer
-	 */
-	function spawn_clouds()
-	{
-		var tile_size = terrain.getTileSize();
-		var map_size = terrain.getSize();
-
-		for (var c = 0 ; c < 10 ; c++)
-		{
-			var point = new MovingPoint().setVelocity(-15*1.05, -2*1.05).setPosition(c * 600, c * 20);
-			var cloud = new Cloud().setType(random(1, cloud_variants));
-			var entity = new Entity().add(point).add(cloud);
-
-			clouds.push(entity);
-			entities.push(entity);
-		}
-	}
-
-	// ---------------------------------------------- //
-	// ------------- Graphics rendering ------------- //
-	// ---------------------------------------------- //
 
 	/**
 	 * Tile the prerendered background terrain across the screen
@@ -189,7 +221,7 @@ function GameInstance(assets)
 
 		while (tile_offset.x < tiles_to_draw.x || tile_offset.y < tiles_to_draw.y)
 		{
-			// Remaining tiles to the end of the map from current offset
+			// Remaining tiles to the end of the map from current tile offset
 			var map_limit =
 			{
 				x: map_size - ((tile_offset.x + bg_tile_offset.x) % map_size),
@@ -207,6 +239,12 @@ function GameInstance(assets)
 				x: tile_size * tile_offset.x + bg_pixel_offset.x - tile_size,
 				y: tile_size * tile_offset.y + bg_pixel_offset.y - tile_size
 			};
+
+			if (configuration.pixelSnapping)
+			{
+				draw_offset.x = Math.floor(draw_offset.x);
+				draw_offset.y = Math.floor(draw_offset.y);
+			}
 			// Clipping parameters for next map chunk
 			var clip =
 			{
@@ -238,6 +276,8 @@ function GameInstance(assets)
 
 	/**
 	 * Render all clouds above the terrain scene
+	 *
+	 * TODO: Clean up and eliminate repeat code
 	 */
 	function render_clouds()
 	{
@@ -252,7 +292,7 @@ function GameInstance(assets)
 		for (var c = 0 ; c < clouds.length ; c++)
 		{
 			var cloud = clouds[c];
-			var position = cloud.get(MovingPoint).getPosition();
+			var position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
 			var type = cloud.get(Cloud).getType();
 
 			screen.clouds.draw.image(assets.getImage('shadows/' + type + '.png'), position.x + offset.x, position.y + offset.y);
@@ -261,110 +301,72 @@ function GameInstance(assets)
 		for (var c = 0 ; c < clouds.length ; c++)
 		{
 			var cloud = clouds[c];
-			var position = cloud.get(MovingPoint).getPosition();
+			var position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
 			var type = cloud.get(Cloud).getType();
 
 			screen.clouds.draw.image(assets.getImage('clouds/' + type + '.png'), position.x, position.y);
 		}
 	}
 
-	/**
-	 * Renders remaining game objects to the game screen
-	 */
-	function render_game()
-	{
-		for (var e = 0 ; e < entities.length ; e++)
-		{
-			if (entities[e].has(GameSprite))
-			{
-				// TODO: Render the entity using its GameSprite
-				// coordinates offset by [camera]
-			}
-		}
-	}
-
-	// --------------------------------------- //
-	// ------------- Update loop ------------- //
-	// --------------------------------------- //
-
-	function update(dt)
-	{
-		for (var e = 0 ; e < entities.length ; e++)
-		{
-			entities[e].update(dt);
-		}
-	}
-
-	function render()
+	function render_all()
 	{
 		// Background layer
 		render_bg();
 		// Cloud layer
 		screen.clouds.clear();
 		render_clouds();
-		// Game objects
-		render_game();
 	}
 
-	function loop()
+	function start()
 	{
-		if (active)
-		{
-			if (running && loaded)
-			{
-				var new_time = Date.now();
-				var dt = (new_time - time) / 1000;
-
-				update(dt);
-				render();
-
-				time = new_time;
-			}
-
-			setTimeout(loop, frametime);
-		}
-	}
-
-	/**
-	 * Finish initialization and start game
-	 */
-	function load()
-	{
-		bg_camera = new MovingPoint().setVelocity(15, 2);
-		camera = new MovingPoint();
-		drone = new Drone();
-
-		entities.push(new Entity().add(bg_camera));
-		entities.push(new Entity().add(camera));
-		entities.push(new Entity().add(drone));
-
-		if (active && running)
-		{
-			advance_bg_cycle();
-		}
-
+		bg_camera = new MovingPoint().setVelocity(-1*configuration.scrollSpeed.x, -1*configuration.scrollSpeed.y);
 		loaded = true;
+
+		advance_bg_cycle();
 	}
 
 	// Public:
-	this.init = function()
+	this.update = function(dt)
 	{
-		var t = Date.now();
-		// Generate and render background terrain
+		if (loaded)
+		{
+			bg_camera.update(dt);
+
+			for (var c = 0 ; c < clouds.length ; c++)
+			{
+				clouds[c].update(dt);
+			}
+
+			render_all();
+		}
+	}
+
+	this.configure = function(_configuration)
+	{
+		configuration = _configuration;
+		return _;
+	}
+
+	this.build = function(handlers)
+	{
+		handlers = handlers || {};
+		handlers.progress = handlers.progress || function(){};
+		handlers.complete = handlers.complete || function(){};
+
 		terrain = new Terrain()
 		.build(
 			{
-				iterations: 11,
-				elevation: 250,
-				concentration: 35,
-				smoothness: 8,
-				repeat: true
+				iterations: configuration.iterations,
+				elevation: configuration.elevation,
+				concentration: configuration.concentration,
+				smoothness: configuration.smoothness,
+				repeat: configuration.repeat
 			}
 		)
-		.setLightAngle(220)
-		.setCityCount(200)
-		.setMaxCitySize(30)
-		.setTileSize(2)
+		.setLightAngle(configuration.lightAngle)
+		.setCityCount(configuration.cities)
+		.setMaxCitySize(configuration.maxCitySize)
+		.setTileSize(configuration.tileSize)
 		.render();
 
 		spawn_clouds();
@@ -372,51 +374,16 @@ function GameInstance(assets)
 		// Prerender terrain at different times of day
 		prerender_terrain_variants(
 			{
-				times: [12, 19, 20, 0, 4, 6],
-				progress: function(rendered, total)
-				{
-					console.log('Prerendering...' + rendered + '/' + total + '...');
-				},
+				times: configuration.hours,
+				progress: handlers.progress,
 				complete: function()
 				{
-					console.log('Total init time: ' + (Date.now() - t) + 'ms');
-					load();
+					start();
+					handlers.complete();
 				}
 			}
 		);
 
 		return _;
-	}
-
-	this.start = function()
-	{
-		if (!active)
-		{
-			active = true;
-			time = Date.now();
-			loop();
-
-			if (loaded)
-			{
-				advance_bg_cycle();
-			}
-		}
-
-		if (!running)
-		{
-			running = true;
-		}
-
-		return _;
-	}
-
-	this.stop = function()
-	{
-		active = false;
-	}
-
-	this.pause = function()
-	{
-		running = false;
 	}
 }

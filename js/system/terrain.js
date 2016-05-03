@@ -67,7 +67,7 @@ function Terrain()
 			{
 				if (e >= 80) return 0;
 				if (e > tree_line) return -55;
-				if (e < sea_line) return 80 - t - (sea_line-e);
+				if (e < sea_line) return 20 - t - (sea_line-e);
 				if (t > 60 && e > sea_line+5) return -35+t;
 				return -70+t;
 			},
@@ -75,7 +75,7 @@ function Terrain()
 			{
 				if (e >= 80) return 0;
 				if (e > tree_line) return -50;
-				if (e < sea_line) return 110 - Math.round(t/2) - (sea_line-e);
+				if (e < sea_line) return 50 - Math.round(t/2) - (sea_line-e);
 				if (t > 60 && e > sea_line+5) return 20 + Math.round(-2.5*e) + t;
 				if (e > sea_line+5) return -130 + Math.round(1.5*t);
 				return -120+t;
@@ -84,7 +84,7 @@ function Terrain()
 			{
 				if (e >= 80) return 0;
 				if (e > tree_line) return -65;
-				if (e < sea_line) return 70 - Math.round(t/3) - (sea_line-e);
+				if (e < sea_line) return 30 - Math.round(t/3) - (sea_line-e);
 				if (t > 60 && e > sea_line+5) return -50 + (sea_line+5) + t - e;
 				return Math.round(t/25);
 			}
@@ -633,9 +633,9 @@ function Terrain()
 			// Determine tile coloration
 			var hue =
 			{
-				r: color.elevation.red(_elevation) + color.temperature.red(temperature, _elevation) + (sun ? 0 : -70),
-				g: color.elevation.green(_elevation) + color.temperature.green(temperature, _elevation) + (sun ? 0 : -70),
-				b: color.elevation.blue(_elevation) + color.temperature.blue(temperature, _elevation) + (sun ? 0 : -20)
+				r: color.elevation.red(_elevation) + color.temperature.red(temperature, _elevation) + (sun ? 0 : -20),
+				g: color.elevation.green(_elevation) + color.temperature.green(temperature, _elevation) + (sun ? 0 : -20),
+				b: color.elevation.blue(_elevation) + color.temperature.blue(temperature, _elevation) + (sun ? 0 : -5)
 			};
 
 			// Special coloration for shoreline tiles
