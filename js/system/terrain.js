@@ -260,7 +260,6 @@ function Terrain()
 		{
 			var _y = Math.round(y - Math.sin(light_angle)*(i+1));
 			var _x = Math.round(x + Math.cos(light_angle)*(i+1));
-
 			var height = data[mod(_y, map_size)][mod(_x, map_size)];
 
 			if (height > elevation+i) return false;
@@ -493,12 +492,16 @@ function Terrain()
 	function generate_road_between(city1, city2, distance, height_data, sea_level)
 	{
 		var map_size = height_data.length;
+		// Get direction to draw road along x and y axes
 		var move_y = (city2.y - city1.y) < (map_size - city2.y + city1.y) ? 1 : -1;
 		var move_x = (city2.x - city1.x) < (map_size - city2.x + city1.x) ? 1 : -1;
+		// x and y distance between cities
 		var dx = Math.min(city2.x - city1.x, (map_size - city2.x) + city1.x);
 		var dy = Math.min(city2.y - city1.y, (map_size - city2.y) + city1.y);
 
+		// Distance counter
 		var d = 0;
+		// Keep track of random deviation amount
 		var offset =
 		{
 			y: Generator.random(-1, 1),
@@ -507,15 +510,19 @@ function Terrain()
 
 		while(d < distance)
 		{
+			// Ratio of road completion
 			var ratio = d/distance;
+			// Distance of road tile from both cities
 			var remoteness = Math.sin(Math.PI * ratio);
 
+			// Determine where to place new road tile
 			var tile =
 			{
 				y: mod(city1.y + Math.round(move_y * dy * ratio) + offset.y, map_size),
 				x: mod(city1.x + Math.round(move_x * dx * ratio) + offset.x, map_size)
 			};
 
+			// Only draw road tiles above sea level
 			if (height_data[tile.y][tile.x] > sea_level)
 			{
 				var color_reduction = Math.round(25 * remoteness);
@@ -530,8 +537,10 @@ function Terrain()
 				city_canvas.draw.rectangle(tile.x, tile.y, 1, 1).fill(rgb(hue.r, hue.g, hue.b));
 			}
 
+			// Increase distance proportionally to remoteness
 			d += 1 + Math.floor(3*remoteness);
 
+			// Randomly update deviation
 			offset.y += Generator.random(-1, 1);
 			offset.x += Generator.random(-1, 1);
 		}
@@ -579,14 +588,6 @@ function Terrain()
 				}
 			}
 		}
-	}
-
-	/**
-	 * Generates and renders the cloud layer
-	 */
-	function generate_clouds()
-	{
-
 	}
 
 	/**
@@ -678,8 +679,6 @@ function Terrain()
 
 		// Write image buffer data back into the canvas
 		terrain_canvas.data.put(height_image);
-		// Generate cloud patterns above the landscape
-		generate_clouds();
 		// Store the base rendering to time_canvas
 		time_canvas.data.put(terrain_canvas.data.get());
 	}
@@ -747,15 +746,20 @@ function Terrain()
 			}
 			else
 			{
-				// Daytime lighting
+				// Terrain lighting
 				var red = (is_city ? city_color.red : terrain_color.red) + cloud_color.red;
 				var green = (is_city ? city_color.green : terrain_color.green) + cloud_color.green;
 				var blue = (is_city ? city_color.blue : terrain_color.blue) + cloud_color.blue;
 				var average = Math.round((red + green + blue) / 3) - 15*(4 - light_level);
 
-				composite_color.red = lighting.red + (is_twilight ? Math.round((red + average) / 2) : (is_night ? average : red));
-				composite_color.green = lighting.green + (is_twilight ? Math.round((green + average) / 2) : (is_night ? average : green));
-				composite_color.blue = lighting.blue + (is_twilight ? Math.round((blue + average) / 2) : (is_night ? average : blue));
+				// Additional lighting modifier based on evening times
+				var time_red = (is_twilight ? Math.round((red + average) / 2) : (is_night ? average : red));
+				var time_green = (is_twilight ? Math.round((green + average) / 2) : (is_night ? average : green));
+				var time_blue = (is_twilight ? Math.round((blue + average) / 2) : (is_night ? average : blue));
+
+				composite_color.red = lighting.red + time_red;
+				composite_color.green = lighting.green + time_green;
+				composite_color.blue = lighting.blue + time_blue;
 			}
 
 			// Top left pixel to start at
