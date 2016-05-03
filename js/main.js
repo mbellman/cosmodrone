@@ -68,10 +68,12 @@ function createScreens()
 	// Backgrounds (for planet surface, starfield, etc.)
 	screen.bg0 = new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
 	screen.bg1 = new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
+	screen.clouds = new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
 
 	$('#game #bg')
 	.append(screen.bg0.element())
 	.append(screen.bg1.element())
+	.append(screen.clouds.element())
 	.find('canvas')
 	.addClass('fill');
 }

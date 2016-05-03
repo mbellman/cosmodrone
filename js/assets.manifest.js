@@ -3,7 +3,8 @@ var AssetManifest = {
 		folder: 'images',
 		files: [
 			'earth.png',
-			'clouds.png'
+			'clouds/1.png',
+			'shadows/1.png'
 		],
 	},
 	audio: {

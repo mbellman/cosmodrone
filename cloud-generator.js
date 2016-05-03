@@ -3,10 +3,13 @@ var size = 200;
 
 function generate_clouds(type) {
 	canvas.clear();
+	shadow.clear();
 
 	var composite = new Canvas(document.createElement('canvas')).setSize(size, size);
 	var noise_levels = [];
 	var noise_data = [];
+
+	var t = Date.now();
 
 	for (var i = 0 ; i < 6 ; i++) {
 		var square_size = Math.pow(2,i);
@@ -30,6 +33,7 @@ function generate_clouds(type) {
 	}
 
 	var canvas_image = canvas.data.get();
+	var shadow_image = shadow.data.get();
 	var noise_count = noise_levels.length;
 
 	for (var y = 0 ; y < size ; y++) {
@@ -46,22 +50,33 @@ function generate_clouds(type) {
 			var dx = (size/2) - x;
 			var dy = (size/2) - y;
 			var center_dist = Math.round(Math.sqrt(dx*dx + dy*dy));
-			var average = Math.round(color/noise_count) - Math.round(300/size) * Math.round(0.3*center_dist);
+			var average = Math.round(color/noise_count) - Math.round(300/size) * Math.round(0.4*center_dist);
 
 			if (average > 70) {
-				canvas_image.data[pixel] = 130 + average;
-				canvas_image.data[pixel+1] = 130 + average;
-				canvas_image.data[pixel+2] = 160 + average;
+				var adj = Math.round(1.5 * average);
+
+				canvas_image.data[pixel] = 90 + adj;
+				canvas_image.data[pixel+1] = 90 + adj;
+				canvas_image.data[pixel+2] = 120 + adj;
 				canvas_image.data[pixel+3] = 255;
+
+				shadow_image.data[pixel] = 60;
+				shadow_image.data[pixel+1] = 60;
+				shadow_image.data[pixel+2] = 90;
+				shadow_image.data[pixel+3] = 100;
 			}
 		}
 	}
 
+	console.log((Date.now()-t) + 'ms');
+
 	canvas.data.put(canvas_image);
+	shadow.data.put(shadow_image);
 }
 
 // DOM stuff
 var canvas = new Canvas(document.getElementById('cloud'));
+var shadow = new Canvas(document.getElementById('shadow'));
 var sizeButton = document.getElementsByClassName('size');
 var cloudButton = document.getElementsByClassName('type');
 
@@ -75,6 +90,11 @@ function change_size(button) {
 	canvas.element().style.height = newSize + 'px';
 	canvas.element().width = newSize;
 	canvas.element().height = newSize;
+
+	shadow.element().style.width = newSize + 'px';
+	shadow.element().style.height = newSize + 'px';
+	shadow.element().width = newSize;
+	shadow.element().height = newSize;
 
 	size = newSize;
 }

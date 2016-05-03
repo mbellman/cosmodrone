@@ -31,7 +31,7 @@ function Terrain()
 		{
 			beach: {r: 180, g: 170, b: 80},
 			reef: {r: 10, g: 140, b: 130},
-			city: {r: 70, g: 70, b: 70},
+			city: {r: 90, g: 90, b: 90},
 			city2: {r: 255, g: 250, b: 170}
 		},
 		elevation:
@@ -39,7 +39,7 @@ function Terrain()
 			red: function(e)
 			{
 				if (e < sea_line) return 20 + Math.round(e/4);
-				if (e <= sea_line+5) return 210 - 2*e;
+				if (e <= sea_line+5) return 215 - 2*e;
 				if (e <= tree_line) return 125-e;
 				if (e <= 80) return 165;
 				return 120+e;
@@ -47,15 +47,15 @@ function Terrain()
 			green: function(e)
 			{
 				if (e < sea_line) return Math.max(30, 60 - (4*sea_line - 4*e));
-				if (e <= sea_line+5) return 205-e;
-				if (e <= tree_line) return 80+e;
+				if (e <= sea_line+5) return 215-e;
+				if (e <= tree_line) return 85+e;
 				if (e <= 80) return 145;
 				return 100+e;
 			},
 			blue: function(e)
 			{
 				if (e < sea_line) return 35 + Math.round(e/10);
-				if (e <= sea_line+5) return 90-e;
+				if (e <= sea_line+5) return 75-e;
 				if (e <= tree_line) return -10 + Math.round(0.6*e);
 				if (e <= 80) return 110;
 				return 115+e;
@@ -706,6 +706,7 @@ function Terrain()
 		// Increasingly reduce city lights over the course of the night
 		var city_light_reduction = 30 * (mod(hour-8, 24) - 16);
 		var clr_3q = Math.round(0.75 * city_light_reduction);
+		var dlr_limit = color.presets.city.r-5;
 		// Special light setting flags
 		var is_twilight = (light_level === 5);
 		var is_night = (light_level < 5);
@@ -737,7 +738,7 @@ function Terrain()
 			if (is_night && is_city)
 			{
 				// Nighttime city lighting
-				var density_light_reduction = Math.pow(clamp(65-city_color.red, 0, 65), 2);
+				var density_light_reduction = Math.pow(clamp(dlr_limit - city_color.red, 0, dlr_limit), 2);
 				var dlr_3q = Math.round(0.75 * density_light_reduction);
 
 				composite_color.red = color.presets.city2.r - city_light_reduction - density_light_reduction;

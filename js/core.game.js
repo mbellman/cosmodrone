@@ -12,16 +12,18 @@ function GameInstance(assets)
 	var loaded = false;
 	// Game variables
 	var level = 1;
-	// Core objects
+	// Terrain objects
 	var terrain;
 	var terrains = [];
-	var bgcamera;
+	var clouds = [];
+	// Core game objects
+	var bg_camera;
 	var camera;
 	var drone;
 	// System state variables
 	var evening = true;
-	var frontbg = 0;
-	var activeterrain = 0;
+	var front_bg = 0;
+	var active_terrain = 0;
 
 	// ------------------------------------------------------------- //
 	// ------------- Game-specific classes and objects ------------- //
@@ -136,20 +138,20 @@ function GameInstance(assets)
 	function advance_bg_cycle()
 	{
 		// Switch background screens
-		frontbg = bit_flip(frontbg);
+		front_bg = bit_flip(front_bg);
 
 		// Update time-of-day cycle
-		if (++activeterrain > terrains.length-1)
+		if (++active_terrain > terrains.length-1)
 		{
-			activeterrain = 0;
+			active_terrain = 0;
 		}
 
-		var newbg = 'bg' + frontbg;
-		var oldbg = 'bg' + bit_flip(frontbg);
+		var new_bg = 'bg' + front_bg;
+		var old_bg = 'bg' + bit_flip(front_bg);
 
 		// Swap the actual screen elements
-		$(screen[oldbg].element()).css('z-index', '1');
-		$(screen[newbg].element()).css(
+		$(screen[old_bg].element()).css('z-index', '1');
+		$(screen[new_bg].element()).css(
 			{
 				'opacity' : '0',
 				'z-index' : '2'
@@ -192,21 +194,21 @@ function GameInstance(assets)
 		// Current tile the background camera is on
 		var bg_tile_offset =
 		{
-			x: mod(Math.floor(bgcamera.position().x / tile_size), map_size),
-			y: mod(Math.floor(bgcamera.position().y / tile_size), map_size)
+			x: mod(Math.floor(bg_camera.position().x / tile_size), map_size),
+			y: mod(Math.floor(bg_camera.position().y / tile_size), map_size)
 		};
 		// Sub-tile offset based on the background camera's pixel position
 		var bg_pixel_offset =
 		{
-			x: tile_size - mod(bgcamera.position().x, tile_size),
-			y: tile_size - mod(bgcamera.position().y, tile_size)
+			x: tile_size - mod(bg_camera.position().x, tile_size),
+			y: tile_size - mod(bg_camera.position().y, tile_size)
 		};
 		// Information for time-of-day rendering sources/targets
-		var newbg = 'bg' + frontbg;
-		var oldbg = 'bg' + bit_flip(frontbg);
-		var terrainbefore = cycle_forward(activeterrain-1, terrains.length-1);
-		var newterrain = terrains[activeterrain].element();
-		var oldterrain = terrains[terrainbefore].element();
+		var new_bg = 'bg' + front_bg;
+		var old_bg = 'bg' + bit_flip(front_bg);
+		var terrain_before = cycle_forward(active_terrain-1, terrains.length-1);
+		var new_terrain = terrains[active_terrain].element();
+		var old_terrain = terrains[terrain_before].element();
 
 		while (tile_offset.x < tiles_to_draw.x || tile_offset.y < tiles_to_draw.y)
 		{
@@ -238,8 +240,8 @@ function GameInstance(assets)
 			};
 
 			// Draw the map chunk
-			screen[newbg].draw.image(newterrain, clip.x, clip.y, clip.width, clip.height, draw_offset.x, draw_offset.y, clip.width, clip.height);
-			screen[oldbg].draw.image(oldterrain, clip.x, clip.y, clip.width, clip.height, draw_offset.x, draw_offset.y, clip.width, clip.height);
+			screen[new_bg].draw.image(new_terrain, clip.x, clip.y, clip.width, clip.height, draw_offset.x, draw_offset.y, clip.width, clip.height);
+			screen[old_bg].draw.image(old_terrain, clip.x, clip.y, clip.width, clip.height, draw_offset.x, draw_offset.y, clip.width, clip.height);
 
 			// Advance the tile 'pointer' to determine
 			// what and where to draw on the next cycle
@@ -257,18 +259,30 @@ function GameInstance(assets)
 		}
 	}
 
+	/**
+	 * Render all clouds above the terrain scene
+	 */
+	function render_clouds()
+	{
+
+	}
+
 	// --------------------------------------- //
 	// ------------- Update loop ------------- //
 	// --------------------------------------- //
 
 	function update(dt)
 	{
-		bgcamera.update(dt);
+		bg_camera.update(dt);
 	}
 
 	function render()
 	{
+		// Background layer
 		render_bg();
+		// Cloud layer
+		screen.clouds.clear();
+		render_clouds();
 	}
 
 	function loop()
@@ -288,6 +302,20 @@ function GameInstance(assets)
 
 			setTimeout(loop, frametime);
 		}
+	}
+
+	/**
+	 * Finish loading level and start game
+	 */
+	function load()
+	{
+		bg_camera = new Camera().setVelocity(15, 3);
+		camera = new Camera();
+		drone = new Drone();
+
+		if (active && running) advance_bg_cycle();
+
+		loaded = true;
 	}
 
 	// Public:
@@ -322,14 +350,7 @@ function GameInstance(assets)
 				complete: function()
 				{
 					console.log('Total init time: ' + (Date.now() - t) + 'ms');
-
-					bgcamera = new Camera().setVelocity(15, 3);
-					camera = new Camera();
-					drone = new Drone();
-
-					if (active && running) advance_bg_cycle();
-
-					loaded = true;
+					load();
 				}
 			}
 		);

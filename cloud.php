@@ -10,9 +10,12 @@
 				background: #DDF;
 			}
 
-			canvas#cloud {
+			canvas#cloud,
+			canvas#shadow {
+				display: inline-block;
 				width: 200px;
 				height: 200px;
+				margin: 0 2px;
 				border: 1px solid #000;
 			}
 
@@ -63,6 +66,7 @@
 		<br />
 		<br />
 		<canvas id="cloud" width="200" height="200"></canvas>
+		<canvas id="shadow" width="200" height="200"></canvas>
 
 		<script src="cloud-generator.js"></script>
 	</body>
