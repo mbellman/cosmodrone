@@ -15,7 +15,7 @@ function Background(assets)
 	var bg_camera;                                     // The scrolling background camera instance
 	var front_bg = 0;                                  // Binary; represents the current front screen of the background cycle
 	var active_terrain = 0;                            // Current time-of-day terrain prerender being shown
-	var cloud_variants = 4;                            // Number of different cloud types to randomly pick from
+	var cloud_variants = 5;                            // Number of different cloud types to randomly pick from
 	var build_steps = 0;                               // Determined in build() by various configuration parameters
 	var build_steps_complete = 0;                      // For passing back into the progress handler
 	var configuration = default_configuration();
@@ -222,8 +222,8 @@ function Background(assets)
 
 		shadow_offset =
 		{
-			x: configuration.tileSize * 5 * Math.cos(configuration.lightAngle * pi_factor) * -1,
-			y: configuration.tileSize * 5 * Math.sin(configuration.lightAngle * pi_factor)
+			x: configuration.tileSize * 8 * Math.cos(configuration.lightAngle * pi_factor) * -1,
+			y: configuration.tileSize * 8 * Math.sin(configuration.lightAngle * pi_factor)
 		};
 	}
 

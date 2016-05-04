@@ -58,11 +58,11 @@ function generate_clouds(type) {
 			var average = Math.round(color/noise_count) - Math.pow(Math.round(300/size), 2) * Math.pow(Math.round(0.05*center_dist), 2);
 
 			if (average > 70) {
-				var adj = Math.round(3 * (average-70));
+				var adj = average-70;
 
-				canvas_image.data[pixel] = 150 + adj;
-				canvas_image.data[pixel+1] = 150 + adj;
-				canvas_image.data[pixel+2] = 180 + adj;
+				canvas_image.data[pixel] = 200 + adj;
+				canvas_image.data[pixel+1] = 200 + adj;
+				canvas_image.data[pixel+2] = 230 + adj;
 				canvas_image.data[pixel+3] = 255;
 
 				shadow_image.data[pixel] = 0;
@@ -74,7 +74,7 @@ function generate_clouds(type) {
 	}
 
 	// Reduce stray pixel-sized clouds
-	for (var i = 0 ; i < 2 ; i++) {
+	for (var i = 0 ; i < 1 ; i++) {
 		for (var y = 0 ; y < size ; y++) {
 			for (var x = 0 ; x < size ; x++) {
 				var pixel = 4 * (y*size + x);
@@ -86,14 +86,22 @@ function generate_clouds(type) {
 
 				var empty_surrounding = 0;
 
-				if (canvas_image.data[top_px+3] === 0) empty_surrounding++;
-				if (canvas_image.data[left_px+3] === 0) empty_surrounding++;
-				if (canvas_image.data[right_px+3] === 0) empty_surrounding++;
-				if (canvas_image.data[bottom_px+3] === 0) empty_surrounding++;
+				if (canvas_image.data[top_px+3] < 255) empty_surrounding++;
+				if (canvas_image.data[left_px+3] < 255) empty_surrounding++;
+				if (canvas_image.data[right_px+3] < 255) empty_surrounding++;
+				if (canvas_image.data[bottom_px+3] < 255) empty_surrounding++;
 
 				if (empty_surrounding >= 3) {
 					canvas_image.data[pixel+3] = 0;
 					shadow_image.data[pixel+3] = 0;
+					continue;
+				}
+
+				if (canvas_image.data[pixel+3] === 0) {
+					canvas_image.data[pixel] = 255;
+					canvas_image.data[pixel+1] = 255;
+					canvas_image.data[pixel+2] = 255;
+					canvas_image.data[pixel+3] = 80;
 				}
 			}
 		}
