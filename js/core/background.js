@@ -5,18 +5,23 @@ function Background(assets)
 {
 	// Private:
 	var _ = this;
-	var loaded = false;
-	var terrain;
-	var terrains = [];
-	var clouds = [];
-	var cloud_variants = 1;
-	var bg_camera;
-	var front_bg = 0;
-	var active_terrain = 0;
+	var loaded = false;                                // Whether or not prerendering has finished, enabling the background cycle to start
+	var terrain;                                       // Landscape instance
+	var terrain_renders = [];                          // Prerendered time-of-day terrain variants
+	var cloud_renders = [];                            // Prerendered cloud types, scaled based on [configuration.tileSize]
+	var shadow_renders = [];                           // Prerendered cloud shadows, scaled based on [configuration.tileSize]
+	var clouds = [];                                   // Active cloud objects on screen
+	var shadow_offset = {};                            // Offset for cloud shadows; determined via [configuration.lightAngle]
+	var bg_camera;                                     // The scrolling background camera instance
+	var front_bg = 0;                                  // Binary; represents the current front screen of the background cycle
+	var active_terrain = 0;                            // Current time-of-day terrain prerender being shown
+	var cloud_variants = 4;                            // Number of different cloud types to randomly pick from
+	var build_steps = 0;                               // Determined in build() by various configuration parameters
+	var build_steps_complete = 0;                      // For passing back into the progress handler
 	var configuration = default_configuration();
 
 	/**
-	 * Default background configuration
+	 * Default instance configuration
 	 */
 	function default_configuration()
 	{
@@ -69,8 +74,27 @@ function Background(assets)
 		var tile_size = terrain.getTileSize();
 
 		terrain.setTime(hour);
-		terrains.push(new Canvas(new Element('canvas')).setSize(tile_size*map_size, tile_size*map_size));
-		terrains[terrains.length-1].draw.image(terrain.canvas);
+		terrain_renders.push(new Canvas(new Element('canvas')).setSize(tile_size*map_size, tile_size*map_size));
+		terrain_renders[terrain_renders.length-1].draw.image(terrain.canvas);
+	}
+
+	/**
+	 * Prerenders and saves one cloud image asset and its
+	 * shadow as non-interpolated scaled canvas data
+	 */
+	function prerender_cloud_variant(cloud)
+	{
+		var cloud_asset = assets.getImage('clouds/' + cloud + '.png');
+		var shadow_asset = assets.getImage('shadows/' + cloud + '.png');
+
+		var cloud_canvas = new Canvas(new Element('canvas')).setSize(cloud_asset.width, cloud_asset.height);
+		var shadow_canvas = new Canvas(new Element('canvas')).setSize(shadow_asset.width, shadow_asset.height);
+
+		cloud_canvas.draw.image(cloud_asset);
+		shadow_canvas.draw.image(shadow_asset);
+
+		cloud_renders.push(cloud_canvas.scale(configuration.tileSize));
+		shadow_renders.push(shadow_canvas.scale(configuration.tileSize));
 	}
 
 	/**
@@ -79,14 +103,14 @@ function Background(assets)
 	 */
 	function prerender_terrain_variants(parameters)
 	{
+		parameters.progress = parameters.progress || function(){};
+		parameters.complete = parameters.complete || function(){};
+
 		var times = parameters.times || [12];
 		var total = times.length;
 		var t = 0;
 
-		parameters.progress = parameters.progress || function(){};
-		parameters.complete = parameters.complete || function(){};
-
-		terrains.length = 0;
+		terrain_renders.length = 0;
 
 		/**
 		 * Temporary function for rendering the
@@ -104,7 +128,7 @@ function Background(assets)
 
 					if (++t <= total)
 					{
-						parameters.progress(t, total);
+						parameters.progress(++build_steps_complete, build_steps);
 					}
 
 					INTERNAL_prerender_next();
@@ -121,6 +145,47 @@ function Background(assets)
 	}
 
 	/**
+	 * Stores each cloud/shadow image asset for
+	 * rendering at the appropriate tile size
+	 */
+	function prerender_cloud_variants(handlers)
+	{
+		handlers.progress = handlers.progress || function(){};
+		handlers.complete = handlers.complete || function(){};
+
+		var c = 0;
+
+		cloud_renders.length = 0;
+		shadow_renders.length = 0;
+
+		/**
+		 * See: prerender_terrain_variants()
+		 */
+		function INTERNAL_prerender_next()
+		{
+			if (c < cloud_variants)
+			{
+				setTimeout(function(){
+					prerender_cloud_variant(c+1);
+
+					if (++c <= cloud_variants)
+					{
+						handlers.progress(++build_steps_complete, build_steps);
+					}
+
+					INTERNAL_prerender_next();
+				}, 100);
+
+				return;
+			}
+
+			handlers.complete();
+		}
+
+		INTERNAL_prerender_next();
+	}
+
+	/**
 	 * Spawns the initial cloud cover layer
 	 *
 	 * TODO: Distribute and vary the clouds properly
@@ -130,14 +195,36 @@ function Background(assets)
 		var tile_size = terrain.getTileSize();
 		var map_size = terrain.getSize();
 
-		for (var c = 0 ; c < 10 ; c++)
+		for (var c = 0 ; c < 8 ; c++)
 		{
-			var point = new MovingPoint().setVelocity(1.05 * configuration.scrollSpeed.x, 1.05 * configuration.scrollSpeed.y).setPosition(c * 600, c * 20);
-			var cloud = new Cloud().setType(random(1, cloud_variants));
+			var position =
+			{
+				x: random(-600, viewport.width + 600),
+				y: random(-600, viewport.height + 600)
+			};
+
+			var type = random(1, cloud_variants);
+
+			var point = new MovingPoint().setVelocity(configuration.scrollSpeed.x, configuration.scrollSpeed.y).setPosition(position.x, position.y);
+			var cloud = new Cloud().setType(type);
 			var entity = new Entity().add(point).add(cloud);
 
 			clouds.push(entity);
 		}
+	}
+
+	/**
+	 * Determines how much to displace shadows beneath clouds
+	 */
+	function set_shadow_offset()
+	{
+		var pi_factor = Math.PI / 180;
+
+		shadow_offset =
+		{
+			x: configuration.tileSize * 5 * Math.cos(configuration.lightAngle * pi_factor) * -1,
+			y: configuration.tileSize * 5 * Math.sin(configuration.lightAngle * pi_factor)
+		};
 	}
 
 	// ---------------------------------------- //
@@ -154,7 +241,7 @@ function Background(assets)
 		front_bg = bit_flip(front_bg);
 
 		// Update time-of-day cycle
-		if (++active_terrain > terrains.length-1)
+		if (++active_terrain > terrain_renders.length-1)
 		{
 			active_terrain = 0;
 		}
@@ -215,9 +302,9 @@ function Background(assets)
 		// Information for time-of-day rendering sources/targets
 		var new_bg = 'bg' + front_bg;
 		var old_bg = 'bg' + bit_flip(front_bg);
-		var terrain_before = cycle_forward(active_terrain-1, terrains.length-1);
-		var new_terrain = terrains[active_terrain].element();
-		var old_terrain = terrains[terrain_before].element();
+		var terrain_before = cycle_forward(active_terrain-1, terrain_renders.length-1);
+		var new_terrain = terrain_renders[active_terrain].element();
+		var old_terrain = terrain_renders[terrain_before].element();
 
 		while (tile_offset.x < tiles_to_draw.x || tile_offset.y < tiles_to_draw.y)
 		{
@@ -281,21 +368,13 @@ function Background(assets)
 	 */
 	function render_clouds()
 	{
-		var tile_size = terrain.getTileSize();
-
-		var offset =
-		{
-			x: tile_size * 4,
-			y: tile_size * 4
-		};
-
 		for (var c = 0 ; c < clouds.length ; c++)
 		{
 			var cloud = clouds[c];
 			var position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
 			var type = cloud.get(Cloud).getType();
 
-			screen.clouds.draw.image(assets.getImage('shadows/' + type + '.png'), position.x + offset.x, position.y + offset.y);
+			screen.clouds.draw.image(shadow_renders[type-1].element(), position.x + shadow_offset.x, position.y + shadow_offset.y);
 		}
 
 		for (var c = 0 ; c < clouds.length ; c++)
@@ -303,8 +382,9 @@ function Background(assets)
 			var cloud = clouds[c];
 			var position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
 			var type = cloud.get(Cloud).getType();
+			var image = cloud_renders[type-1].element();
 
-			screen.clouds.draw.image(assets.getImage('clouds/' + type + '.png'), position.x, position.y);
+			screen.clouds.draw.image(cloud_renders[type-1].element(), position.x, position.y);
 		}
 	}
 
@@ -344,6 +424,17 @@ function Background(assets)
 	this.configure = function(_configuration)
 	{
 		configuration = _configuration;
+
+		var defaults = default_configuration();
+
+		for (var key in defaults)
+		{
+			if (!configuration.hasOwnProperty(key))
+			{
+				configuration[key] = defaults[key];
+			}
+		}
+
 		return _;
 	}
 
@@ -352,6 +443,8 @@ function Background(assets)
 		handlers = handlers || {};
 		handlers.progress = handlers.progress || function(){};
 		handlers.complete = handlers.complete || function(){};
+
+		build_steps = cloud_variants + configuration.hours.length;
 
 		terrain = new Terrain()
 		.build(
@@ -369,17 +462,25 @@ function Background(assets)
 		.setTileSize(configuration.tileSize)
 		.render();
 
-		spawn_clouds();
-
-		// Prerender terrain at different times of day
-		prerender_terrain_variants(
+		prerender_cloud_variants(
 			{
-				times: configuration.hours,
 				progress: handlers.progress,
 				complete: function()
 				{
-					start();
-					handlers.complete();
+					// Prerender terrain at different times of day
+					prerender_terrain_variants(
+						{
+							times: configuration.hours,
+							progress: handlers.progress,
+							complete: function()
+							{
+								spawn_clouds();
+								set_shadow_offset();
+								start();
+								handlers.complete();
+							}
+						}
+					);
 				}
 			}
 		);

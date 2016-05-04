@@ -31,8 +31,6 @@ function Terrain()
 	{
 		presets:
 		{
-			beach: {r: 190, g: 170, b: 80},
-			reef: {r: 0, g: 120, b: 100},
 			city: {r: 90, g: 90, b: 90},
 			city2: {r: 255, g: 250, b: 170}
 		},
@@ -69,7 +67,7 @@ function Terrain()
 			{
 				if (e >= 80) return 0;
 				if (e > tree_line) return -55;
-				if (e > sea_line+5 && t > biome_line) return -20 + Math.round(t/2);
+				if (e > sea_line+5 && t > biome_line) return -20 + Math.round(0.75*t);
 				if (e > sea_line+5) return -90+t;
 				if (e > sea_line && t > shore_biome_line && t < shore_biome_line+4) return -235+t+e;
 				if (e < sea_line) return 20 - t - (sea_line-e);
@@ -633,17 +631,17 @@ function Terrain()
 			// Scale elevation to [0-100] for use by the tile coloration formulas
 			var _elevation = Math.round(elevation*ratio);
 			// Get temperature and lighting info for this tile
-			var tx = mod(y, climate.size);
-			var ty = mod(x, climate.size);
-			var temperature = 5 + climate.data[ty][tx];
-			var sun = (_elevation < sea_line ? false : _elevation < sea_line+6 || tile_is_lit(height.data, y, x));
+			var temp_x = mod(y, climate.size);
+			var temp_y = mod(x, climate.size);
+			var temperature = 5 + climate.data[temp_y][temp_x];
+			var is_sunny = (_elevation < sea_line ? false : _elevation < sea_line+6 || tile_is_lit(height.data, y, x));
 
 			// Determine tile coloration
 			var hue =
 			{
-				r: color.elevation.red(_elevation) + color.temperature.red(temperature, _elevation) + (sun ? 0 : -25),
-				g: color.elevation.green(_elevation) + color.temperature.green(temperature, _elevation) + (sun ? 0 : -25),
-				b: color.elevation.blue(_elevation) + color.temperature.blue(temperature, _elevation)// + (sun ? 0 : 0)
+				r: color.elevation.red(_elevation) + color.temperature.red(temperature, _elevation) + (is_sunny ? 0 : -25),
+				g: color.elevation.green(_elevation) + color.temperature.green(temperature, _elevation) + (is_sunny ? 0 : -25),
+				b: color.elevation.blue(_elevation) + color.temperature.blue(temperature, _elevation)
 			};
 
 			// Special coloration for shoreline tiles
@@ -652,12 +650,11 @@ function Terrain()
 				if (tile_just_above(height.data, y, x, sea_level-1))
 				{
 					hue.r += 20;
-					hue.g += 20;// = color.presets.beach;
+					hue.g += 20;
 				}
 				else
 				if (tile_just_below(height.data, y, x, sea_level))
 				{
-					//hue = color.presets.reef;
 					hue.g += 50;
 					hue.b += 40;
 				}
@@ -775,8 +772,8 @@ function Terrain()
 			// Top left pixel to start at
 			var pixel = p/4;
 			var x = pixel % map_size;
-			var y = Math.floor(pixel/map_size);
-			pixel = 4*(y*map_size*tile_size*tile_size + x*tile_size);
+			var y = Math.floor(pixel / map_size);
+			pixel = 4 * (y*map_size*tile_size*tile_size + x*tile_size);
 
 			for (var py = 0 ; py < tile_size ; py++)
 			{

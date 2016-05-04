@@ -374,6 +374,11 @@ function HeightMap()
 		return _;
 	}
 
+	this.changeTile = function(y, x, height)
+	{
+		map[y][x] = height;
+	}
+
 	this.data = function()
 	{
 		return map;

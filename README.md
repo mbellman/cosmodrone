@@ -4,12 +4,10 @@ A hush-hush game project.
 ### TODO:
 
 ##### BACKGROUND
+* Create more cloud assets, including cirrus clouds
 * Dynamic cloud spawning and repopulation
-* Make sure clouds properly scale with tile size
-* Cloud shadows should be displaced with respect to the lighting angle
-* Create more cloud assets
 * Make sure code style is consistent across all files
-* (?) Have cloud shadows displace in the direction of the screen center for a mild 3D effect
+* See if group prerender methods in Background can be consolidated
 * (?) Add erosion to the heightmap generator
 
 ##### GAME

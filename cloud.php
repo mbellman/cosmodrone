@@ -2,8 +2,8 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<script src="js/graphics.canvas.js"></script>
-		<script src="js/system.map.js"></script>
+		<script src="js/graphics/canvas.js"></script>
+		<script src="js/system/tools.js"></script>
 		<style type="text/css">
 			body {
 				font-family: Arial;
@@ -61,8 +61,9 @@
 		<input type="button" class="size" value="300" data-size="300" />
 		<br />
 		<input type="button" class="type" value="Cumulus" data-type="cumulus" />
-		<input type="button" class="type" value="Altocumulus" data-type="altocumulus" />
 		<input type="button" class="type" value="Cirrus" data-type="cirrus" />
+		<br />
+		Density: <input type="text" id="density" value="0.4" size="2" />
 		<br />
 		<br />
 		<canvas id="cloud" width="200" height="200"></canvas>

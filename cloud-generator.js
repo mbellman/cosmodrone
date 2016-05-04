@@ -8,9 +8,13 @@ function generate_clouds(type) {
 	var composite = new Canvas(document.createElement('canvas')).setSize(size, size);
 	var noise_levels = [];
 	var noise_data = [];
+	var density = document.getElementById('density').value;
+	if (isNaN(density)) {
+		density = 0.4;
+		document.getElementById('density').value = '0.4';
+	}
 
-	var t = Date.now();
-
+	// Composite noise
 	for (var i = 0 ; i < 6 ; i++) {
 		var square_size = Math.pow(2,i);
 		var canvas_size = Math.round(size/square_size);
@@ -20,7 +24,7 @@ function generate_clouds(type) {
 
 		for (var y = 0 ; y < canvas_size ; y++) {
 			for (var x = 0 ; x < canvas_size ; x++) {
-				if (Math.random() < 0.4) {
+				if (Math.random() < density) {
 					noise_canvas.draw.rectangle(x, y, 1, 1).fill('rgb('+color+','+color+','+color+')');
 				}
 			}
@@ -36,6 +40,7 @@ function generate_clouds(type) {
 	var shadow_image = shadow.data.get();
 	var noise_count = noise_levels.length;
 
+	// Draw cloud shapes from noise
 	for (var y = 0 ; y < size ; y++) {
 		for (var x = 0 ; x < size ; x++) {
 			var color = 0;
@@ -50,14 +55,14 @@ function generate_clouds(type) {
 			var dx = (size/2) - x;
 			var dy = (size/2) - y;
 			var center_dist = Math.round(Math.sqrt(dx*dx + dy*dy));
-			var average = Math.round(color/noise_count) - Math.round(300/size) * Math.round(0.4*center_dist);
+			var average = Math.round(color/noise_count) - Math.pow(Math.round(300/size), 2) * Math.pow(Math.round(0.05*center_dist), 2);
 
 			if (average > 70) {
-				var adj = Math.round(2 * average);
+				var adj = Math.round(3 * (average-70));
 
-				canvas_image.data[pixel] = 30 + adj;
-				canvas_image.data[pixel+1] = 30 + adj;
-				canvas_image.data[pixel+2] = 60 + adj;
+				canvas_image.data[pixel] = 150 + adj;
+				canvas_image.data[pixel+1] = 150 + adj;
+				canvas_image.data[pixel+2] = 180 + adj;
 				canvas_image.data[pixel+3] = 255;
 
 				shadow_image.data[pixel] = 0;
@@ -68,7 +73,31 @@ function generate_clouds(type) {
 		}
 	}
 
-	console.log((Date.now()-t) + 'ms');
+	// Reduce stray pixel-sized clouds
+	for (var i = 0 ; i < 2 ; i++) {
+		for (var y = 0 ; y < size ; y++) {
+			for (var x = 0 ; x < size ; x++) {
+				var pixel = 4 * (y*size + x);
+
+				var top_px = 4 * (clamp(y-1, 0, size)*size + x);
+				var left_px = 4 * (y*size + clamp(x-1, 0, size));
+				var right_px = 4 * (y*size + clamp(x+1, 0, size));
+				var bottom_px = 4 * (clamp(y+1, 0, size)*size + x);
+
+				var empty_surrounding = 0;
+
+				if (canvas_image.data[top_px+3] === 0) empty_surrounding++;
+				if (canvas_image.data[left_px+3] === 0) empty_surrounding++;
+				if (canvas_image.data[right_px+3] === 0) empty_surrounding++;
+				if (canvas_image.data[bottom_px+3] === 0) empty_surrounding++;
+
+				if (empty_surrounding >= 3) {
+					canvas_image.data[pixel+3] = 0;
+					shadow_image.data[pixel+3] = 0;
+				}
+			}
+		}
+	}
 
 	canvas.data.put(canvas_image);
 	shadow.data.put(shadow_image);

@@ -91,7 +91,7 @@ function GameInstance(assets)
 			.configure(
 				{
 					iterations: 11,
-					elevation: 200,
+					elevation: 250,
 					concentration: 35,
 					smoothness: 8,
 					repeat: true,
@@ -113,7 +113,7 @@ function GameInstance(assets)
 				{
 					progress: function(rendered, total)
 					{
-						console.log('Prerendering terrain...' + rendered + '/' + total + '...');
+						console.log('Rendering...' + rendered + '/' + total + '...');
 					},
 					complete: function()
 					{
