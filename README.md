@@ -5,7 +5,6 @@ A hush-hush game project.
 
 ##### BACKGROUND
 * Cirrus clouds
-* Improve cyclone aesthetics
 * Cloud removal/repopulation
 
 ##### GAME
