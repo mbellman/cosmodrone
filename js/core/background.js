@@ -15,10 +15,41 @@ function Background(assets)
 	var bg_camera;                                     // The scrolling background camera instance
 	var front_bg = 0;                                  // Binary; represents the current front screen of the background cycle
 	var active_terrain = 0;                            // Current time-of-day terrain prerender being shown
-	var cloud_variants = 5;                            // Number of different cloud types to randomly pick from
 	var build_steps = 0;                               // Determined in build() by various configuration parameters
 	var build_steps_complete = 0;                      // For passing back into the progress handler
-	var configuration = default_configuration();
+	var configuration = default_configuration();       // Store default settings
+	                                                   // Bank of information on cloud assets + types
+	var cloud_bank =
+	[
+		{
+			file: 'cumulus-1',
+			type: 'cumulus'
+		},
+		{
+			file: 'cumulus-2',
+			type: 'cumulus'
+		},
+		{
+			file: 'cumulus-3',
+			type: 'cumulus'
+		},
+		{
+			file: 'cumulus-4',
+			type: 'cumulus'
+		},
+		{
+			file: 'heavy-cumulus-1',
+			type: 'heavy_cumulus'
+		},
+		{
+			file: 'heavy-cumulus-2',
+			type: 'heavy_cumulus'
+		},
+		{
+			file: 'cyclone-1',
+			type: 'cyclone'
+		}
+	];
 
 	/**
 	 * Default instance configuration
@@ -84,8 +115,10 @@ function Background(assets)
 	 */
 	function prerender_cloud_variant(cloud)
 	{
-		var cloud_asset = assets.getImage('clouds/' + cloud + '.png');
-		var shadow_asset = assets.getImage('shadows/' + cloud + '.png');
+		var name = cloud_bank[cloud].file;
+
+		var cloud_asset = assets.getImage('clouds/' + name + '.png');
+		var shadow_asset = assets.getImage('shadows/' + name + '.png');
 
 		var cloud_canvas = new Canvas(new Element('canvas')).setSize(cloud_asset.width, cloud_asset.height);
 		var shadow_canvas = new Canvas(new Element('canvas')).setSize(shadow_asset.width, shadow_asset.height);
@@ -163,12 +196,12 @@ function Background(assets)
 		 */
 		function INTERNAL_prerender_next()
 		{
-			if (c < cloud_variants)
+			if (c < cloud_bank.length)
 			{
 				setTimeout(function(){
-					prerender_cloud_variant(c+1);
+					prerender_cloud_variant(c);
 
-					if (++c <= cloud_variants)
+					if (++c <= cloud_bank.length)
 					{
 						handlers.progress(++build_steps_complete, build_steps);
 					}
@@ -186,31 +219,123 @@ function Background(assets)
 	}
 
 	/**
+	 * Returns a randomly picked cloud of type [type]
+	 */
+	function random_cloud_index(type)
+	{
+		// Cloud bank cycle pointer
+		var c = 0;
+		// Keep track of cycles
+		var cycle = 0;
+
+		while (1)
+		{
+			if (cycle > 200)
+			{
+				// Halt the loop if we've cycled too many times
+				break;
+			}
+
+			var cloud_data = cloud_bank[c];
+
+			if (Math.random() < 0.1 && cloud_data.type === type)
+			{
+				// Pick this cloud
+				break;
+			}
+
+			// Update c and revert to 0 if it goes over the limit
+			c = cycle_back(++c, cloud_bank.length-1);
+			cycle++;
+		}
+
+		return c;
+	}
+
+	/**
+	 * Spawns a cloud from cloud_bank via
+	 * [index] and positions it at [x, y]
+	 */
+	function spawn_cloud(index, x, y)
+	{
+		var cloud_image = cloud_renders[index].element();
+		var shadow_image = shadow_renders[index].element();
+
+		var point = new MovingPoint().setVelocity(configuration.scrollSpeed.x, configuration.scrollSpeed.y).setPosition(x, y);
+		var cloud = new Cloud().setImage(cloud_image).setShadow(shadow_image);
+
+		clouds.push(new Entity().add(point).add(cloud));
+	}
+
+	/**
+	 * Spawns a cyclone with surrounding cloud patches
+	 */
+	function spawn_cyclone(x, y)
+	{
+		// Pick the cyclone
+		var index = random_cloud_index('cyclone');
+		var cyclone_size = cloud_renders[index].getSize();
+
+		// Position the cyclone at [x, y] relative to its eye
+		spawn_cloud(index, x - Math.round(cyclone_size.width/2), y - Math.round(cyclone_size.height/2));
+
+		// Generate the surrounding clouds
+		var group_count = random(6, 7);
+		var angle = Math.random() * 2 * Math.PI;
+
+		for (var g = 0 ; g < group_count ; g++)
+		{
+			// Pick the cloud patch and angle of displacement
+			var type = chance() ? 'heavy_cumulus' : 'cumulus';
+			var index = random_cloud_index(type);
+			var patch_size = cloud_renders[index].getSize();
+			// Make sure the patch is positioned outside of the cyclone
+			var w2 = Math.round(patch_size.width/2);
+			var h2 = Math.round(patch_size.height/2);
+			var patch_distance = Math.sqrt(w2*w2 + h2*h2);
+			var magnitude = 0.6 * (cyclone_size.width/2 + patch_distance);
+			// Determine how to displace the cloud patch
+			var patch_offset =
+			{
+				x: Math.round(magnitude * Math.cos(angle)),
+				y: Math.round(magnitude * Math.sin(angle) * -1)
+			};
+
+			spawn_cloud(index, x - w2 + patch_offset.x, y - h2 + patch_offset.y);
+
+			// Advance the angle cycle to get coverage around the cyclone
+			angle += ((2 * Math.PI) / group_count);
+		}
+	}
+
+	/**
 	 * Spawns the initial cloud cover layer
 	 *
 	 * TODO: Distribute and vary the clouds properly
 	 */
-	function spawn_clouds()
+	function spawn_cloud_layer()
 	{
 		var tile_size = terrain.getTileSize();
 		var map_size = terrain.getSize();
+		var types = ['cumulus', 'heavy_cumulus', 'cyclone'];
 
+		spawn_cyclone(600, 600);
+
+		/*
 		for (var c = 0 ; c < 8 ; c++)
 		{
+			var type = types[random(0, types.length-1)];
+			var index = random_cloud_index(type);
+
 			var position =
 			{
 				x: random(-600, viewport.width + 600),
 				y: random(-600, viewport.height + 600)
 			};
 
-			var type = random(1, cloud_variants);
-
-			var point = new MovingPoint().setVelocity(configuration.scrollSpeed.x, configuration.scrollSpeed.y).setPosition(position.x, position.y);
-			var cloud = new Cloud().setType(type);
-			var entity = new Entity().add(point).add(cloud);
-
-			clouds.push(entity);
+			spawn_cloud(index, position.x, position.y);
 		}
+		*/
 	}
 
 	/**
@@ -372,19 +497,18 @@ function Background(assets)
 		{
 			var cloud = clouds[c];
 			var position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
-			var type = cloud.get(Cloud).getType();
+			var shadow = cloud.get(Cloud).getShadow();
 
-			screen.clouds.draw.image(shadow_renders[type-1].element(), position.x + shadow_offset.x, position.y + shadow_offset.y);
+			screen.clouds.draw.image(shadow, position.x + shadow_offset.x, position.y + shadow_offset.y);
 		}
 
 		for (var c = 0 ; c < clouds.length ; c++)
 		{
 			var cloud = clouds[c];
 			var position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
-			var type = cloud.get(Cloud).getType();
-			var image = cloud_renders[type-1].element();
+			var image = cloud.get(Cloud).getImage();
 
-			screen.clouds.draw.image(cloud_renders[type-1].element(), position.x, position.y);
+			screen.clouds.draw.image(image, position.x, position.y);
 		}
 	}
 
@@ -444,7 +568,7 @@ function Background(assets)
 		handlers.progress = handlers.progress || function(){};
 		handlers.complete = handlers.complete || function(){};
 
-		build_steps = cloud_variants + configuration.hours.length;
+		build_steps = cloud_bank.length + configuration.hours.length;
 
 		terrain = new Terrain()
 		.build(
@@ -474,7 +598,7 @@ function Background(assets)
 							progress: handlers.progress,
 							complete: function()
 							{
-								spawn_clouds();
+								spawn_cloud_layer();
 								set_shadow_offset();
 								start();
 								handlers.complete();

@@ -59,11 +59,13 @@
 		<input type="button" class="size" value="100" data-size="100" />
 		<input type="button" class="size selected" value="200" data-size="200" />
 		<input type="button" class="size" value="300" data-size="300" />
+		<input type="button" class="size" value="400" data-size="400" />
 		<br />
 		<input type="button" class="type" value="Cumulus" data-type="cumulus" />
+		<input type="button" class="type" value="Cyclone" data-type="cyclone" />
 		<input type="button" class="type" value="Cirrus" data-type="cirrus" />
 		<br />
-		Density: <input type="text" id="density" value="0.4" size="2" />
+		Density: <input type="text" id="density" value="0.4" size="2" /> | Cyclone spokes: <input type="text" id="spokes" value="8" size="2" />
 		<br />
 		<br />
 		<canvas id="cloud" width="200" height="200"></canvas>

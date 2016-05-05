@@ -56,7 +56,6 @@ function createScreens()
 	screen.bg1 = fullSizeScreen();
 	screen.clouds = fullSizeScreen();
 	screen.clouds.element().style.zIndex = '3';
-	screen.clouds.element().style.opacity = '0.8';
 
 	$('#game #bg')
 	.append(screen.bg0.element())

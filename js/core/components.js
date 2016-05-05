@@ -52,19 +52,32 @@ function Cloud()
 {
 	// Private:
 	var _ = this;
+	var image;
+	var shadow;
 	var type = 0;
 
 	// Public:
 	this.update = function(dt){}
 
-	this.getType = function()
+	this.getImage = function()
 	{
-		return type;
+		return image;
 	}
 
-	this.setType = function(_type)
+	this.getShadow = function()
 	{
-		type = _type;
+		return shadow;
+	}
+
+	this.setImage = function(_image)
+	{
+		image = _image;
+		return _;
+	}
+
+	this.setShadow = function(_shadow)
+	{
+		shadow = _shadow;
 		return _;
 	}
 }

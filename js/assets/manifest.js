@@ -1,24 +1,33 @@
-var AssetManifest = {
-	images: {
+var AssetManifest =
+{
+	images:
+	{
 		folder: 'images',
-		files: [
+		files:
+		[
+			'clouds/cumulus-1.png',
+			'clouds/cumulus-2.png',
+			'clouds/cumulus-3.png',
+			'clouds/cumulus-4.png',
+			'clouds/cyclone-1.png',
+			'clouds/heavy-cumulus-1.png',
+			'clouds/heavy-cumulus-2.png',
 			'earth.png',
-			'clouds/1.png',
-			'clouds/2.png',
-			'clouds/3.png',
-			'clouds/4.png',
-			'clouds/5.png',
-			'shadows/1.png',
-			'shadows/2.png',
-			'shadows/3.png',
-			'shadows/4.png',
-			'shadows/5.png'
+			'shadows/cumulus-1.png',
+			'shadows/cumulus-2.png',
+			'shadows/cumulus-3.png',
+			'shadows/cumulus-4.png',
+			'shadows/cyclone-1.png',
+			'shadows/heavy-cumulus-1.png',
+			'shadows/heavy-cumulus-2.png',
 		],
 	},
-	audio: {
+	audio:
+	{
 		folder: 'audio',
-		files: [
-			'coin.mp3'
-		]
+		files:
+		[
+			'coin.mp3',
+		],
 	}
 };

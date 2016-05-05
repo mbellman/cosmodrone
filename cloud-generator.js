@@ -1,107 +1,130 @@
 // Cloud pattern generator
 var size = 200;
 
+function write_to_pixel(data, pixel, r, g, b, a) {
+	data[pixel] = r;
+	data[pixel+1] = g;
+	data[pixel+2] = b;
+	data[pixel+3] = a;
+}
+
 function generate_clouds(type) {
 	canvas.clear();
 	shadow.clear();
 
-	var composite = new Canvas(document.createElement('canvas')).setSize(size, size);
-	var noise_levels = [];
-	var noise_data = [];
-	var density = document.getElementById('density').value;
-	if (isNaN(density)) {
-		density = 0.4;
-		document.getElementById('density').value = '0.4';
-	}
+	if (type !== 'cirrus') {
+		var size_half = size/2;
+		var composite = new Canvas(document.createElement('canvas')).setSize(size, size);
+		var noise_levels = [];
+		var noise_data = [];
+		var density = Number(document.getElementById('density').value);
+		var spokes = Number(document.getElementById('spokes').value);
 
-	// Composite noise
-	for (var i = 0 ; i < 6 ; i++) {
-		var square_size = Math.pow(2,i);
-		var canvas_size = Math.round(size/square_size);
-		var noise_canvas = new Canvas(document.createElement('canvas')).setSize(canvas_size, canvas_size);
-		var color = 255 - 30*(5-i);
-		noise_canvas.draw.rectangle(0, 0, canvas_size, canvas_size).fill('#000');
+		if (isNaN(density)) {
+			density = 0.4;
+			document.getElementById('density').value = '0.4';
+		}
 
-		for (var y = 0 ; y < canvas_size ; y++) {
-			for (var x = 0 ; x < canvas_size ; x++) {
-				if (Math.random() < density) {
-					noise_canvas.draw.rectangle(x, y, 1, 1).fill('rgb('+color+','+color+','+color+')');
+		if (isNaN(spokes)) {
+			spokes = 7;
+			document.getElementById('spokes').value = '7';
+		}
+
+		// Composite noise
+		for (var i = 0 ; i < 6 ; i++) {
+			var square_size = Math.pow(2,i);
+			var canvas_size = Math.round(size/square_size);
+			var cs_half = canvas_size/2;
+			var noise_canvas = new Canvas(document.createElement('canvas')).setSize(canvas_size, canvas_size);
+			var color = 255 - 30*(5-i);
+			noise_canvas.draw.rectangle(0, 0, canvas_size, canvas_size).fill('#000');
+
+			for (var y = 0 ; y < canvas_size ; y++) {
+				for (var x = 0 ; x < canvas_size ; x++) {
+					if (type === 'cyclone') {
+						var dx = x - cs_half;
+						var dy = y - cs_half;
+						var radius = Math.sqrt(dx*dx + dy*dy);
+						var angle = Math.atan2(dx, dy);
+						var radius_ratio = radius/cs_half;
+						var down_scale = Math.pow(1 - radius_ratio, 3);
+						var limit = 6 * density * down_scale + Math.sin(angle * spokes + Math.pow(2+radius_ratio, 2.75));
+
+						if ((radius_ratio > 0.075 || Math.random() < 0.1) && ((Math.random() < limit && Math.random() < 0.9) || Math.random() < 0.6)) {
+							noise_canvas.draw.rectangle(x, y, 1, 1).fill('rgb('+color+','+color+','+color+')');
+						}
+					} else {
+						if (Math.random() < density) {
+							noise_canvas.draw.rectangle(x, y, 1, 1).fill('rgb('+color+','+color+','+color+')');
+						}
+					}
 				}
 			}
+
+			var full_canvas = new Canvas(document.createElement('canvas')).setSize(size, size);
+			full_canvas.draw.image(noise_canvas.element(), 0, 0, size, size);
+			noise_levels.push(full_canvas);
+			noise_data.push(full_canvas.data.get());
 		}
 
-		var full_canvas = new Canvas(document.createElement('canvas')).setSize(size, size);
-		full_canvas.draw.image(noise_canvas.element(), 0, 0, size, size);
-		noise_levels.push(full_canvas);
-		noise_data.push(full_canvas.data.get());
-	}
+		var canvas_image = canvas.data.get();
+		var shadow_image = shadow.data.get();
+		var noise_count = noise_levels.length;
 
-	var canvas_image = canvas.data.get();
-	var shadow_image = shadow.data.get();
-	var noise_count = noise_levels.length;
-
-	// Draw cloud shapes from noise
-	for (var y = 0 ; y < size ; y++) {
-		for (var x = 0 ; x < size ; x++) {
-			var color = 0;
-			var alpha = 0;
-			var pixel = 4 * (y*size + x);
-
-			for (var n = 0 ; n < noise_count ; n++) {
-				color += noise_data[n].data[pixel];
-				alpha += noise_data[n].data[pixel+3];
-			}
-
-			var dx = (size/2) - x;
-			var dy = (size/2) - y;
-			var center_dist = Math.round(Math.sqrt(dx*dx + dy*dy));
-			var average = Math.round(color/noise_count) - Math.pow(Math.round(300/size), 2) * Math.pow(Math.round(0.05*center_dist), 2);
-
-			if (average > 70) {
-				var adj = average-70;
-
-				canvas_image.data[pixel] = 200 + adj;
-				canvas_image.data[pixel+1] = 200 + adj;
-				canvas_image.data[pixel+2] = 230 + adj;
-				canvas_image.data[pixel+3] = 255;
-
-				shadow_image.data[pixel] = 0;
-				shadow_image.data[pixel+1] = 0;
-				shadow_image.data[pixel+2] = 20;
-				shadow_image.data[pixel+3] = 190;
-			}
-		}
-	}
-
-	// Reduce stray pixel-sized clouds
-	for (var i = 0 ; i < 1 ; i++) {
+		// Draw cloud shapes from noise
 		for (var y = 0 ; y < size ; y++) {
 			for (var x = 0 ; x < size ; x++) {
+				var color = 0;
+				var alpha = 0;
 				var pixel = 4 * (y*size + x);
 
-				var top_px = 4 * (clamp(y-1, 0, size)*size + x);
-				var left_px = 4 * (y*size + clamp(x-1, 0, size));
-				var right_px = 4 * (y*size + clamp(x+1, 0, size));
-				var bottom_px = 4 * (clamp(y+1, 0, size)*size + x);
-
-				var empty_surrounding = 0;
-
-				if (canvas_image.data[top_px+3] < 255) empty_surrounding++;
-				if (canvas_image.data[left_px+3] < 255) empty_surrounding++;
-				if (canvas_image.data[right_px+3] < 255) empty_surrounding++;
-				if (canvas_image.data[bottom_px+3] < 255) empty_surrounding++;
-
-				if (empty_surrounding >= 3) {
-					canvas_image.data[pixel+3] = 0;
-					shadow_image.data[pixel+3] = 0;
-					continue;
+				for (var n = 0 ; n < noise_count ; n++) {
+					color += noise_data[n].data[pixel];
+					alpha += noise_data[n].data[pixel+3];
 				}
 
-				if (canvas_image.data[pixel+3] === 0) {
-					canvas_image.data[pixel] = 255;
-					canvas_image.data[pixel+1] = 255;
-					canvas_image.data[pixel+2] = 255;
-					canvas_image.data[pixel+3] = 80;
+				var dx = x - size/2;
+				var dy = y - size/2;
+				var radius = Math.sqrt(dx*dx + dy*dy);
+				var radius_ratio = radius / size_half;
+				var average = Math.round(color/noise_count) - Math.round(100 * Math.pow(radius_ratio, 3));
+
+				if (average > 70) {
+					var adj = average-70;
+
+					write_to_pixel(canvas_image.data, pixel, 200+adj, 200+adj, 230+adj, 255);
+					write_to_pixel(shadow_image.data, pixel, 0, 0, 20, 190);
+				}
+			}
+		}
+
+		// Reduce stray pixel-sized clouds
+		for (var i = 0 ; i < 1 ; i++) {
+			for (var y = 0 ; y < size ; y++) {
+				for (var x = 0 ; x < size ; x++) {
+					var pixel = 4 * (y*size + x);
+
+					var top_px = 4 * (clamp(y-1, 0, size)*size + x);
+					var left_px = 4 * (y*size + clamp(x-1, 0, size));
+					var right_px = 4 * (y*size + clamp(x+1, 0, size));
+					var bottom_px = 4 * (clamp(y+1, 0, size)*size + x);
+
+					var empty_surrounding = 0;
+
+					if (canvas_image.data[top_px+3] < 255) empty_surrounding++;
+					if (canvas_image.data[left_px+3] < 255) empty_surrounding++;
+					if (canvas_image.data[right_px+3] < 255) empty_surrounding++;
+					if (canvas_image.data[bottom_px+3] < 255) empty_surrounding++;
+
+					if (empty_surrounding >= 3) {
+						canvas_image.data[pixel+3] = 0;
+						shadow_image.data[pixel+3] = 0;
+						continue;
+					}
+
+					if (canvas_image.data[pixel+3] === 0) {
+						write_to_pixel(canvas_image.data, pixel, 255, 255, 255, 80);
+					}
 				}
 			}
 		}

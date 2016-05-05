@@ -10,8 +10,7 @@ function Terrain()
 	var temp_map;                             // Terrain temperature map
 	var terrain_canvas;                       // Default terrain rendering
 	var city_canvas;                          // City layer rendering
-	var cloud_canvas;                         // Cloud layer rendering
-	var time_canvas;                          // Time-of-day rendering (composite of heightmap, cities, and clouds)
+	var time_canvas;                          // Time-of-day rendering (composite of heightmap + cities)
 	var tile_size = 1;                        // Pixel size of map tiles
 	var light_angle = Math.PI/2;              // Angle of light source
 	var city_count = 400;                     // Number of cities
@@ -707,7 +706,7 @@ function Terrain()
 	}
 
 	/**
-	 * Runs through the heightmap, city, and cloud layers
+	 * Runs through the heightmap and city layers in order
 	 * to composite the results to time_canvas. Accepts an
 	 * argument to specify the time of day for the rendering.
 	 */
@@ -716,13 +715,12 @@ function Terrain()
 		if (isNaN(hour)) hour = 12;
 		hour = (hour < 0 ? 0 : (hour > 24 ? 24 : hour));
 
+		var map_size = height_map.getSize();
 		// Create composite image data buffer
 		var composite = time_canvas.data.get();
 		// Grab image data for various layers
 		var height_image = terrain_canvas.data.get().data;
 		var city_image = city_canvas.data.get().data;
-		var cloud_image = cloud_canvas.data.get().data;
-		var map_size = height_map.getSize();
 		// Light 'level' on a scale from 0-12; processed by the [color.time] formulas
 		var light_level = 12 - Math.abs(12-hour);
 		// Increasingly reduce city lights over the course of the night
@@ -745,10 +743,7 @@ function Terrain()
 			// Get layer color data
 			var terrain_color = get_color_data(height_image, p);
 			var city_color = get_color_data(city_image, p);
-			var cloud_color = get_color_data(cloud_image, p);
-			// State checks for city tiles/cloud tiles
 			var is_city = (city_color.red > 0);
-			var is_cloudy = (cloud_color.red > 0);
 			// Prepare color data for modification
 			var composite_color =
 			{
@@ -759,7 +754,6 @@ function Terrain()
 
 			if (is_night && is_city)
 			{
-				// Nighttime city lighting
 				var density_light_reduction = Math.pow(clamp(dlr_limit - city_color.red, 0, dlr_limit), 2);
 				var dlr_3q = Math.round(0.75 * density_light_reduction);
 
@@ -769,20 +763,21 @@ function Terrain()
 			}
 			else
 			{
-				// Terrain lighting
-				var red = (is_city ? city_color.red : terrain_color.red) + cloud_color.red;
-				var green = (is_city ? city_color.green : terrain_color.green) + cloud_color.green;
-				var blue = (is_city ? city_color.blue : terrain_color.blue) + cloud_color.blue;
+				var red = (is_city ? city_color.red : terrain_color.red);
+				var green = (is_city ? city_color.green : terrain_color.green);
+				var blue = (is_city ? city_color.blue : terrain_color.blue);
 				var average = Math.round((red + green + blue) / 3) - 15*(4 - light_level);
 
-				// Additional lighting modifier based on evening times
-				var time_red = (is_twilight ? Math.round((red + average) / 2) : (is_night ? average : red));
-				var time_green = (is_twilight ? Math.round((green + average) / 2) : (is_night ? average : green));
-				var time_blue = (is_twilight ? Math.round((blue + average) / 2) : (is_night ? average : blue));
+				var time =
+				{
+					red: (is_twilight ? Math.round((red + average) / 2) : (is_night ? average : red)),
+					green: (is_twilight ? Math.round((green + average) / 2) : (is_night ? average : green)),
+					blue: (is_twilight ? Math.round((blue + average) / 2) : (is_night ? average : blue))
+				};
 
-				composite_color.red = lighting.red + time_red;
-				composite_color.green = lighting.green + time_green;
-				composite_color.blue = lighting.blue + time_blue;
+				composite_color.red = lighting.red + time.red;
+				composite_color.green = lighting.green + time.green;
+				composite_color.blue = lighting.blue + time.blue;
 			}
 
 			// Top left pixel to start at
@@ -831,7 +826,6 @@ function Terrain()
 		// Instantiate each layer as its own Canvas
 		terrain_canvas = new Canvas(new Element('canvas'));
 		city_canvas = new Canvas(new Element('canvas'));
-		cloud_canvas = new Canvas(new Element('canvas'));
 		time_canvas = new Canvas(new Element('canvas'));
 		// Public canvas is sourced from time_canvas
 		_.canvas = time_canvas.element();
@@ -850,7 +844,6 @@ function Terrain()
 
 		terrain_canvas.setSize(map_size, map_size);
 		city_canvas.setSize(map_size, map_size);
-		cloud_canvas.setSize(map_size, map_size);
 		time_canvas.setSize(tile_size*map_size, tile_size*map_size);
 
 		return _;

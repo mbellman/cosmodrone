@@ -7,6 +7,14 @@ function random(low, high)
 }
 
 /**
+ * 50/50 chance of returning true or false
+ */
+function chance()
+{
+	return (Math.random() < 0.5);
+}
+
+/**
  * Negative-friendly modulus operation
  */
 function mod(n, m)
