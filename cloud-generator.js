@@ -50,7 +50,7 @@ function generate_clouds(type) {
 						var down_scale = Math.pow(1 - radius_ratio, 3);
 						var limit = 6 * density * down_scale + Math.sin(angle * spokes + Math.pow(2+radius_ratio, 2.75));
 
-						if ((radius_ratio > 0.075 || Math.random() < 0.1) && ((Math.random() < limit && Math.random() < 0.9) || Math.random() < 0.6)) {
+						if ((radius_ratio > 0.06 || Math.random() < 0.15) && ((Math.random() < limit && Math.random() < 0.9) || Math.random() < 0.6)) {
 							noise_canvas.draw.rectangle(x, y, 1, 1).fill('rgb('+color+','+color+','+color+')');
 						}
 					} else {
@@ -90,10 +90,10 @@ function generate_clouds(type) {
 				var average = Math.round(color/noise_count) - Math.round(100 * Math.pow(radius_ratio, 3));
 
 				if (average > 70) {
-					var adj = average-70;
+					var adj = (average > 90 ? 55 : 0);
 
-					write_to_pixel(canvas_image.data, pixel, 200+adj, 200+adj, 230+adj, 255);
-					write_to_pixel(shadow_image.data, pixel, 0, 0, 20, 190);
+					write_to_pixel(canvas_image.data, pixel, 220+adj, 220+adj, 245+adj, 255);
+					write_to_pixel(shadow_image.data, pixel, 0, 0, 10, 200);
 				}
 			}
 		}
@@ -116,14 +116,10 @@ function generate_clouds(type) {
 					if (canvas_image.data[right_px+3] < 255) empty_surrounding++;
 					if (canvas_image.data[bottom_px+3] < 255) empty_surrounding++;
 
-					if (empty_surrounding >= 3) {
-						canvas_image.data[pixel+3] = 0;
-						shadow_image.data[pixel+3] = 0;
-						continue;
-					}
-
-					if (canvas_image.data[pixel+3] === 0) {
-						write_to_pixel(canvas_image.data, pixel, 255, 255, 255, 80);
+					if (empty_surrounding < 3) {
+						if (canvas_image.data[pixel+3] === 0) {
+							write_to_pixel(canvas_image.data, pixel, 255, 255, 255, 140);
+						}
 					}
 				}
 			}

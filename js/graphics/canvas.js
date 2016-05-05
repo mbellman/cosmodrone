@@ -93,6 +93,11 @@ function Canvas(element) {
 			ctx.putImageData(data, x, y);
 		}
 	};
+	
+	this.clear = function()
+	{
+		ctx.clearRect(0, 0, element.width, element.height);
+	}
 
 	this.scale = function(multiple)
 	{
@@ -156,11 +161,6 @@ function Canvas(element) {
 		return _;
 	}
 
-	this.clear = function()
-	{
-		ctx.clearRect(0, 0, element.width, element.height);
-	}
-
 	this.getSize = function()
 	{
 		return {
@@ -173,6 +173,18 @@ function Canvas(element) {
 	{
 		element.width = w || element.width;
 		element.height = h || element.height;
+		return _;
+	}
+
+	this.setGlobalCompositeOperation = function(type)
+	{
+		ctx.globalCompositeOperation = type;
+		return _;
+	}
+
+	this.setGlobalAlpha = function(alpha)
+	{
+		ctx.globalAlpha = alpha;
 		return _;
 	}
 

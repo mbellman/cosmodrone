@@ -12,6 +12,8 @@ var AssetManifest =
 			'clouds/cyclone-1.png',
 			'clouds/heavy-cumulus-1.png',
 			'clouds/heavy-cumulus-2.png',
+			'clouds/small-cumulus-1.png',
+			'clouds/small-cumulus-2.png',
 			'earth.png',
 			'shadows/cumulus-1.png',
 			'shadows/cumulus-2.png',
@@ -20,6 +22,8 @@ var AssetManifest =
 			'shadows/cyclone-1.png',
 			'shadows/heavy-cumulus-1.png',
 			'shadows/heavy-cumulus-2.png',
+			'shadows/small-cumulus-1.png',
+			'shadows/small-cumulus-2.png',
 		],
 	},
 	audio:

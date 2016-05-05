@@ -21,6 +21,9 @@ include(
 var viewport = {};
 var screen = {};
 var game;
+// For passing any in-game handlers to
+// the primary window.resize() event
+var resize_event_queue = [];
 
 // Initialization
 function main()
@@ -38,7 +41,7 @@ function main()
 	.then(function(pack)
 	{
 		game = new GameInstance(pack);
-		game.init().start();
+		game.debug(true).init().start();
 	});
 
 	$(window).on('resize', onResize);
@@ -79,11 +82,18 @@ function onResize()
 	viewport.width = $(window).width();
 	viewport.height = $(window).height();
 
+	// Update screen dimensions
 	for (var s in screen)
 	{
 		if (screen.hasOwnProperty(s))
 		{
 			screen[s].setSize(viewport.width, viewport.height);
 		}
+	}
+
+	// Fire any external resize events
+	for (var e = 0 ; e < resize_event_queue.length ; e++)
+	{
+		resize_event_queue[e]();
 	}
 }

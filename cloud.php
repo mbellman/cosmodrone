@@ -59,7 +59,7 @@
 		<input type="button" class="size" value="100" data-size="100" />
 		<input type="button" class="size selected" value="200" data-size="200" />
 		<input type="button" class="size" value="300" data-size="300" />
-		<input type="button" class="size" value="400" data-size="400" />
+		<input type="button" class="size" value="500" data-size="500" />
 		<br />
 		<input type="button" class="type" value="Cumulus" data-type="cumulus" />
 		<input type="button" class="type" value="Cyclone" data-type="cyclone" />

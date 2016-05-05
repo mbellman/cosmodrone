@@ -15,6 +15,15 @@ function chance()
 }
 
 /**
+ * Randomly selects and returns an argument
+ */
+function pick_random()
+{
+	var pick = random(0, arguments.length);
+	return arguments[pick];
+}
+
+/**
  * Negative-friendly modulus operation
  */
 function mod(n, m)
@@ -36,8 +45,9 @@ function clamp(value, min, max)
 function minimum()
 {
 	var min = Number.POSITIVE_INFINITY;
+	var len = arguments.length;
 
-	for (var n = 0 ; n < arguments.length ; n++)
+	for (var n = 0 ; n < len ; n++)
 	{
 		if (arguments[n] < min)
 		{
@@ -78,6 +88,14 @@ function cycle_forward(value, max)
 function cycle_back(value, max)
 {
 	return (value > max ? 0 : value);
+}
+
+/**
+ * Return formatted RGB string from three color parts
+ */
+function rgb(r, g, b)
+{
+	return 'rgb('+r+','+g+','+b+')';
 }
 
 /**

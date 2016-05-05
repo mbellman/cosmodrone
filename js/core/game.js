@@ -1,8 +1,8 @@
 function GameInstance(assets)
 {
 	// Private:
-
 	var _ = this;
+	var DEBUG_MODE = false;
 	// Framerate/dt variables
 	var frametime = 1000 / 60;
 	var time;
@@ -55,6 +55,14 @@ function GameInstance(assets)
 				render();
 
 				time = new_time;
+
+				if (DEBUG_MODE)
+				{
+					var dt_ratio = (1/60) / dt;
+					var fps = Math.round(60 * dt_ratio);
+
+					$('.debug').html(fps + 'fps, ' + dt);
+				}
 			}
 
 			setTimeout(loop, frametime);
@@ -82,7 +90,7 @@ function GameInstance(assets)
 	/**
 	 * Sets up a scrolling planetary background
 	 */
-	function add_planet_background()
+	function add_background()
 	{
 		var t = Date.now();
 
@@ -100,7 +108,7 @@ function GameInstance(assets)
 					tileSize: 2,
 					lightAngle: 220,
 					hours: [12, 19, 20, 0, 4, 6],
-					cycleSpeed: 60000,
+					cycleSpeed: 20000,
 					scrollSpeed:
 					{
 						x: -10,
@@ -128,7 +136,7 @@ function GameInstance(assets)
 	// Public:
 	this.init = function()
 	{
-		add_planet_background();
+		add_background();
 		return _;
 	}
 
@@ -152,10 +160,18 @@ function GameInstance(assets)
 	this.stop = function()
 	{
 		active = false;
+		return _;
 	}
 
 	this.pause = function()
 	{
 		running = false;
+		return _;
+	}
+
+	this.debug = function(state)
+	{
+		DEBUG_MODE = state;
+		return _;
 	}
 }
