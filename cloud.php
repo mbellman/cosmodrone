@@ -65,7 +65,11 @@
 		<input type="button" class="type" value="Cyclone" data-type="cyclone" />
 		<input type="button" class="type" value="Cirrus" data-type="cirrus" />
 		<br />
-		Density: <input type="text" id="density" value="0.4" size="2" /> | Cyclone spokes: <input type="text" id="spokes" value="8" size="2" />
+		Density: <input type="text" id="density" value="0.4" size="2" />
+		<br />
+		Cyclone spokes: <input type="text" id="spokes" value="8" size="2" /> | Cyclone angle offset: <input type="text" id="angle" value="0" size="2" />
+		<br />
+		Cirrus points: <input type="text" id="points" value="10" size="2" />
 		<br />
 		<br />
 		<canvas id="cloud" width="200" height="200"></canvas>

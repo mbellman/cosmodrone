@@ -108,7 +108,7 @@ function GameInstance(assets)
 					tileSize: 2,
 					lightAngle: 220,
 					hours: [12, 19, 20, 0, 4, 6],
-					cycleSpeed: 20000,
+					cycleSpeed: 60000,
 					scrollSpeed:
 					{
 						x: -10,

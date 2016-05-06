@@ -39,11 +39,27 @@ function Background(assets)
 			type: 'cumulus'
 		},
 		{
+			file: 'cyclone-1',
+			type: 'cyclone'
+		},
+		{
+			file: 'cyclone-2',
+			type: 'cyclone'
+		},
+		{
+			file: 'small-cyclone-1',
+			type: 'small_cyclone'
+		},
+		{
 			file: 'heavy-cumulus-1',
 			type: 'heavy_cumulus'
 		},
 		{
 			file: 'heavy-cumulus-2',
+			type: 'heavy_cumulus'
+		},
+		{
+			file: 'heavy-cumulus-3',
 			type: 'heavy_cumulus'
 		},
 		{
@@ -55,9 +71,17 @@ function Background(assets)
 			type: 'small_cumulus'
 		},
 		{
-			file: 'cyclone-1',
-			type: 'cyclone'
-		}
+			file: 'cirrus-1',
+			type: 'cirrus'
+		},
+		{
+			file: 'cirrus-2',
+			type: 'cirrus'
+		},
+		{
+			file: 'cirrus-3',
+			type: 'cirrus'
+		},
 	];
 
 	/**
@@ -125,18 +149,26 @@ function Background(assets)
 	function prerender_cloud_variant(cloud)
 	{
 		var name = cloud_bank[cloud].file;
+		var type = cloud_bank[cloud].type;
 
 		var cloud_asset = assets.getImage('clouds/' + name + '.png');
-		var shadow_asset = assets.getImage('shadows/' + name + '.png');
-
 		var cloud_canvas = new Canvas(new Element('canvas')).setSize(cloud_asset.width, cloud_asset.height);
-		var shadow_canvas = new Canvas(new Element('canvas')).setSize(shadow_asset.width, shadow_asset.height);
-
 		cloud_canvas.draw.image(cloud_asset);
-		shadow_canvas.draw.image(shadow_asset);
-
 		cloud_renders.push(cloud_canvas.scale(configuration.tileSize));
-		shadow_renders.push(shadow_canvas.scale(configuration.tileSize));
+
+		if (type !== 'cirrus')
+		{
+			// Store shadow for lower clouds
+			var shadow_asset = assets.getImage('shadows/' + name + '.png');
+			var shadow_canvas = new Canvas(new Element('canvas')).setSize(shadow_asset.width, shadow_asset.height);
+			shadow_canvas.draw.image(shadow_asset);
+			shadow_renders.push(shadow_canvas.scale(configuration.tileSize));
+		}
+		else
+		{
+			// Store a blank entry for cirrus cloud shadows
+			shadow_renders.push(null);
+		}
 	}
 
 	/**
@@ -239,7 +271,7 @@ function Background(assets)
 
 		while (1)
 		{
-			if (cycle > 1000)
+			if (cycle > 5000)
 			{
 				// Halt the loop if we've cycled too many times
 				break;
@@ -267,8 +299,9 @@ function Background(assets)
 	 */
 	function spawn_cloud(index, x, y)
 	{
+		var type = cloud_bank[index].type;
 		var cloud_image = cloud_renders[index].element();
-		var shadow_image = shadow_renders[index].element();
+		var shadow_image = (type !== 'cirrus' ? shadow_renders[index].element() : null);
 
 		var point = new MovingPoint().setVelocity(configuration.scrollSpeed.x, configuration.scrollSpeed.y).setPosition(x, y);
 		var cloud = new Cloud().setImage(cloud_image).setShadow(shadow_image);
@@ -279,42 +312,63 @@ function Background(assets)
 	/**
 	 * Spawns a cyclone with surrounding cloud patches
 	 */
-	function spawn_cyclone(x, y)
+	function spawn_cyclone(size, x, y)
 	{
+		var large_cyclone = (size === 'large');
+
 		// Pick the cyclone
-		var index = random_cloud_index('cyclone');
+		var index = random_cloud_index((large_cyclone ? 'cyclone' : 'small_cyclone'));
 		var cyclone_size = cloud_renders[index].getSize();
 
 		// Position the cyclone at [x, y] relative to its eye
 		spawn_cloud(index, x - Math.round(cyclone_size.width/2), y - Math.round(cyclone_size.height/2));
 
-		// Pick how many surrounding clouds we'll
-		// place and set a starting offset angle
-		var group_count = random(7, 9);
+		// Set a starting offset angle
 		var angle = Math.random() * 2 * Math.PI;
 
-		for (var g = 0 ; g < group_count ; g++)
+		// Loop around once for clouds near the storm,
+		// and again for more distance, smaller ones
+		for (var i = 0 ; i < 2 ; i++)
 		{
-			// Select a new cloud patch
-			var type = chance() ? 'heavy_cumulus' : 'cumulus';
-			var index = random_cloud_index('cumulus');
-			var patch_size = cloud_renders[index].getSize();
-			// Make sure the patch is positioned outside of the cyclone
-			var w2 = Math.round(patch_size.width/2);
-			var h2 = Math.round(patch_size.height/2);
-			var patch_distance = Math.sqrt(w2*w2 + h2*h2);
-			var magnitude = 0.6 * (cyclone_size.width/2 + patch_distance);
-			// Determine how to displace the cloud patch
-			var patch_offset =
+			// Number of surrounding patches should increase
+			// with distance as the coverage area gets wider
+			var cloud_count = (i === 0 ? random(7, 9) : random(13, 16));
+			
+			for (var g = 0 ; g < cloud_count ; g++)
 			{
-				x: Math.round(magnitude * Math.cos(angle)),
-				y: Math.round(magnitude * Math.sin(angle) * -1)
-			};
+				// Select the next cloud patch
+				var type;
 
-			spawn_cloud(index, x - w2 + patch_offset.x, y - h2 + patch_offset.y);
+				if (large_cyclone)
+				{
+					if (i === 0) type = pick_random('cumulus', 'heavy_cumulus');
+					else type = pick_random('cumulus', 'small_cumulus');
+				}
+				else
+				{
+					if (i === 0) type = 'cumulus';
+					else type = 'small_cumulus';
+				}
 
-			// Advance the angle cycle to get coverage around the cyclone
-			angle += ((2 * Math.PI) / group_count);
+				var index = random_cloud_index(type);
+				var patch_size = cloud_renders[index].getSize();
+				// Make sure the patch is positioned outside of the cyclone
+				var w2 = Math.round(patch_size.width/2);
+				var h2 = Math.round(patch_size.height/2);
+				var patch_distance = Math.sqrt(w2*w2 + h2*h2);
+				var magnitude = (i+1) * (large_cyclone ? 0.6 : 0.52) * (cyclone_size.width/2 + patch_distance);
+				// Determine how to displace the cloud patch
+				var patch_offset =
+				{
+					x: Math.round(magnitude * Math.cos(angle)),
+					y: Math.round(magnitude * Math.sin(angle) * -1)
+				};
+
+				spawn_cloud(index, x - w2 + patch_offset.x, y - h2 + patch_offset.y);
+
+				// Advance the angle cycle to get coverage around the cyclone
+				angle += ((2 * Math.PI) / cloud_count);
+			}
 		}
 	}
 
@@ -326,11 +380,11 @@ function Background(assets)
 		var tile_size = terrain.getTileSize();
 		var map_size = terrain.getSize();
 
-		//spawn_cyclone(2000, 600);
+		//spawn_cyclone('small', 2000, 600);
 
-		for (var c = 0 ; c < 10 ; c++)
+		for (var c = 0 ; c < 30 ; c++)
 		{
-			var type = pick_random('cumulus', 'heavy_cumulus', 'small_cumulus');
+			var type = pick_random('small_cumulus', 'cirrus');
 			var index = random_cloud_index(type);
 
 			var position =
@@ -375,8 +429,8 @@ function Background(assets)
 		var blue_ratio = Math.pow(light_ratio, 1/3);
 
 		return {
-			red: 200 - Math.round(red_ratio*150),
-			green: 200 - Math.round(green_ratio*130),
+			red: 200 - Math.round(red_ratio*180),
+			green: 200 - Math.round(green_ratio*160),
 			blue: 200 - Math.round(blue_ratio*40)
 		};
 	}
@@ -550,10 +604,13 @@ function Background(assets)
 			var position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
 			var shadow = cloud.get(Cloud).getShadow();
 
-			// Target the background screens to avoid color errors
-			// in the [cloud_buffer_canvas] compositing process
-			screen.bg0.draw.image(shadow, position.x + shadow_offset.x, position.y + shadow_offset.y);
-			screen.bg1.draw.image(shadow, position.x + shadow_offset.x, position.y + shadow_offset.y);
+			if (shadow !== null)
+			{
+				// Target the background screens to avoid color errors
+				// in the [cloud_buffer_canvas] compositing process
+				screen.bg0.draw.image(shadow, position.x + shadow_offset.x, position.y + shadow_offset.y);
+				screen.bg1.draw.image(shadow, position.x + shadow_offset.x, position.y + shadow_offset.y);
+			}
 		}
 
 		// Draw clouds

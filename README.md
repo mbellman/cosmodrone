@@ -4,7 +4,8 @@ A hush-hush game project.
 ### TODO:
 
 ##### BACKGROUND
-* Cirrus clouds
+* Extended cirrus cloud patches
+* Slightly tweak/refine cirrus clouds
 * Cloud removal/repopulation
 
 ##### GAME

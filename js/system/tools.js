@@ -19,7 +19,7 @@ function chance()
  */
 function pick_random()
 {
-	var pick = random(0, arguments.length);
+	var pick = random(0, arguments.length-1);
 	return arguments[pick];
 }
 

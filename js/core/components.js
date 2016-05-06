@@ -54,7 +54,7 @@ function Cloud()
 	var _ = this;
 	var image;
 	var shadow;
-	var type = 0;
+	var type;
 
 	// Public:
 	this.update = function(dt){}

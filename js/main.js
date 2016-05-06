@@ -41,7 +41,7 @@ function main()
 	.then(function(pack)
 	{
 		game = new GameInstance(pack);
-		game.debug(true).init().start();
+		game.init().start();
 	});
 
 	$(window).on('resize', onResize);
