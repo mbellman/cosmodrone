@@ -1,5 +1,6 @@
 // Cloud pattern generator
 var size = 200;
+var type;
 
 function write_to_pixel(data, pixel, r, g, b, a) {
 	data[pixel] = r;
@@ -8,7 +9,138 @@ function write_to_pixel(data, pixel, r, g, b, a) {
 	data[pixel+3] = a;
 }
 
-function generate_clouds(type) {
+function decrease_alpha() {
+	var canvas_image = canvas.data.get();
+	var w = canvas.getSize().width;
+
+	for (var y = 0 ; y < w ; y++) {
+		for (var x = 0 ; x < w ; x++) {
+			var pixel = 4 * (y*w + x);
+			var alpha = canvas_image.data[pixel+3];
+			var alpha_ratio = alpha/255;
+
+			canvas_image.data[pixel+3] = Math.round(alpha * Math.pow(alpha_ratio, 2));
+		}
+	}
+
+	canvas.data.put(canvas_image);
+}
+
+function anti_alias() {
+	var canvas_image = canvas.data.get();
+	var c_w = canvas.getSize().width;
+
+	for (var i = 0 ; i < 1 ; i++) {
+		for (var y = 0 ; y < c_w ; y++) {
+			for (var x = 0 ; x < c_w ; x++) {
+				var pixel = 4 * (y*c_w + x);
+
+				var top_px = 4 * (clamp(y-1, 0, c_w)*c_w + x);
+				var left_px = 4 * (y*c_w + clamp(x-1, 0, c_w));
+				var right_px = 4 * (y*c_w + clamp(x+1, 0, c_w));
+				var bottom_px = 4 * (clamp(y+1, 0, c_w)*c_w + x);
+
+				var empty_surrounding = 0;
+
+				if (canvas_image.data[top_px+3] < 255) empty_surrounding++;
+				if (canvas_image.data[left_px+3] < 255) empty_surrounding++;
+				if (canvas_image.data[right_px+3] < 255) empty_surrounding++;
+				if (canvas_image.data[bottom_px+3] < 255) empty_surrounding++;
+
+				if (empty_surrounding < 3) {
+					if (canvas_image.data[pixel+3] === 0) {
+						write_to_pixel(canvas_image.data, pixel, 255, 255, 255, 140);
+					}
+				}
+			}
+		}
+	}
+
+	canvas.data.put(canvas_image);
+}
+
+function generate_cirrus_clouds(x, y) {
+	var start_alpha = 1;
+
+	canvas.setGlobalAlpha(start_alpha);
+
+	// Cirrus clouds
+	var group = [];
+	var size_q = Math.round(size/4);
+	var size_8 = Math.round(size/8);
+	var size_3 = Math.round(size/3);
+	var size_24 = Math.round(size/24);
+	var points = Number(document.getElementById('points').value);
+
+	if (isNaN(points)) {
+		density = 10;
+		document.getElementById('points').value = '10';
+	}
+
+	// Set up group of points
+	var max = 0;
+	for (var p = 0 ; p < points ; p++) {
+		var offset_x = random(-20, 20);
+		var offset_y = random(-10, 10);
+
+		if (offset_x > max) max = offset_x;
+
+		group.push([offset_x, offset_y, random(0.5, 1), brushes[random(0, brushes.length-1)], Math.random()/2]);
+	}
+
+	// Trace along the canvas, gradually reducing alpha
+	var size_3q = Math.round(0.75*size);
+	var position = {x: x, y: y};
+	var scale = 0.05;
+
+	// Have the clouds move about a little at random
+	for (var t = 0 ; t < 5 ; t++) {
+		position.x += random(-1, 1);
+		position.y += random(-1, 1);
+
+		for (var p = 0 ; p < points ; p++) {
+			var brush = group[p];
+			var _scale = brush[2];
+			canvas.setGlobalAlpha(start_alpha * Math.random());
+			canvas.draw.image(brush[3], position.x + brush[0], position.y + brush[1], brush[3].width * _scale * scale, brush[3].height * _scale * scale);
+		}
+	}
+
+	// Have the clouds wisp away in an arc
+	var dist = Math.round(30 * size * random(1, 1.25) * scale);
+	for (var t = 0 ; t < dist ; t++) {
+		var ratio = 1 - t / dist;
+		var scale_r = scale * ratio;
+
+		var x_move = 1 - Math.pow(ratio, 1/9);
+		var y_move = Math.pow(1 - ratio, 2);
+
+		var rand_limit = 0.02 * Math.pow(ratio, 2);
+		var rand_x = (Math.random() < rand_limit ? random(-1, 1) : 0);
+		var rand_y = (Math.random() < rand_limit ? random(-1, 1) : 0);
+
+		position.x += x_move + rand_x;
+		position.y += y_move + rand_y;
+
+		for (var p = 0 ; p < points ; p++) {
+			var brush = group[p];
+			var _scale = brush[2];
+			var wisp_limit = brush[4];
+			var inv_scale = (ratio < wisp_limit ? 100 * Math.pow(wisp_limit - ratio, 2) : 0);
+			var spread_w = spread.width * inv_scale * scale * 4;
+			var spread_h = spread.height * inv_scale * scale * 4;
+
+			var pos_x = position.x + brush[0] + Math.pow((1 - ratio), 1/3) * (max - brush[0]);
+
+			canvas.setGlobalAlpha(start_alpha * Math.pow(ratio,2));
+			canvas.draw.image(brush[3], pos_x, position.y + brush[1], brush[3].width * scale_r * _scale, brush[3].height * scale_r * _scale);
+			canvas.setGlobalAlpha(0.4 * start_alpha * Math.pow(ratio,3));
+			canvas.draw.image(spread, pos_x - spread_w, position.y + brush[1], spread_w, spread_h);
+		}
+	}
+}
+
+function generate_clouds() {
 	canvas.clear();
 	shadow.clear();
 
@@ -109,108 +241,10 @@ function generate_clouds(type) {
 			}
 		}
 
-		// Reduce stray pixel-sized clouds
-		for (var i = 0 ; i < 1 ; i++) {
-			for (var y = 0 ; y < size ; y++) {
-				for (var x = 0 ; x < size ; x++) {
-					var pixel = 4 * (y*size + x);
-
-					var top_px = 4 * (clamp(y-1, 0, size)*size + x);
-					var left_px = 4 * (y*size + clamp(x-1, 0, size));
-					var right_px = 4 * (y*size + clamp(x+1, 0, size));
-					var bottom_px = 4 * (clamp(y+1, 0, size)*size + x);
-
-					var empty_surrounding = 0;
-
-					if (canvas_image.data[top_px+3] < 255) empty_surrounding++;
-					if (canvas_image.data[left_px+3] < 255) empty_surrounding++;
-					if (canvas_image.data[right_px+3] < 255) empty_surrounding++;
-					if (canvas_image.data[bottom_px+3] < 255) empty_surrounding++;
-
-					if (empty_surrounding < 3) {
-						if (canvas_image.data[pixel+3] === 0) {
-							write_to_pixel(canvas_image.data, pixel, 255, 255, 255, 140);
-						}
-					}
-				}
-			}
-		}
-
 		canvas.data.put(canvas_image);
 		shadow.data.put(shadow_image);
-	} else {
-		canvas.setGlobalAlpha(1);
 
-		// Cirrus clouds
-		var group = [];
-		var size_q = Math.round(size/4);
-		var size_3 = Math.round(size/3);
-		var size_32 = Math.round(size/32);
-		var points = Number(document.getElementById('points').value);
-
-		if (isNaN(points)) {
-			density = 10;
-			document.getElementById('points').value = '10';
-		}
-
-		// Set up group of points
-		for (var p = 0 ; p < points ; p++) {
-			var offset_x = random(-size_q, size_q);
-			var offset_y = random(-size_32, size_32);
-
-			group.push([offset_x, offset_y, random(0.5, 1), brushes[random(0, brushes.length-1)]]);
-		}
-
-		// Trace along the canvas, gradually reducing alpha
-		var size_3q = Math.round(0.75*size);
-		var position = {x: random(size_q, size_3), y: random(size_q, size_3)};
-		var scale = (size/500);
-
-		// Have the clouds move about a little at random
-		for (var t = 0 ; t < 1 ; t++) {
-			position.x += random(-1, 1);
-			position.y += random(-1, 1);
-
-			for (var p = 0 ; p < points ; p++) {
-				var brush = group[p];
-				var _scale = brush[2];
-				canvas.draw.image(brush[3], position.x + brush[0], position.y + brush[1], brush[3].width * _scale * scale, brush[3].height * _scale * scale);
-			}
-		}
-
-		// Have the clouds wisp away in an arc
-		for (var t = 0 ; t < 4*size ; t++) {
-			var ratio = 1 - t / (4*size);
-			var scale_r = scale * ratio;
-
-			var x_move = 1 - Math.pow(ratio, 1/6) + (Math.random() < 0.01 ? 1 : 0);
-			var y_move = Math.pow(1 - ratio, 3) + (Math.random() < 0.01 ? 1 : 0);
-
-			position.x += x_move;
-			position.y += y_move;
-
-			canvas.setGlobalAlpha(Math.pow(ratio,3));
-
-			for (var p = 0 ; p < points ; p++) {
-				var brush = group[p];
-				var _scale = brush[2];
-				canvas.draw.image(brush[3], position.x + brush[0], position.y + brush[1], brush[3].width * scale_r * _scale, brush[3].height * scale_r * _scale);
-			}
-		}
-
-		// Decrease alpha
-		var canvas_image = canvas.data.get();
-
-		for (var y = 0 ; y < size ; y++) {
-			for (var x = 0 ; x < size ; x++) {
-				var pixel = 4 * (y*size + x);
-				var alpha = canvas_image.data[pixel+3];
-
-				canvas_image.data[pixel+3] = Math.round(0.8 * alpha);
-			}
-		}
-
-		canvas.data.put(canvas_image);
+		anti_alias();
 	}
 }
 
@@ -227,6 +261,15 @@ var brushes = [
 brushes[0].src = 'cirrus-brush.png';
 brushes[1].src = 'cirrus-brush2.png';
 brushes[2].src = 'cirrus-brush3.png';
+var spread = new Image();
+spread.src = 'cirrus-spread.png';
+
+function cirrus_canvas() {
+	canvas.element().style.width = 700 + 'px';
+	canvas.element().style.height = 700 + 'px';
+	canvas.element().width = 700;
+	canvas.element().height = 700;
+}
 
 function change_size(button) {
 	reset_size_buttons();
@@ -254,13 +297,32 @@ function reset_size_buttons() {
 }
 
 function document_click(e) {
+	if (e.target.getAttribute('id') === 'alpha') {
+		decrease_alpha();
+		anti_alias();
+		return;
+	}
+
 	if (e.target.className === 'size') {
 		change_size(e.target);
 	}
 
 	if (e.target.className === 'type') {
 		var cloud_type = e.target.getAttribute('data-type');
+		type = cloud_type;
+
+		if (type === 'cirrus') {
+			cirrus_canvas();
+			return;
+		}
+
+		change_size(document.querySelector('.size.selected'));
 		generate_clouds(cloud_type);
+	}
+
+	if (e.target.getAttribute('id') === 'cloud') {
+		var offset = document.getElementById('cloud').getBoundingClientRect();
+		generate_cirrus_clouds(e.clientX - offset.x, e.clientY - offset.y);
 	}
 
 	e.stopPropagation();

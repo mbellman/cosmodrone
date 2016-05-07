@@ -8,6 +8,7 @@ var AssetManifest =
 			'clouds/cirrus-1.png',
 			'clouds/cirrus-2.png',
 			'clouds/cirrus-3.png',
+			'clouds/cirrus-4.png',
 			'clouds/cumulus-1.png',
 			'clouds/cumulus-2.png',
 			'clouds/cumulus-3.png',

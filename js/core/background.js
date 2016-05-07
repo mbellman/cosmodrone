@@ -82,6 +82,10 @@ function Background(assets)
 			file: 'cirrus-3',
 			type: 'cirrus'
 		},
+		{
+			file: 'cirrus-4',
+			type: 'cirrus'
+		},
 	];
 
 	/**

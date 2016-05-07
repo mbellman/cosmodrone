@@ -52,6 +52,10 @@
 				border-right: 2px solid #FDD;
 				border-bottom: 2px solid #FDD;
 			}
+
+			input#alpha {
+				background: #F00;
+			}
 		</style>
 	</head>
 	<body>
@@ -70,6 +74,9 @@
 		Cyclone spokes: <input type="text" id="spokes" value="8" size="2" /> | Cyclone angle offset: <input type="text" id="angle" value="0" size="2" />
 		<br />
 		Cirrus points: <input type="text" id="points" value="10" size="2" />
+		<br />
+		<br />
+		<input type="button" id="alpha" class="type" value="Decrease alpha" />
 		<br />
 		<br />
 		<canvas id="cloud" width="200" height="200"></canvas>
