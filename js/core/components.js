@@ -30,6 +30,19 @@ function MovingPoint()
 		};
 	}
 
+	this.getVelocity = function()
+	{
+		return {
+			x: velocity.x,
+			y: velocity.y
+		};
+	}
+
+	this.getAbsoluteVelocity = function()
+	{
+		return velocity.magnitude();
+	}
+
 	this.setPosition = function(x, y)
 	{
 		position.x = x;
@@ -69,6 +82,11 @@ function Cloud()
 		return shadow;
 	}
 
+	this.getType = function()
+	{
+		return type;
+	}
+
 	this.setImage = function(_image)
 	{
 		image = _image;
@@ -78,6 +96,12 @@ function Cloud()
 	this.setShadow = function(_shadow)
 	{
 		shadow = _shadow;
+		return _;
+	}
+
+	this.setType = function(_type)
+	{
+		type = _type;
 		return _;
 	}
 }

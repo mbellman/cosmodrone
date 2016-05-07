@@ -26,8 +26,13 @@ div.debug {
 	z-index: 99;
 }
 
+div#game {
+	background: #88C;
+}
+
 div#game #bg {
 	z-index: 1;
+	opacity: 0.95;
 }
 
 canvas#game {

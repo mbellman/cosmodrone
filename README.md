@@ -3,10 +3,9 @@ A hush-hush game project.
 
 ### TODO:
 
-##### BACKGROUND
-* Extended cirrus cloud patches
-* Slightly tweak/refine cirrus clouds
-* Cloud removal/repopulation
+##### CODE STYLING
+* Why don't public functions have descriptions?
+* Brighten shadows
 
 ##### GAME
 * UI

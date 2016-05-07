@@ -85,29 +85,31 @@ function generate_cirrus_clouds(x, y) {
 
 		if (offset_x > max) max = offset_x;
 
-		group.push([offset_x, offset_y, random(0.5, 1), brushes[random(0, brushes.length-1)], Math.random()/2]);
+		group.push([offset_x, offset_y, random(0.5, 1), brushes[random(0, brushes.length-1)], Math.random()*0.75]);
 	}
 
 	// Trace along the canvas, gradually reducing alpha
 	var size_3q = Math.round(0.75*size);
 	var position = {x: x, y: y};
-	var scale = 0.05;
+	var scale = 0.1;
 
 	// Have the clouds move about a little at random
-	for (var t = 0 ; t < 5 ; t++) {
+	for (var t = 0 ; t < 25 ; t++) {
 		position.x += random(-1, 1);
 		position.y += random(-1, 1);
 
 		for (var p = 0 ; p < points ; p++) {
 			var brush = group[p];
-			var _scale = brush[2];
+			var _scale = brush[2] * (5 * t/25);
 			canvas.setGlobalAlpha(start_alpha * Math.random());
 			canvas.draw.image(brush[3], position.x + brush[0], position.y + brush[1], brush[3].width * _scale * scale, brush[3].height * _scale * scale);
 		}
 	}
 
+	return;
+
 	// Have the clouds wisp away in an arc
-	var dist = Math.round(30 * size * random(1, 1.25) * scale);
+	var dist = Math.round(35 * size * random(1, 1.25) * scale);
 	for (var t = 0 ; t < dist ; t++) {
 		var ratio = 1 - t / dist;
 		var scale_r = scale * ratio;
@@ -127,15 +129,15 @@ function generate_cirrus_clouds(x, y) {
 			var _scale = brush[2];
 			var wisp_limit = brush[4];
 			var inv_scale = (ratio < wisp_limit ? 100 * Math.pow(wisp_limit - ratio, 2) : 0);
-			var spread_w = spread.width * inv_scale * scale * 4;
-			var spread_h = spread.height * inv_scale * scale * 4;
+			var spread_w = spread.width * inv_scale * scale * 8;
+			var spread_h = spread.height * inv_scale * scale * 8;
 
 			var pos_x = position.x + brush[0] + Math.pow((1 - ratio), 1/3) * (max - brush[0]);
 
 			canvas.setGlobalAlpha(start_alpha * Math.pow(ratio,2));
 			canvas.draw.image(brush[3], pos_x, position.y + brush[1], brush[3].width * scale_r * _scale, brush[3].height * scale_r * _scale);
-			canvas.setGlobalAlpha(0.4 * start_alpha * Math.pow(ratio,3));
-			canvas.draw.image(spread, pos_x - spread_w, position.y + brush[1], spread_w, spread_h);
+			canvas.setGlobalAlpha(0.1 * start_alpha * Math.pow(ratio,2));
+			canvas.draw.image(brush[3], pos_x - spread_w, position.y + brush[1], spread_w, spread_h);
 		}
 	}
 }
@@ -235,7 +237,7 @@ function generate_clouds() {
 				if (average > 70) {
 					var adj = (average > 90 ? 55 : 0);
 
-					write_to_pixel(canvas_image.data, pixel, 220+adj, 220+adj, 245+adj, 255);
+					write_to_pixel(canvas_image.data, pixel, 200+adj, 200+adj, 225+adj, 255);
 					write_to_pixel(shadow_image.data, pixel, 0, 0, 10, 200);
 				}
 			}
