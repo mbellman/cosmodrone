@@ -399,7 +399,7 @@ function Background(assets)
 		var angle = Math.random() * 2 * Math.PI;
 
 		// Loop around once for clouds near the storm,
-		// and again for more distance, smaller ones
+		// and again for more distant, smaller ones
 		for (var i = 0 ; i < 2 ; i++)
 		{
 			// Number of surrounding patches should increase
@@ -474,7 +474,7 @@ function Background(assets)
 	{
 		var bg_velocity = bg_camera.getVelocity();
 		var bg_abs_velocity = bg_camera.getAbsoluteVelocity();
-		var spawn_probability = 0.00025 * bg_abs_velocity;
+		var spawn_probability = 0.0002 * bg_abs_velocity;
 
 		var position =
 		{
@@ -489,11 +489,11 @@ function Background(assets)
 			return;
 		}
 
-		if (Math.random() > 0.05)
+		if (Math.random() > 0.02)
 		{
-			// 95% chance of generating a normal cloud
+			// 98% chance of generating a normal cloud
 			// (higher chance of picking cirrus clouds)
-			var type = pick_random('cumulus', 'heavy_cumulus', 'small_cumulus', 'cirrus', 'cirrus');
+			var type = pick_random('cumulus', 'heavy_cumulus', 'small_cumulus', 'cirrus', 'cirrus', 'cirrus');
 			var index = random_cloud_index(type);
 			var size = cloud_renders[index].getSize();
 
@@ -505,7 +505,7 @@ function Background(assets)
 		}
 		else
 		{
-			// 5% chance of generating a cyclone
+			// 2% chance of generating a cyclone
 			var index = pick_random('large', 'small');
 
 			var size =
@@ -516,8 +516,8 @@ function Background(assets)
 
 			var spawn_offset =
 			{
-				x: 1500,
-				y: 1500
+				x: 1250,
+				y: 1250
 			};
 
 			cloud_cooldown = 2000;
