@@ -26,6 +26,8 @@ var AssetManifest =
 			'clouds/small-cumulus-3.png',
 			'clouds/small-cumulus-4.png',
 			'clouds/small-cyclone-1.png',
+			'drone/drone.png',
+			'parts/dummy.png',
 			'shadows/cumulus-1.png',
 			'shadows/cumulus-2.png',
 			'shadows/cumulus-3.png',

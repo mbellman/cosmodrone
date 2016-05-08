@@ -42,7 +42,7 @@ function Terrain()
 				if (e < sea_line) return 20 + Math.round(e/4);
 				if (e <= sea_line+5) return 180;
 				if (e <= tree_line) return 125-e;
-				if (e <= 80) return 175;
+				if (e <= 80) return 160;
 				return 120+e;
 			},
 			green: function(e)
@@ -50,7 +50,7 @@ function Terrain()
 				if (e < sea_line) return Math.max(35, 60 - (4*sea_line - 4*e));
 				if (e <= sea_line+5) return 155 - (sea_line+5) + e;
 				if (e <= tree_line) return 85+e;
-				if (e <= 80) return 140;
+				if (e <= 80) return 125;
 				return 95+e;
 			},
 			blue: function(e)
@@ -58,7 +58,7 @@ function Terrain()
 				if (e < sea_line) return 35 + Math.round(e/10);
 				if (e <= sea_line+5) return 105;
 				if (e <= tree_line) return Math.round(0.6*e);
-				if (e <= 80) return 110;
+				if (e <= 80) return 95;
 				return 115+e;
 			}
 		},
@@ -422,20 +422,24 @@ function Terrain()
 				continue;
 			}
 
-			// Pick a random size (within range) and generate the layout
+			// Pick a random city size (within range), skewed toward lower values
 			var r = Generator.random();
-			var city_size = 1 + Math.ceil((r*r*r) * Generator.random(0, max_size));
+			var r3 = r*r*r;
+			var city_size = 1 + Math.ceil(r3 * Generator.random(0, max_size));
 			var city_radius = Math.round(city_size/2);
+			// Generate city structure
 			var city_layout = generate_city(city_size);
+			// Get elevation at the center point of the city
 			var center_y = mod(location.y + city_radius, map_size);
 			var center_x = mod(location.x + city_radius, map_size);
-			// Get elevation at the center point of the city
 			var city_elevation = height_data[center_y][center_x];
 
 			// Draw the layout directly onto terrain_canvas
-			for (var y = 0 ; y < city_layout.length ; y++)
+			city_size = city_layout.length;
+
+			for (var y = 0 ; y < city_size ; y++)
 			{
-				for (var x = 0 ; x < city_layout.length ; x++)
+				for (var x = 0 ; x < city_size ; x++)
 				{
 					var tile =
 					{
@@ -447,7 +451,9 @@ function Terrain()
 					// only draw on tiles above sea level
 					if (height_data[tile.y][tile.x] >= sea_level)
 					{
-						var color_reduction = 6 * (5 - city_layout[y][x]);
+						// Find density value for this tile, ranging from 0-5
+						var density = city_layout[y][x];
+						var color_reduction = 6 * (5 - density);
 
 						var hue =
 						{
@@ -457,7 +463,7 @@ function Terrain()
 						};
 
 						// Only draw tiles above a certain density
-						if (city_layout[y][x] > 0)
+						if (density > 0)
 						{
 							// Flatten terrain beneath the city
 							height_data[tile.y][tile.x] = city_elevation;
@@ -582,14 +588,13 @@ function Terrain()
 				{
 					var city1 = chunk[c];
 
-					// Now iterate over all neighboring city chunks
-					// (including self) and check city distances
+					// Iterate over neighboring city chunks
 					for (var n = 0 ; n < neighbor.length ; n++)
 					{
 						var neighbor_chunk = neighbor[n];
 						var neighbor_cities = city_chunks[neighbor_chunk.y][neighbor_chunk.x];
 
-						// Finally iterate over all cities from a neighbor chunk
+						// Iterate over all cities from a neighbor chunk
 						for (var c2 = 0 ; c2 < neighbor_cities.length ; c2++)
 						{
 							var city2 = neighbor_cities[c2];
@@ -823,10 +828,10 @@ function Terrain()
 	{
 		// Generate an elevation map
 		height_map = new HeightMap();
-		height_map.seed('height').generate(settings);
+		height_map.seed('seedy').generate(settings);
 		// Generate a temperature map
 		temp_map = new HeightMap();
-		temp_map.seed('height').generate(
+		temp_map.seed('seedy').generate(
 			{
 				iterations: Math.min(settings.iterations - 1, 10),
 				elevation: 100,
@@ -842,7 +847,7 @@ function Terrain()
 		// Public canvas is sourced from time_canvas
 		_.canvas = time_canvas.element();
 		// Seed the PRNG
-		Generator.seed('height');
+		Generator.seed('seedy');
 
 		init = true;
 

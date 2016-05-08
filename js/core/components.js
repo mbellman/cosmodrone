@@ -1,9 +1,48 @@
 /**
- * A sprite to be rendered on the game screen
+ * A sprite to be rendered onto [screen.game]
  */
-function Sprite()
+function Sprite(source)
 {
+	// Private:
+	var _ = this;
+	var target;
 
+	// Public:
+	this.x = 0;
+	this.y = 0;
+	this.scale = 1;
+	this.alpha = 1;
+
+	this.update = function(dt)
+	{
+		screen.game.setGlobalAlpha(_.alpha);
+		screen.game.draw.image(
+			source,
+			_.x - (!!target ? target.getPosition().x : 0),
+			_.y - (!!target ? target.getPosition().y : 0),
+			source.width * _.scale,
+			source.height * _.scale
+		);
+	}
+
+	this.setXY = function(x, y)
+	{
+		_.x = x;
+		_.y = y;
+		return _;
+	}
+
+	this.follow = function(_target)
+	{
+		target = _target;
+		return _;
+	}
+
+	this.setAlpha = function(alpha)
+	{
+		_.alpha = alpha;
+		return _;
+	}
 }
 
 /**
@@ -43,17 +82,17 @@ function MovingPoint()
 		return velocity.magnitude();
 	}
 
-	this.setPosition = function(x, y)
+	this.setPosition = function(x, y, is_modifier)
 	{
-		position.x = x;
-		position.y = y;
+		position.x = (is_modifier ? position.x+x : x);
+		position.y = (is_modifier ? position.y+y : y);
 		return _;
 	}
 
-	this.setVelocity = function(x, y)
+	this.setVelocity = function(x, y, is_modifier)
 	{
-		velocity.x = x;
-		velocity.y = y;
+		velocity.x = (is_modifier ? velocity.x+x : x);
+		velocity.y = (is_modifier ? velocity.y+y : y);
 		return _;
 	}
 }
@@ -118,5 +157,10 @@ function Drone()
 	this.update = function(dt)
 	{
 
+	}
+
+	this.getSpeed = function()
+	{
+		return 3;
 	}
 }

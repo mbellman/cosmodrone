@@ -2,8 +2,8 @@
 <html>
 	<head>
 		<meta charset="UTF-8">
-		<script src="js/graphics/canvas.js"></script>
-		<script src="js/system/tools.js"></script>
+		<script src="../js/graphics/canvas.js"></script>
+		<script src="../js/system/tools.js"></script>
 		<style type="text/css">
 			body {
 				font-family: Arial;

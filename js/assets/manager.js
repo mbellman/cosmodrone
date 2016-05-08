@@ -100,6 +100,14 @@
 			audio: {}
 		};
 
+		/**
+		 * Warns of an unavailable asset listing
+		 */
+		function asset_error(path, file)
+		{
+			console.warn('Asset error: ' (root.base + path + file));
+		}
+
 		// Public:
 		this.path = function(type, folder)
 		{
@@ -123,12 +131,26 @@
 
 		this.getImage = function(file)
 		{
-			return data.image[root.base + root.images + file].media;
+			try
+			{
+				return data.image[root.base + root.images + file].media;
+			}
+			catch(e)
+			{
+				asset_error(root.images, file);
+			}
 		}
 
 		this.getAudio = function(file)
 		{
-			return data.audio[root.base + root.audio + file].media;
+			try
+			{
+				return data.audio[root.base + root.audio + file].media;
+			}
+			catch(e)
+			{
+				asset_error(root.audio, file);
+			}
 		}
 
 		this.lock = function()

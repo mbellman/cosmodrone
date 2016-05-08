@@ -7,6 +7,7 @@ include(
 		'js/graphics/canvas.js',
 		'js/system/tools.js',
 		'js/system/vector.js',
+		'js/system/input.js',
 		'js/system/rng.js',
 		'js/system/map.js',
 		'js/system/terrain.js',
@@ -25,33 +26,20 @@ var game;
 // the primary window.resize() event
 var resize_event_queue = [];
 
-// Initialization
+/**
+ * Initialization
+ */
 function main()
 {
 	createScreens();
-	onResize();
+	loadGame();
 
-	new AssetLoader()
-	.root('assets')
-	.load(AssetManifest)
-	.progress(function(percent)
-	{
-		console.log('Loading...' + percent + '%');
-	})
-	.then(function(pack)
-	{
-		game = new GameInstance(pack);
-		game.init().start();
-	});
-
-	$(window).on('resize', onResize);
+	$(window).on('resize', onResize).resize();
 }
 
-function fullSizeScreen()
-{
-	return new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
-}
-
+/**
+ * Set up screen structure
+ */
 function createScreens()
 {
 	// Backgrounds (for planet surface, starfield, etc.)
@@ -60,13 +48,15 @@ function createScreens()
 	screen.clouds = fullSizeScreen();
 	screen.clouds.element().style.zIndex = '3';
 
+	// Add background canvases to the document
 	$('#game #bg')
 	.append(screen.bg0.element())
 	.append(screen.bg1.element())
 	.append(screen.clouds.element());
 
-	// Primary game scene
+	// Primary game screen
 	screen.game = fullSizeScreen();
+	screen.game.element().style.zIndex = '2';
 
 	$('#game')
 	.append(screen.game.element());
@@ -77,6 +67,28 @@ function createScreens()
 	.addClass('fill');
 }
 
+/**
+ * Start up the game
+ */
+function loadGame()
+{
+	new AssetLoader()
+	.root('assets')
+	.load(AssetManifest)
+	.progress(function(percent)
+	{
+		console.log('Loading...' + percent + '%');
+	})
+	.then(function(pack)
+	{
+		game = new GameInstance(pack);
+		game.debug(true).init().start();
+	});
+}
+
+/**
+ * Browser resize handler
+ */
 function onResize()
 {
 	viewport.width = $(window).width();
@@ -96,4 +108,12 @@ function onResize()
 	{
 		resize_event_queue[e]();
 	}
+}
+
+/**
+ * Shorthand for obtaining a screen-sized Canvas instance
+ */
+function fullSizeScreen()
+{
+	return new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
 }

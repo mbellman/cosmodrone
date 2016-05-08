@@ -184,7 +184,7 @@ function Background(assets)
 		// Determine the progress between hours
 		var prev_hour = configuration.hours[cycle_forward(active_terrain-1, terrain_renders.length-1)];
 		var next_hour = configuration.hours[active_terrain];
-		var difference = (next_hour > prev_hour ? next_hour-prev_hour : 24-prev_hour + next_hour);
+		var difference = (next_hour >= prev_hour ? next_hour-prev_hour : 24-prev_hour + next_hour);
 		var granular_hour = clamp(prev_hour + progress*difference, 0, 24);
 
 		granular_light_level = Math.abs(12-granular_hour);
@@ -638,12 +638,8 @@ function Background(assets)
 	 */
 	function stop_bg_cycle()
 	{
-		// Determine background layering
-		var new_bg = 'bg' + front_bg;
-		var old_bg = 'bg' + bit_flip(front_bg);
-
-		$(screen[old_bg].element()).stop();
-		$(screen[new_bg].element()).stop();
+		$(screen.bg0.element()).stop();
+		$(screen.bg1.element()).stop();
 	}
 
 	/**
@@ -748,7 +744,7 @@ function Background(assets)
 
 		// Draw light level color first for compositing
 		var color = get_time_color();
-		screen.clouds.setGlobalCompositeOperation('source-over').setGlobalAlpha(0.6);
+		screen.clouds.setGlobalCompositeOperation('source-over').setGlobalAlpha(0.7);
 		screen.clouds.draw.rectangle(0, 0, viewport.width, viewport.height).fill(rgb(color.red, color.green, color.blue));
 
 		// Draw shadows
@@ -875,10 +871,9 @@ function Background(assets)
 
 	this.build = function(handlers)
 	{
-		// Safeguards for re-building the
-		// instance after initialization
-		loaded = false;
-		stop_bg_cycle();
+		// Safeguard in case of re-building the
+		// instance after first initialization
+		_.halt();
 
 		handlers = handlers || {};
 		handlers.progress = handlers.progress || function(){};
@@ -927,5 +922,11 @@ function Background(assets)
 		);
 
 		return _;
+	}
+
+	this.halt = function()
+	{
+		loaded = false;
+		stop_bg_cycle();
 	}
 }

@@ -3,10 +3,16 @@ A hush-hush game project.
 
 ### TODO:
 
-##### CODE STYLING
-* Why don't public functions have descriptions?
+##### GAME
+* Background/cloud rendering is definitely going to need some optimizing
+* Proper Sprite follow()/camera offset implementation
+* Drone rotation + movement in pointed direction
+* UI
+
+##### BACKGROUND
+* Rivers
+* More cirrus clouds
 * Brighten shadows
 
-##### GAME
-* UI
-* Entire rest of game
+##### CODE STYLING
+* Why don't public functions have descriptions?
