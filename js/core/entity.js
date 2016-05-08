@@ -37,6 +37,11 @@ function Entity()
 			component.onAdded();
 		}
 
+		if (typeof component.setOwner === 'function')
+		{
+			component.setOwner(_);
+		}
+
 		return _;
 	}
 

@@ -15,14 +15,18 @@ function Sprite(source)
 
 	this.update = function(dt)
 	{
+		var draw =
+		{
+			x: _.x - (!!target ? target.getPosition().x : 0),
+			y: _.y - (!!target ? target.getPosition().y : 0)
+		};
+
+		// Avoid drawing objects offscreen
+		if (draw.x > viewport.width || draw.x + source.width < 0) return;
+		if (draw.y > viewport.height || draw.y + source.height < 0) return;
+
 		screen.game.setGlobalAlpha(_.alpha);
-		screen.game.draw.image(
-			source,
-			_.x - (!!target ? target.getPosition().x : 0),
-			_.y - (!!target ? target.getPosition().y : 0),
-			source.width * _.scale,
-			source.height * _.scale
-		);
+		screen.game.draw.image(source, draw.x, draw.y, source.width * _.scale, source.height * _.scale);
 	}
 
 	this.setXY = function(x, y)
@@ -52,13 +56,32 @@ function MovingPoint()
 {
 	// Private:
 	var _ = this;
+	var owner = null;
 	var position = new Vec2();
 	var velocity = new Vec2();
+
+	/**
+	 * Method for updating the Sprite coordinates
+	 * of the owner entity where applicable
+	 */
+	function update_sprite()
+	{
+		if (owner !== null)
+		{
+			var sprite = owner.get(Sprite);
+
+			if (sprite !== null)
+			{
+				sprite.setXY(position.x, position.y);
+			}
+		}
+	}
 
 	// Public:
 	this.update = function(dt)
 	{
 		position.add(velocity, dt);
+		update_sprite();
 	}
 
 	this.getPosition = function(round)
@@ -86,6 +109,9 @@ function MovingPoint()
 	{
 		position.x = (is_modifier ? position.x+x : x);
 		position.y = (is_modifier ? position.y+y : y);
+
+		update_sprite();
+
 		return _;
 	}
 
@@ -93,6 +119,12 @@ function MovingPoint()
 	{
 		velocity.x = (is_modifier ? velocity.x+x : x);
 		velocity.y = (is_modifier ? velocity.y+y : y);
+		return _;
+	}
+
+	this.setOwner = function(entity)
+	{
+		owner = entity;
 		return _;
 	}
 }

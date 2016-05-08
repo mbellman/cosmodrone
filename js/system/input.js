@@ -1,3 +1,11 @@
+var KeyCodes =
+{
+	37: 'LEFT',
+	38: 'UP',
+	39: 'RIGHT',
+	40: 'DOWN'
+};
+
 /**
  * An input manager allowing for custom key event queues
  */
@@ -97,32 +105,24 @@ function Keys()
 		DOWN: false,
 		LEFT: false
 	};
-	var map =
-	{
-		'arrowup': 'UP',
-		'arrowright': 'RIGHT',
-		'arrowdown': 'DOWN',
-		'arrowleft': 'LEFT'
-	};
 
 	/**
 	 * Toggle the key state depending on the event type
 	 */
 	function set_state(event)
 	{
-		var key_name = KeyCodes[event.keyCode];
-		var mapped_key = map[key_name] || 'null';
+		var key_name = KeyCodes[event.keyCode] || 'null';
 
-		if (typeof state[mapped_key] !== 'undefined')
+		if (typeof state[key_name] !== 'undefined')
 		{
 			if (event.type === 'keydown')
 			{
-				state[mapped_key] = true;
+				state[key_name] = true;
 			}
 
 			if (event.type === 'keyup')
 			{
-				state[mapped_key] = false;
+				state[key_name] = false;
 			}
 		}
 	}
@@ -162,11 +162,3 @@ function Keys()
 		return _;
 	}
 }
-
-var KeyCodes =
-{
-	37: 'arrowleft',
-	38: 'arrowup',
-	39: 'arrowright',
-	40: 'arrowdown'
-};

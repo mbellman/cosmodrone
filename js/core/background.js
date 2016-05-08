@@ -229,7 +229,7 @@ function Background(assets)
 	// ---------------------------------------------- //
 
 	/**
-	 * Prerender a single terrain variant at a specific hour
+	 * Prerender terrain at a specific hour
 	 */
 	function prerender_terrain_variant(hour)
 	{
@@ -238,60 +238,18 @@ function Background(assets)
 
 		terrain.setTime(hour);
 
-		terrain_renders.push(new Canvas(new Element('canvas')).setSize(tile_size*map_size, tile_size*map_size));
-		terrain_renders[terrain_renders.length-1].draw.image(terrain.canvas);
+		terrain_renders.push(
+			new Canvas(new Element('canvas'))
+				.setSize(tile_size * map_size, tile_size * map_size)
+		);
+
+		terrain_renders[terrain_renders.length-1].draw
+			.image(terrain.canvas);
 	}
 
 	/**
-	 * Prerender variants of the terrain to
-	 * reflect important hours of the day
-	 */
-	function prerender_terrain_variants(parameters)
-	{
-		parameters.progress = parameters.progress || function(){};
-		parameters.complete = parameters.complete || function(){};
-
-		var times = parameters.times || [12];
-		var total = times.length;
-		var t = 0;
-
-		terrain_renders.length = 0;
-
-		/**
-		 * Temporary function for rendering the
-		 * next terrain variant on a delay as to
-		 * avoid halting the primary JS process
-		 */
-		function INTERNAL_prerender_next()
-		{
-			if (t < total)
-			{
-				var hour = times[t];
-
-				setTimeout(function(){
-					prerender_terrain_variant(hour);
-
-					if (++t <= total)
-					{
-						parameters.progress(++build_steps_complete, build_steps);
-					}
-
-					INTERNAL_prerender_next();
-				}, 100);
-
-				return;
-			}
-
-			parameters.complete();
-		}
-
-		// Start rendering first variant
-		INTERNAL_prerender_next();
-	}
-
-	/**
-	 * Prerenders and saves one cloud image asset and its
-	 * shadow as non-interpolated scaled canvas data
+	 * Prerender cloud + shadow pair as
+	 * non-interpolated scaled Canvas data
 	 */
 	function prerender_cloud_variant(cloud)
 	{
@@ -299,7 +257,9 @@ function Background(assets)
 		var type = cloud_bank[cloud].type;
 
 		var cloud_asset = assets.getImage('clouds/' + name + '.png');
-		var cloud_canvas = new Canvas(new Element('canvas')).setSize(cloud_asset.width, cloud_asset.height);
+		var cloud_canvas = new Canvas(new Element('canvas'))
+			.setSize(cloud_asset.width, cloud_asset.height);
+
 		cloud_canvas.draw.image(cloud_asset);
 		cloud_renders.push(cloud_canvas.scale(configuration.tileSize));
 
@@ -307,7 +267,9 @@ function Background(assets)
 		{
 			// Store shadow for lower clouds
 			var shadow_asset = assets.getImage('shadows/' + name + '.png');
-			var shadow_canvas = new Canvas(new Element('canvas')).setSize(shadow_asset.width, shadow_asset.height);
+			var shadow_canvas = new Canvas(new Element('canvas'))
+				.setSize(shadow_asset.width, shadow_asset.height);
+
 			shadow_canvas.draw.image(shadow_asset);
 			shadow_renders.push(shadow_canvas.scale(configuration.tileSize));
 		}
@@ -316,6 +278,62 @@ function Background(assets)
 			// Store a blank entry for cirrus cloud shadows
 			shadow_renders.push(null);
 		}
+	}
+
+	/**
+	 * Used for prerendering a sequence
+	 * of Canvas instances on a delay
+	 */
+	function prerender_group(index, total, data, handler, progress, complete)
+	{
+		if (index < total)
+		{
+			try
+			{
+				var input = data[index];
+			}
+			catch(e)
+			{
+				var input = index;
+			}
+
+			setTimeout(function()
+			{
+				handler(input);
+
+				if (++index <= total)
+				{
+					progress(++build_steps_complete, build_steps);
+				}
+
+				prerender_group(index, total, data, handler, progress, complete);
+			}, 100);
+
+			return;
+		}
+
+		complete();
+	}
+
+	/**
+	 * Prerender variants of the terrain to
+	 * reflect important hours of the day
+	 */
+	function prerender_terrain_variants(handlers)
+	{
+		handlers.progress = handlers.progress || function(){};
+		handlers.complete = handlers.complete || function(){};
+
+		terrain_renders.length = 0;
+
+		prerender_group(
+			0,
+			configuration.hours.length,
+			configuration.hours,
+			prerender_terrain_variant,
+			handlers.progress,
+			handlers.complete
+		);
 	}
 
 	/**
@@ -332,31 +350,14 @@ function Background(assets)
 		cloud_renders.length = 0;
 		shadow_renders.length = 0;
 
-		/**
-		 * See: prerender_terrain_variants()
-		 */
-		function INTERNAL_prerender_next()
-		{
-			if (c < cloud_bank.length)
-			{
-				setTimeout(function(){
-					prerender_cloud_variant(c);
-
-					if (++c <= cloud_bank.length)
-					{
-						handlers.progress(++build_steps_complete, build_steps);
-					}
-
-					INTERNAL_prerender_next();
-				}, 100);
-
-				return;
-			}
-
-			handlers.complete();
-		}
-
-		INTERNAL_prerender_next();
+		prerender_group(
+			0,
+			cloud_bank.length,
+			null,
+			prerender_cloud_variant,
+			handlers.progress,
+			handlers.complete
+		);
 	}
 
 	/**
@@ -375,8 +376,14 @@ function Background(assets)
 			y: configuration.scrollSpeed.y
 		};
 
-		var point = new MovingPoint().setVelocity(velocity.x, velocity.y).setPosition(x, y);
-		var cloud = new Cloud().setImage(cloud_image).setShadow(shadow_image).setType(type);
+		var point = new MovingPoint()
+			.setVelocity(velocity.x, velocity.y)
+			.setPosition(x, y);
+
+		var cloud = new Cloud()
+			.setImage(cloud_image)
+			.setShadow(shadow_image)
+			.setType(type);
 
 		clouds.push(new Entity().add(point).add(cloud));
 	}
@@ -388,55 +395,63 @@ function Background(assets)
 	{
 		var large_cyclone = (size === 'large');
 
-		// Pick the cyclone
+		// Pick a cyclone among several
 		var index = random_cloud_index((large_cyclone ? 'cyclone' : 'small_cyclone'));
 		var cyclone_size = cloud_renders[index].getSize();
 
-		// Position the cyclone at [x, y] relative to its eye
-		spawn_cloud(index, x - Math.round(cyclone_size.width/2), y - Math.round(cyclone_size.height/2));
+		// Position the cyclone eye at [x, y]
+		var position =
+		{
+			x: x - Math.round(cyclone_size.width/2),
+			y: y - Math.round(cyclone_size.height/2)
+		};
+
+		spawn_cloud(index, position.x, position.y);
 
 		// Set a starting offset angle
 		var angle = Math.random() * 2 * Math.PI;
 
-		// Loop around once for clouds near the storm,
-		// and again for more distant, smaller ones
+		// Draw surrounding clouds in two rings; loop around once for clouds
+		// near the storm, and again for more distant smaller clouds
 		for (var i = 0 ; i < 2 ; i++)
 		{
-			// Number of surrounding patches should increase
-			// with distance as the coverage area gets wider
+			// We'll need more clouds among the outer ring
 			var cloud_count = (i === 0 ? random(7, 9) : random(13, 16));
-			
+
 			for (var g = 0 ; g < cloud_count ; g++)
 			{
-				// Select the next cloud patch
 				var type;
 
 				if (large_cyclone)
 				{
+					// Larger clouds for larger cyclones
 					if (i === 0) type = pick_random('cumulus', 'heavy_cumulus');
 					else type = pick_random('cumulus', 'small_cumulus');
 				}
 				else
 				{
+					// Smaller clouds for smaller cyclones
 					if (i === 0) type = 'cumulus';
 					else type = 'small_cumulus';
 				}
 
+				// Select the next cloud
 				var index = random_cloud_index(type);
-				var patch_size = cloud_renders[index].getSize();
-				// Make sure the patch is positioned outside of the cyclone
-				var w2 = Math.round(patch_size.width/2);
-				var h2 = Math.round(patch_size.height/2);
-				var patch_distance = Math.sqrt(w2*w2 + h2*h2);
-				var magnitude = (i+1) * (large_cyclone ? 0.6 : 0.52) * (cyclone_size.width/2 + patch_distance);
-				// Determine how to displace the cloud patch
-				var patch_offset =
+				var cloud_size = cloud_renders[index].getSize();
+				// Make sure the cloud is positioned outside of the cyclone
+				var w_half = Math.round(cloud_size.width/2);
+				var h_half = Math.round(cloud_size.height/2);
+				var cloud_distance = Math.sqrt(w_half*w_half + h_half*h_half);
+				// Formula for the magnitude of this cloud's offset vector
+				var magnitude = (i+1) * (large_cyclone ? 0.6 : 0.52) * (cyclone_size.width/2 + cloud_distance);
+				// Determine how to displace the cloud
+				var cloud_offset =
 				{
 					x: Math.round(magnitude * Math.cos(angle)),
 					y: Math.round(magnitude * Math.sin(angle) * -1)
 				};
 
-				spawn_cloud(index, x - w2 + patch_offset.x, y - h2 + patch_offset.y);
+				spawn_cloud(index, x - w_half + cloud_offset.x, y - h_half + cloud_offset.y);
 
 				// Advance the angle cycle to get coverage around the cyclone
 				angle += ((2 * Math.PI) / cloud_count);
@@ -482,10 +497,14 @@ function Background(assets)
 			y: 0
 		};
 
-		if (Math.random() > spawn_probability || (bg_velocity.x === 0 && bg_velocity.y === 0) || cloud_cooldown > 0)
+		if (
+			Math.random() > spawn_probability ||
+			(bg_velocity.x === 0 && bg_velocity.y === 0) ||
+			cloud_cooldown > 0
+		)
 		{
-			// Don't generate a new cloud if [spawn_probability]
-			// limit not hit or background isn't scrolling
+			// Don't generate a new cloud if [spawn_probability] limit
+			// not hit, background isn't scrolling, or cooldown active
 			return;
 		}
 
@@ -649,6 +668,7 @@ function Background(assets)
 	{
 		var tile_size = terrain.getTileSize();
 		var map_size = terrain.getSize();
+
 		// Tile offset 'pointer'
 		var tile_offset =
 		{
@@ -673,6 +693,7 @@ function Background(assets)
 			x: tile_size - mod(bg_camera.getPosition().x, tile_size),
 			y: tile_size - mod(bg_camera.getPosition().y, tile_size)
 		};
+
 		// Information for time-of-day rendering sources/targets
 		var new_bg = 'bg' + front_bg;
 		var old_bg = 'bg' + bit_flip(front_bg);
@@ -715,9 +736,21 @@ function Background(assets)
 				height: tile_size * Math.min(map_limit.y, screen_limit.y)
 			};
 
-			// Draw the map chunk
-			screen[new_bg].draw.image(new_terrain, clip.x, clip.y, clip.width, clip.height, draw_offset.x, draw_offset.y, clip.width, clip.height);
-			screen[old_bg].draw.image(old_terrain, clip.x, clip.y, clip.width, clip.height, draw_offset.x, draw_offset.y, clip.width, clip.height);
+			// Draw the map chunk to both background
+			// screens for time-of-day transitioning
+			screen[new_bg].draw
+				.image(
+					new_terrain,
+					clip.x, clip.y, clip.width, clip.height,
+					draw_offset.x, draw_offset.y, clip.width, clip.height
+				);
+
+			screen[old_bg].draw
+				.image(
+					old_terrain,
+					clip.x, clip.y, clip.width, clip.height,
+					draw_offset.x, draw_offset.y, clip.width, clip.height
+				);
 
 			// Advance the tile 'pointer' to determine
 			// what and where to draw on the next cycle
@@ -744,26 +777,14 @@ function Background(assets)
 
 		// Draw light level color first for compositing
 		var color = get_time_color();
-		screen.clouds.setGlobalCompositeOperation('source-over').setGlobalAlpha(0.7);
-		screen.clouds.draw.rectangle(0, 0, viewport.width, viewport.height).fill(rgb(color.red, color.green, color.blue));
+		screen.clouds
+			.setGlobalCompositeOperation('source-over')
+			.setGlobalAlpha(0.7);
+		screen.clouds.draw
+			.rectangle(0, 0, viewport.width, viewport.height)
+			.fill(rgb(color.red, color.green, color.blue));
 
-		// Draw shadows
-		for (var c = 0 ; c < clouds.length ; c++)
-		{
-			var cloud = clouds[c];
-			var position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
-			var shadow = cloud.get(Cloud).getShadow();
-
-			if (shadow !== null)
-			{
-				// Target the background screens to avoid color errors
-				// in the [cloud_buffer_canvas] compositing process
-				screen.bg0.draw.image(shadow, position.x + shadow_offset.x, position.y + shadow_offset.y);
-				screen.bg1.draw.image(shadow, position.x + shadow_offset.x, position.y + shadow_offset.y);
-			}
-		}
-
-		// Draw clouds
+		// Draw clouds and their shadows
 		var viewport_w2 = viewport.width/2;
 		var viewport_h2 = viewport.height/2;
 
@@ -771,23 +792,44 @@ function Background(assets)
 		{
 			var cloud = clouds[c];
 			var position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
-			var data = cloud.get(Cloud);
-			var image = data.getImage();
-			var type = data.getType();
+			var instance = cloud.get(Cloud);
+			var sprite = instance.getImage();
+			var shadow = instance.getShadow();
+			var type = instance.getType();
 			var offset_factor = (type === 'cirrus' ? (40 / viewport_w2) : (15 / viewport_w2));
 
+			// Shadow rendering
+			if (shadow !== null)
+			{
+				// Target the background screens to avoid color errors
+				// in the [cloud_buffer_canvas] compositing process
+				screen.bg0.draw
+					.image(shadow, position.x + shadow_offset.x, position.y + shadow_offset.y);
+
+				screen.bg1.draw
+					.image(shadow, position.x + shadow_offset.x, position.y + shadow_offset.y);
+			}
+
+			// Cloud rendering
 			var offset =
 			{
-				x: (position.x + image.width/2 - viewport_w2) * offset_factor,
-				y: (position.y + image.height/2 - viewport_h2) * offset_factor
+				x: (position.x + sprite.width/2 - viewport_w2) * offset_factor,
+				y: (position.y + sprite.height/2 - viewport_h2) * offset_factor
 			};
 
-			cloud_buffer_canvas.draw.image(image, position.x + offset.x, position.y + offset.y);
+			cloud_buffer_canvas.draw
+				.image(sprite, position.x + offset.x, position.y + offset.y);
 		}
 
 		// Composite [cloud_buffer_canvas] onto the primary cloud screen
-		screen.clouds.setGlobalCompositeOperation('destination-atop').setGlobalAlpha(1);
-		screen.clouds.draw.image(cloud_buffer_canvas.element());
+		screen.clouds
+			.setGlobalCompositeOperation('destination-atop')
+			.setGlobalAlpha(1);
+		screen.clouds.draw
+			.image(cloud_buffer_canvas.element());
+
+		// Clear the buffer canvas before the cycle completes
+		// so we don't have to at the beginning of the next
 		cloud_buffer_canvas.clear();
 	}
 
@@ -908,7 +950,6 @@ function Background(assets)
 					// Prerender terrain at different times of day
 					prerender_terrain_variants(
 						{
-							times: configuration.hours,
 							progress: handlers.progress,
 							complete: function()
 							{
