@@ -15,7 +15,7 @@ body {
 	height: 100%;
 }
 
-div.debug {
+div#debug {
 	position: absolute;
 	top: 5px;
 	left: 5px;

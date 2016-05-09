@@ -8,7 +8,7 @@
 		</style>
 	</head>
 	<body>
-		<div class="debug"></div>
+		<div id="debug"></div>
 		<div id="game" class="fill">
 			<div id="bg" class="fill"></div>
 		</div>

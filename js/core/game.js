@@ -33,7 +33,106 @@ function GameInstance(assets)
 			'X: ' + player.x + ', Y:' + player.y
 		];
 
-		$('.debug').html(data.join('<br />'));
+		DEBUG.innerHTML = data.join('<br />');
+	}
+
+	// ------------------------------------------ //
+	// ------------- Initialization ------------- //
+	// ------------------------------------------ //
+
+	/**
+	 * Sets up a scrolling planetary background
+	 */
+	function add_background()
+	{
+		var t = Date.now();
+
+		// Halt loop during generation/prerendering
+		_.stop();
+		// Safeguard for re-generating a new
+		// background if an older one exists
+		destroy_background();
+
+		// Generate the new background
+		background = new Entity().add(new Background(assets)
+			.configure(
+				{
+					iterations: 11,
+					elevation: 250,
+					concentration: 35,
+					smoothness: 8,
+					repeat: true,
+					cities: 200,
+					maxCitySize: 30,
+					tileSize: 2,
+					lightAngle: 220,
+					hours: [12, 19, 20, 0, 4, 6],
+					cycleSpeed: 60000,
+					scrollSpeed:
+					{
+						x: -10,
+						y: -2
+					},
+					pixelSnapping: false
+				}
+			)
+			.build(
+				{
+					progress: function(rendered, total)
+					{
+						console.log('Rendering...' + rendered + '/' + total + '...');
+					},
+					complete: function()
+					{
+						console.log('Total init time: ' + (Date.now() - t) + 'ms');
+						init_complete();
+					}
+				}
+			)
+		);
+
+		entities.push(background);
+	}
+
+	/**
+	 * Halts the scrolling background instance and
+	 * dereferences its contents for garbage collection
+	 */
+	function destroy_background()
+	{
+		if (background !== null && typeof background !== 'undefined')
+		{
+			background.get(Background).unload();
+			background = null;
+		}
+	}
+
+	/**
+	 * Finish initialization and start game
+	 */
+	function init_complete()
+	{
+		initialized = true;
+
+		// Handle input events
+		input.listen();
+		keys.listen();
+
+		// Instantiate camera
+		camera = new Entity().add(new MovingPoint());
+		// Instantiate player drone
+		drone = new Entity()
+			.add(new Drone())
+			.add(new MovingPoint())
+			.add(
+				new Sprite(assets.getImage('drone/drone.png'))
+				.setXY(viewport.width/2, viewport.height/2)
+			);
+
+		entities.push(camera);
+		entities.push(drone);
+
+		_.start();
 	}
 
 	// ----------------------------------------- //
@@ -63,106 +162,6 @@ function GameInstance(assets)
 		{
 			drone.get(MovingPoint).setVelocity(speed, 0, true);
 		}
-	}
-
-	// ------------------------------------------ //
-	// ------------- Initialization ------------- //
-	// ------------------------------------------ //
-
-	/**
-	 * Sets up a scrolling planetary background
-	 */
-	function add_background()
-	{
-		var t = Date.now();
-
-		_.stop();
-
-		// Safeguard for re-generating a new
-		// background if an older one exists
-		destroy_background();
-
-		// Generate the new background
-		background = new Entity().add(new Background(assets)
-		.configure(
-			{
-				iterations: 11,
-				elevation: 250,
-				concentration: 35,
-				smoothness: 8,
-				repeat: true,
-				cities: 200,
-				maxCitySize: 30,
-				tileSize: 2,
-				lightAngle: 220,
-				hours: [12, 19, 20, 0, 4, 6],
-				cycleSpeed: 60000,
-				scrollSpeed:
-				{
-					x: -10,
-					y: -2
-				},
-				pixelSnapping: false
-			}
-		)
-		.build(
-			{
-				progress: function(rendered, total)
-				{
-					console.log('Rendering...' + rendered + '/' + total + '...');
-				},
-				complete: function()
-				{
-					console.log('Total init time: ' + (Date.now() - t) + 'ms');
-					init_complete();
-				}
-			}
-		));
-
-		entities.push(background);
-	}
-
-	/**
-	 * Halts the scrolling background instance and
-	 * dereferences its contents for garbage collection
-	 */
-	function destroy_background()
-	{
-		if (background !== null && typeof background !== 'undefined')
-		{
-			background.get(Background).halt();
-			background = null;
-		}
-	}
-
-	/**
-	 * Finish initialization and start game
-	 */
-	function init_complete()
-	{
-		initialized = true;
-
-		// Handle input events
-		input.listen();
-		keys.listen();
-
-		// Instantiate camera
-		camera = new Entity()
-		.add(new MovingPoint());
-
-		// Instantiate player drone
-		drone = new Entity()
-		.add(new Drone())
-		.add(new MovingPoint())
-		.add(
-			new Sprite(assets.getImage('drone/drone.png'))
-			.setXY(viewport.width/2, viewport.height/2)
-		);
-
-		entities.push(camera);
-		entities.push(drone);
-
-		_.start();
 	}
 
 	// --------------------------------------- //
@@ -204,8 +203,8 @@ function GameInstance(assets)
 				}
 			}
 
-			requestAnimationFrame(loop);
-			//loop_timeout = setTimeout(loop, frametime);
+			//requestAnimationFrame(loop);
+			loop_timeout = setTimeout(loop, frametime);
 		}
 	}
 

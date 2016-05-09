@@ -25,7 +25,7 @@ function Sprite(source)
 		if (draw.x > viewport.width || draw.x + source.width < 0) return;
 		if (draw.y > viewport.height || draw.y + source.height < 0) return;
 
-		screen.game.setGlobalAlpha(_.alpha);
+		screen.game.alpha(_.alpha);
 		screen.game.draw.image(source, draw.x, draw.y, source.width * _.scale, source.height * _.scale);
 	}
 

@@ -844,7 +844,7 @@ function Terrain()
 		terrain_canvas = new Canvas(new Element('canvas'));
 		city_canvas = new Canvas(new Element('canvas'));
 		time_canvas = new Canvas(new Element('canvas'));
-		// Public canvas is sourced from time_canvas
+		// Public canvas is sourced from [time_canvas]
 		_.canvas = time_canvas.element();
 		// Seed the PRNG
 		Generator.seed('seedy');

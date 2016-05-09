@@ -1,7 +1,7 @@
 // Script imports
 include(
 	[
-		'js/jquery-2.2.3.js',
+		'js/dependencies/jquery-2.2.3.js',
 		'js/assets/manifest.js',
 		'js/assets/manager.js',
 		'js/graphics/canvas.js',
@@ -22,6 +22,7 @@ include(
 var viewport = {};
 var screen = {};
 var game;
+var DEBUG;
 // For passing any in-game handlers to
 // the primary window.resize() event
 var resize_event_queue = [];
@@ -31,6 +32,8 @@ var resize_event_queue = [];
  */
 function main()
 {
+	DEBUG = document.getElementById('debug');
+
 	createScreens();
 	loadGame();
 
@@ -50,21 +53,21 @@ function createScreens()
 
 	// Add background canvases to the document
 	$('#game #bg')
-	.append(screen.bg0.element())
-	.append(screen.bg1.element())
-	.append(screen.clouds.element());
+		.append(screen.bg0.element())
+		.append(screen.bg1.element())
+		.append(screen.clouds.element());
 
 	// Primary game screen
 	screen.game = fullSizeScreen();
 	screen.game.element().style.zIndex = '2';
 
 	$('#game')
-	.append(screen.game.element());
+		.append(screen.game.element());
 
 	// Apply CSS to various screens
 	$('#game')
-	.find('canvas')
-	.addClass('fill');
+		.find('canvas')
+		.addClass('fill');
 }
 
 /**

@@ -176,13 +176,13 @@ function Canvas(element) {
 		return _;
 	}
 
-	this.setGlobalCompositeOperation = function(type)
+	this.composite = function(type)
 	{
 		ctx.globalCompositeOperation = type;
 		return _;
 	}
 
-	this.setGlobalAlpha = function(alpha)
+	this.alpha = function(alpha)
 	{
 		ctx.globalAlpha = alpha;
 		return _;

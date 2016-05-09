@@ -10,10 +10,10 @@ function Background(assets)
 	var terrain_renders = [];                          // Prerendered time-of-day terrain variants
 	var cloud_renders = [];                            // Prerendered cloud types, scaled based on [configuration.tileSize]
 	var shadow_renders = [];                           // Prerendered cloud shadows, scaled based on [configuration.tileSize]
-	var cloud_buffer_canvas;                           // Clouds are drawn here before being composited onto [screen.clouds]
+	var cloud_stage;                                   // Clouds are drawn here before being composited onto [screen.clouds]
 	var clouds = [];                                   // Active cloud objects on screen
 	var shadow_offset = {};                            // Offset for cloud shadows; determined via [configuration.lightAngle]
-	var bg_camera;                                     // The scrolling background camera instance
+	var camera;                                        // The scrolling background camera instance
 	var front_bg = 0;                                  // Binary; represents the current front screen of the background cycle
 	var active_terrain = 0;                            // Current time-of-day terrain prerender being shown
 	var granular_light_level = 0;                      // A decimal value between 0-12 representing the instantaneous light level
@@ -224,9 +224,38 @@ function Background(assets)
 		return c;
 	}
 
-	// ---------------------------------------------- //
-	// ------------- Initial generation ------------- //
-	// ---------------------------------------------- //
+	// ------------------------------------------ //
+	// ------------- Initialization ------------- //
+	// ------------------------------------------ //
+
+	function on_resize()
+	{
+		if (loaded)
+		{
+			cloud_stage.setSize(viewport.width, viewport.height);
+		}
+	}
+
+	function start()
+	{
+		cloud_stage = new Canvas(new Element('canvas'))
+			.setSize(viewport.width, viewport.height);
+
+		camera = new MovingPoint()
+			.setVelocity(-1*configuration.scrollSpeed.x, -1*configuration.scrollSpeed.y);
+
+		set_shadow_offset();
+		spawn_cloud_layer();
+		advance_bg_cycle();
+
+		resize_event_queue.push(on_resize);
+
+		loaded = true;
+	}
+
+	// ------------------------------------------------ //
+	// ------------- Texture prerendering ------------- //
+	// ------------------------------------------------ //
 
 	/**
 	 * Prerender terrain at a specific hour
@@ -236,15 +265,13 @@ function Background(assets)
 		var map_size = terrain.getSize();
 		var tile_size = terrain.getTileSize();
 
+		var terrain_canvas = new Canvas(new Element('canvas'))
+			.setSize(map_size * tile_size, map_size * tile_size);
+
 		terrain.setTime(hour);
+		terrain_canvas.draw.image(terrain.canvas);
 
-		terrain_renders.push(
-			new Canvas(new Element('canvas'))
-				.setSize(tile_size * map_size, tile_size * map_size)
-		);
-
-		terrain_renders[terrain_renders.length-1].draw
-			.image(terrain.canvas);
+		terrain_renders.push(terrain_canvas.element());
 	}
 
 	/**
@@ -265,7 +292,7 @@ function Background(assets)
 
 		if (type !== 'cirrus')
 		{
-			// Store shadow for lower clouds
+			// Store shadow for normal clouds
 			var shadow_asset = assets.getImage('shadows/' + name + '.png');
 			var shadow_canvas = new Canvas(new Element('canvas'))
 				.setSize(shadow_asset.width, shadow_asset.height);
@@ -359,6 +386,10 @@ function Background(assets)
 			handlers.complete
 		);
 	}
+
+	// -------------------------------------------- //
+	// ------------- Cloud population ------------- //
+	// -------------------------------------------- //
 
 	/**
 	 * Spawns a cloud from [cloud_bank] as specified
@@ -487,8 +518,8 @@ function Background(assets)
 	 */
 	function respawn_clouds()
 	{
-		var bg_velocity = bg_camera.getVelocity();
-		var bg_abs_velocity = bg_camera.getAbsoluteVelocity();
+		var bg_velocity = camera.getVelocity();
+		var bg_abs_velocity = camera.getAbsoluteVelocity();
 		var spawn_probability = 0.0002 * bg_abs_velocity;
 
 		var position =
@@ -624,7 +655,7 @@ function Background(assets)
 	{
 		// Switch background screens
 		front_bg = bit_flip(front_bg);
-		// Update time-of-day cycle
+		// Update current time-of-day terrain
 		active_terrain = cycle_back(++active_terrain, terrain_renders.length-1);
 
 		// Determine background layering
@@ -684,39 +715,40 @@ function Background(assets)
 		// Current tile the background camera is on
 		var bg_tile_offset =
 		{
-			x: mod(Math.floor(bg_camera.getPosition().x / tile_size), map_size),
-			y: mod(Math.floor(bg_camera.getPosition().y / tile_size), map_size)
+			x: mod(Math.floor(camera.getPosition().x / tile_size), map_size),
+			y: mod(Math.floor(camera.getPosition().y / tile_size), map_size)
 		};
 		// Sub-tile offset based on the background camera's pixel position
 		var bg_pixel_offset =
 		{
-			x: tile_size - mod(bg_camera.getPosition().x, tile_size),
-			y: tile_size - mod(bg_camera.getPosition().y, tile_size)
+			x: tile_size - mod(camera.getPosition().x, tile_size),
+			y: tile_size - mod(camera.getPosition().y, tile_size)
 		};
 
 		// Information for time-of-day rendering sources/targets
 		var new_bg = 'bg' + front_bg;
 		var old_bg = 'bg' + bit_flip(front_bg);
 		var terrain_before = cycle_forward(active_terrain-1, terrain_renders.length-1);
-		var new_terrain = terrain_renders[active_terrain].element();
-		var old_terrain = terrain_renders[terrain_before].element();
+		var new_terrain = terrain_renders[active_terrain];
+		var old_terrain = terrain_renders[terrain_before];
+		var map_limit, screen_limit, draw_offset, clip;
 
 		while (tile_offset.x < tiles_to_draw.x || tile_offset.y < tiles_to_draw.y)
 		{
 			// Remaining tiles to the end of the map from current tile offset
-			var map_limit =
+			map_limit =
 			{
 				x: map_size - ((tile_offset.x + bg_tile_offset.x) % map_size),
 				y: map_size - ((tile_offset.y + bg_tile_offset.y) % map_size)
 			};
 			// Remaining tiles needed to fill the screen
-			var screen_limit =
+			screen_limit =
 			{
 				x: tiles_to_draw.x - tile_offset.x,
 				y: tiles_to_draw.y - tile_offset.y
 			};
 			// Position to draw the next map chunk at
-			var draw_offset =
+			draw_offset =
 			{
 				x: tile_size * tile_offset.x + bg_pixel_offset.x - tile_size,
 				y: tile_size * tile_offset.y + bg_pixel_offset.y - tile_size
@@ -728,7 +760,7 @@ function Background(assets)
 				draw_offset.y = Math.floor(draw_offset.y);
 			}
 			// Clipping parameters for next map chunk
-			var clip =
+			clip =
 			{
 				x: tile_size * ((tile_offset.x + bg_tile_offset.x) % map_size),
 				y: tile_size * ((tile_offset.y + bg_tile_offset.y) % map_size),
@@ -775,62 +807,79 @@ function Background(assets)
 	{
 		screen.clouds.clear();
 
-		// Draw light level color first for compositing
+		// Light level rendering
 		var color = get_time_color();
-		screen.clouds
-			.setGlobalCompositeOperation('source-over')
-			.setGlobalAlpha(0.7);
+		screen.clouds.composite('source-over').alpha(0.7);
 		screen.clouds.draw
 			.rectangle(0, 0, viewport.width, viewport.height)
 			.fill(rgb(color.red, color.green, color.blue));
 
-		// Draw clouds and their shadows
+		// Cloud/shadow rendering
 		var viewport_w2 = viewport.width/2;
 		var viewport_h2 = viewport.height/2;
+		var cloud, position, instance, sprite, shadow, offset_factor, offset, draw;
 
 		for (var c = 0 ; c < clouds.length ; c++)
 		{
-			var cloud = clouds[c];
-			var position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
-			var instance = cloud.get(Cloud);
-			var sprite = instance.getImage();
-			var shadow = instance.getShadow();
-			var type = instance.getType();
-			var offset_factor = (type === 'cirrus' ? (40 / viewport_w2) : (15 / viewport_w2));
+			cloud = clouds[c];
+			position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
+			instance = cloud.get(Cloud);
+			sprite = instance.getImage();
+			shadow = instance.getShadow();
+			offset_factor = (instance.getType() === 'cirrus' ? (40 / viewport_w2) : (15 / viewport_w2));
 
 			// Shadow rendering
 			if (shadow !== null)
 			{
-				// Target the background screens to avoid color errors
-				// in the [cloud_buffer_canvas] compositing process
-				screen.bg0.draw
-					.image(shadow, position.x + shadow_offset.x, position.y + shadow_offset.y);
+				draw =
+				{
+					x: position.x + shadow_offset.x,
+					y: position.y + shadow_offset.y
+				};
 
-				screen.bg1.draw
-					.image(shadow, position.x + shadow_offset.x, position.y + shadow_offset.y);
+				// Only draw shadows within the screen area
+				if (
+					(draw.x < viewport.width && draw.x + shadow.width > 0) &&
+					(draw.y < viewport.height && draw.y + shadow.height > 0)
+				)
+				{
+					// Target the background screens to avoid color
+					// errors in the [cloud_stage] compositing process
+					screen.bg0.draw.image(shadow, draw.x, draw.y);
+					screen.bg1.draw.image(shadow, draw.x, draw.y);
+				}
 			}
 
 			// Cloud rendering
-			var offset =
+			offset =
 			{
 				x: (position.x + sprite.width/2 - viewport_w2) * offset_factor,
 				y: (position.y + sprite.height/2 - viewport_h2) * offset_factor
 			};
 
-			cloud_buffer_canvas.draw
-				.image(sprite, position.x + offset.x, position.y + offset.y);
+			draw =
+			{
+				x: position.x + offset.x,
+				y: position.y + offset.y
+			};
+
+			// Only draw clouds within the screen area
+			if (
+				(draw.x < viewport.width && draw.x + sprite.width > 0) &&
+				(draw.y < viewport.height && draw.y + sprite.height > 0)
+			)
+			{
+				cloud_stage.draw.image(sprite, draw.x, draw.y);
+			}
 		}
 
-		// Composite [cloud_buffer_canvas] onto the primary cloud screen
-		screen.clouds
-			.setGlobalCompositeOperation('destination-atop')
-			.setGlobalAlpha(1);
-		screen.clouds.draw
-			.image(cloud_buffer_canvas.element());
+		// Composite [cloud_stage] onto the primary cloud screen
+		screen.clouds.composite('destination-atop').alpha(1);
+		screen.clouds.draw.image(cloud_stage.element());
 
-		// Clear the buffer canvas before the cycle completes
+		// Clear [cloud_stage] before the cycle completes
 		// so we don't have to at the beginning of the next
-		cloud_buffer_canvas.clear();
+		cloud_stage.clear();
 	}
 
 	/**
@@ -842,37 +891,12 @@ function Background(assets)
 		render_clouds();
 	}
 
-	// ------------------------------------------ //
-	// ------------- Initialization ------------- //
-	// ------------------------------------------ //
-
-	function on_resize()
-	{
-		if (loaded)
-		{
-			cloud_buffer_canvas.setSize(viewport.width, viewport.height);
-		}
-	}
-
-	function start()
-	{
-		cloud_buffer_canvas = new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
-		bg_camera = new MovingPoint().setVelocity(-1*configuration.scrollSpeed.x, -1*configuration.scrollSpeed.y);
-		resize_event_queue.push(on_resize);
-
-		set_shadow_offset();
-		spawn_cloud_layer();
-		advance_bg_cycle();
-
-		loaded = true;
-	}
-
 	// Public:
 	this.update = function(dt)
 	{
 		if (loaded)
 		{
-			bg_camera.update(dt);
+			camera.update(dt);
 
 			var c = 0;
 
@@ -890,7 +914,7 @@ function Background(assets)
 
 			// Lower cloud respawn cooldown so
 			// clouds can continue generating
-			cloud_cooldown -= bg_camera.getAbsoluteVelocity() * dt;
+			cloud_cooldown -= camera.getAbsoluteVelocity() * dt;
 		}
 	}
 
@@ -915,7 +939,7 @@ function Background(assets)
 	{
 		// Safeguard in case of re-building the
 		// instance after first initialization
-		_.halt();
+		_.unload();
 
 		handlers = handlers || {};
 		handlers.progress = handlers.progress || function(){};
@@ -965,7 +989,7 @@ function Background(assets)
 		return _;
 	}
 
-	this.halt = function()
+	this.unload = function()
 	{
 		loaded = false;
 		stop_bg_cycle();
