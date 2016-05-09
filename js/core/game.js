@@ -231,18 +231,37 @@ function GameInstance(assets)
 	 */
 	function clear_screen()
 	{
+		var coordinates, buffer;
+
 		for (var e = 0 ; e < entities.length ; e++)
 		{
 			var sprite = entities[e].get(Sprite);
 
 			if (sprite !== null)
 			{
-				screen.game.clear(
-					sprite.getScreenX(),
-					sprite.getScreenY(),
-					sprite.scale * sprite.getWidth(),
-					sprite.scale * sprite.getHeight()
-				);
+				coordinates =
+				{
+					x: sprite.getScreenX(),
+					y: sprite.getScreenY(),
+					width: sprite.scale * sprite.getWidth(),
+					height: sprite.scale * sprite.getHeight()
+				};
+
+				// Only clear screen for visible Sprites
+				if (
+					(coordinates.x < viewport.width && coordinates.x + coordinates.width > 0) &&
+					(coordinates.y < viewport.height && coordinates.y + coordinates.height > 0)
+				)
+				{
+					buffer = (sprite.snap ? 0 : 2);
+
+					screen.game.clear(
+						coordinates.x - buffer,
+						coordinates.y - buffer,
+						coordinates.width + 2*buffer,
+						coordinates.height + 2*buffer
+					);
+				}
 			}
 		}
 	}

@@ -7,7 +7,6 @@ function Sprite(source)
 	var _ = this;
 	var origin = {x: 0, y: 0};
 	var target;
-	var snap = true;
 
 	/**
 	 * Return the on-screen position of the sprite
@@ -18,8 +17,8 @@ function Sprite(source)
 		var y = _.y - (!!target ? target.getPosition().y : 0) - origin.y;
 
 		return {
-			x: (snap ? Math.round(x) : x),
-			y: (snap ? Math.round(y) : y)
+			x: (_.snap ? Math.floor(x) : x),
+			y: (_.snap ? Math.floor(y) : y)
 		};
 	}
 
@@ -28,6 +27,7 @@ function Sprite(source)
 	this.y = 0;
 	this.scale = 1;
 	this.alpha = 1;
+	this.snap = false;
 
 	this.update = function(dt)
 	{

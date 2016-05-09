@@ -21,6 +21,7 @@ function Background(assets)
 	var cloud_cooldown = 0;                            // Jumps to 2000 when a cyclone is generated; once it counts down to 0 normal cloud spawning can resume
 	var build_steps = 0;                               // Determined in build() by various configuration parameters
 	var build_steps_complete = 0;                      // For passing back into the progress handler
+	var time_transition = true;                        // Set to false if [configuration.hours] has only one time specified
 	var configuration = default_configuration();       // Store default settings
 	var cloud_bank =                                   // Bank of information on cloud assets + types
 	[
@@ -182,13 +183,20 @@ function Background(assets)
 	 */
 	function set_granular_light_level(animation, progress)
 	{
+		if (!time_transition)
+		{
+			// No need to recalculate the value if time is static
+			granular_light_level = Math.abs(12 - configuration.hours[0]);
+			return;
+		}
+
 		// Determine the progress between hours
 		var prev_hour = configuration.hours[cycle_forward(active_terrain-1, terrain_renders.length-1)];
 		var next_hour = configuration.hours[active_terrain];
 		var difference = (next_hour >= prev_hour ? next_hour-prev_hour : 24-prev_hour + next_hour);
 		var granular_hour = clamp(prev_hour + progress*difference, 0, 24);
 
-		granular_light_level = Math.abs(12-granular_hour);
+		granular_light_level = Math.abs(12 - granular_hour);
 	}
 
 	/**
@@ -511,7 +519,9 @@ function Background(assets)
 	{
 		var bg_velocity = camera.getVelocity();
 		var bg_abs_velocity = camera.getAbsoluteVelocity();
-		var spawn_probability = 0.0002 * bg_abs_velocity;
+		var screen_area = viewport.width * viewport.height;
+		var screen_area_ratio = screen_area / 720000;
+		var spawn_probability = screen_area_ratio * 0.00015 * bg_abs_velocity;
 
 		var position =
 		{
@@ -644,6 +654,13 @@ function Background(assets)
 	 */
 	function advance_bg_cycle()
 	{
+		if (!time_transition)
+		{
+			// Just set [granular_light_level] once for static time
+			set_granular_light_level();
+			return;
+		}
+
 		// Switch background screens
 		front_bg = bit_flip(front_bg);
 		// Update current time-of-day terrain
@@ -671,6 +688,8 @@ function Background(assets)
 				complete: advance_bg_cycle
 			}
 		);
+
+		return;
 	}
 
 	/**
@@ -768,12 +787,16 @@ function Background(assets)
 					draw_offset.x, draw_offset.y, clip.width, clip.height
 				);
 
-			screen[old_bg].draw
-				.image(
-					old_terrain,
-					clip.x, clip.y, clip.width, clip.height,
-					draw_offset.x, draw_offset.y, clip.width, clip.height
-				);
+			if (time_transition)
+			{
+				// Only draw twice if the transition is active
+				screen[old_bg].draw
+					.image(
+						old_terrain,
+						clip.x, clip.y, clip.width, clip.height,
+						draw_offset.x, draw_offset.y, clip.width, clip.height
+					);
+			}
 
 			// Advance the tile 'pointer' to determine
 			// what and where to draw on the next cycle
@@ -837,7 +860,8 @@ function Background(assets)
 					// Target the background screens to avoid color
 					// errors in the [cloud_stage] compositing process
 					screen.bg0.draw.image(shadow, draw.x, draw.y);
-					screen.bg1.draw.image(shadow, draw.x, draw.y);
+					// Only draw the shadow twice if time transition is active
+					if (time_transition) screen.bg1.draw.image(shadow, draw.x, draw.y);
 				}
 			}
 
@@ -938,6 +962,9 @@ function Background(assets)
 
 		// For passing into the progress handler
 		build_steps = cloud_bank.length + configuration.hours.length;
+
+		// Save condition for time transition effects
+		time_transition = (configuration.hours.length > 1);
 
 		terrain = new Terrain()
 		.build(
