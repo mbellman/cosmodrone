@@ -9,7 +9,7 @@
 	</head>
 	<body>
 		<div id="debug"></div>
-		<div id="game" class="fill">
+		<div id="game">
 			<div id="bg" class="fill"></div>
 		</div>
 		<script src="js/main.js"></script>

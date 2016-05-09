@@ -5,7 +5,23 @@ function Sprite(source)
 {
 	// Private:
 	var _ = this;
+	var origin = {x: 0, y: 0};
 	var target;
+	var snap = true;
+
+	/**
+	 * Return the on-screen position of the sprite
+	 */
+	function get_screen_coordinates()
+	{
+		var x = _.x - (!!target ? target.getPosition().x : 0) - origin.x;
+		var y = _.y - (!!target ? target.getPosition().y : 0) - origin.y;
+
+		return {
+			x: (snap ? Math.round(x) : x),
+			y: (snap ? Math.round(y) : y)
+		};
+	}
 
 	// Public:
 	this.x = 0;
@@ -15,24 +31,59 @@ function Sprite(source)
 
 	this.update = function(dt)
 	{
-		var draw =
-		{
-			x: _.x - (!!target ? target.getPosition().x : 0),
-			y: _.y - (!!target ? target.getPosition().y : 0)
-		};
+		var draw = get_screen_coordinates();
 
-		// Avoid drawing objects offscreen
+		// Avoid drawing offscreen objects
 		if (draw.x > viewport.width || draw.x + source.width < 0) return;
 		if (draw.y > viewport.height || draw.y + source.height < 0) return;
 
 		screen.game.alpha(_.alpha);
-		screen.game.draw.image(source, draw.x, draw.y, source.width * _.scale, source.height * _.scale);
+		screen.game.draw.image(
+			source,
+			draw.x,
+			draw.y,
+			source.width * _.scale,
+			source.height * _.scale
+		);
+	}
+
+	this.getScreenX = function()
+	{
+		return get_screen_coordinates().x;
+	}
+
+	this.getScreenY = function()
+	{
+		return get_screen_coordinates().y;
+	}
+
+	this.getWidth = function()
+	{
+		return source.width;
+	}
+
+	this.getHeight = function()
+	{
+		return source.height;
 	}
 
 	this.setXY = function(x, y)
 	{
 		_.x = x;
 		_.y = y;
+		return _;
+	}
+
+	this.setOrigin = function(x, y)
+	{
+		origin.x = x;
+		origin.y = y;
+		return _;
+	}
+
+	this.centerOrigin = function()
+	{
+		_.setOrigin(source.width/2, source.height/2);
 		return _;
 	}
 
@@ -50,9 +101,9 @@ function Sprite(source)
 }
 
 /**
- * A drifting [x, y] coordinate
+ * A static or moving [x, y] coordinate
  */
-function MovingPoint()
+function Point()
 {
 	// Private:
 	var _ = this;

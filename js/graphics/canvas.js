@@ -94,9 +94,14 @@ function Canvas(element) {
 		}
 	};
 	
-	this.clear = function()
+	this.clear = function(x, y, width, height)
 	{
-		ctx.clearRect(0, 0, element.width, element.height);
+		x = x || 0;
+		y = y || 0;
+		width = width || element.width;
+		height = height || element.height;
+		ctx.clearRect(x, y, width, height);
+		return _;
 	}
 
 	this.scale = function(multiple)

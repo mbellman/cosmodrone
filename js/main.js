@@ -14,18 +14,21 @@ include(
 		'js/core/entity.js',
 		'js/core/components.js',
 		'js/core/background.js',
+		'js/core/levels.js',
 		'js/core/game.js'
 	]
 ).then(main);
 
 // Global variables
-var viewport = {};
+var viewport =
+{
+	width: 1200,
+	height: 600
+};
+
 var screen = {};
 var game;
 var DEBUG;
-// For passing any in-game handlers to
-// the primary window.resize() event
-var resize_event_queue = [];
 
 /**
  * Initialization
@@ -35,9 +38,8 @@ function main()
 	DEBUG = document.getElementById('debug');
 
 	createScreens();
+	centerGameStage();
 	loadGame();
-
-	$(window).on('resize', onResize).resize();
 }
 
 /**
@@ -46,9 +48,9 @@ function main()
 function createScreens()
 {
 	// Backgrounds (for planet surface, starfield, etc.)
-	screen.bg0 = fullSizeScreen();
-	screen.bg1 = fullSizeScreen();
-	screen.clouds = fullSizeScreen();
+	screen.bg0 = gameScreen();
+	screen.bg1 = gameScreen();
+	screen.clouds = gameScreen();
 	screen.clouds.element().style.zIndex = '3';
 
 	// Add background canvases to the document
@@ -58,7 +60,7 @@ function createScreens()
 		.append(screen.clouds.element());
 
 	// Primary game screen
-	screen.game = fullSizeScreen();
+	screen.game = gameScreen();
 	screen.game.element().style.zIndex = '2';
 
 	$('#game')
@@ -68,6 +70,20 @@ function createScreens()
 	$('#game')
 		.find('canvas')
 		.addClass('fill');
+}
+
+/**
+ * Make sure game area is in center of the window
+ */
+function centerGameStage()
+{
+	$('#game').css(
+		{
+			'width': viewport.width + 'px',
+			'height': viewport.height + 'px',
+			'margin': -1*viewport.height/2 + 'px 0 0 ' + -1*viewport.width/2 + 'px'
+		}
+	);
 }
 
 /**
@@ -90,33 +106,10 @@ function loadGame()
 }
 
 /**
- * Browser resize handler
+ * Shorthand for obtaining a game
+ * screen-sized Canvas instance
  */
-function onResize()
-{
-	viewport.width = $(window).width();
-	viewport.height = $(window).height();
-
-	// Update screen dimensions
-	for (var s in screen)
-	{
-		if (screen.hasOwnProperty(s))
-		{
-			screen[s].setSize(viewport.width, viewport.height);
-		}
-	}
-
-	// Fire any external resize events
-	for (var e = 0 ; e < resize_event_queue.length ; e++)
-	{
-		resize_event_queue[e]();
-	}
-}
-
-/**
- * Shorthand for obtaining a screen-sized Canvas instance
- */
-function fullSizeScreen()
+function gameScreen()
 {
 	return new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
 }

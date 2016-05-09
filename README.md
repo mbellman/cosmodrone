@@ -1,13 +1,15 @@
 # cosmodrone
-A hush-hush game project.
+A game about space station maintenance...
 
 ### TODO:
 
 ##### GAME
-* Background/cloud rendering is definitely going to need some optimizing
-* Proper Sprite follow()/camera offset implementation
+* Have camera "chase" drone with a slight delay
+* Scene zoom-out when speeding up (?)
 * Drone rotation + movement in pointed direction
+* Framerate still needs managing
 * UI
+* jQuery probably isn't necessary
 
 ##### BACKGROUND
 * Rivers

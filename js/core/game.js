@@ -2,13 +2,11 @@ function GameInstance(assets)
 {
 	// Private:
 	var _ = this;
-	var DEBUG_MODE = false;
-	var frametime = 1000 / 60;
+
 	var time;
 	var active = false;
 	var running = true;
 	var initialized = false;
-	var loop_timeout;
 	var level = 1;
 	var input = new InputHandler();
 	var keys = new Keys();
@@ -17,23 +15,33 @@ function GameInstance(assets)
 	var background;
 	var entities = [];
 
+	var DEBUG_MODE = false;
+	var DEBUG_stats_cycle = 0;
+
 	// ------------------------------------- //
 	// ------------- Debugging ------------- //
 	// ------------------------------------- //
 
 	function DEBUG_show_stats(dt)
 	{
-		var dt_ratio = (1/60) / dt;
-		var fps = Math.round(60 * dt_ratio);
-		var player = drone.get(MovingPoint).getPosition(true);
+		// Update stats every 3 frames
+		if (++DEBUG_stats_cycle > 2)
+		{
+			DEBUG_stats_cycle = 0;
 
-		var data =
-		[
-			fps + 'fps, ' + dt,
-			'X: ' + player.x + ', Y:' + player.y
-		];
+			var dt_ratio = (1/60) / dt;
+			var fps = Math.round(60 * dt_ratio);
+			var player = drone.get(Point).getPosition(true);
 
-		DEBUG.innerHTML = data.join('<br />');
+			var data =
+			[
+				viewport.width + ' x ' + viewport.height,
+				fps + 'fps, ' + dt,
+				'X: ' + player.x + ', Y:' + player.y
+			];
+
+			DEBUG.innerHTML = data.join('<br />');
+		}
 	}
 
 	// ------------------------------------------ //
@@ -43,7 +51,7 @@ function GameInstance(assets)
 	/**
 	 * Sets up a scrolling planetary background
 	 */
-	function add_background()
+	function load_background()
 	{
 		var t = Date.now();
 
@@ -108,6 +116,30 @@ function GameInstance(assets)
 	}
 
 	/**
+	 * Load level layout from data
+	 */
+	function load_level()
+	{
+		var data = LevelData[level];
+
+		for (var d = 0 ; d < data.length ; d++)
+		{
+			var object = data[d];
+			var file = ObjectMap[object.type].file;
+
+			entities.push(
+				new Entity()
+					.add(
+						new Sprite(assets.getImage(file))
+						.setXY(object.x, object.y)
+						.follow(camera.get(Point))
+					)
+					.add(new Point().setPosition(object.x, object.y))
+			);
+		}
+	}
+
+	/**
 	 * Finish initialization and start game
 	 */
 	function init_complete()
@@ -119,19 +151,26 @@ function GameInstance(assets)
 		keys.listen();
 
 		// Instantiate camera
-		camera = new Entity().add(new MovingPoint());
+		camera = new Entity().add(new Point());
 		// Instantiate player drone
 		drone = new Entity()
 			.add(new Drone())
-			.add(new MovingPoint())
+			.add(new Point().setPosition(viewport.width/2, viewport.height/2))
 			.add(
 				new Sprite(assets.getImage('drone/drone.png'))
-				.setXY(viewport.width/2, viewport.height/2)
+					.follow(camera.get(Point))
+					.centerOrigin()
 			);
 
+		// Build level structure
+		load_level();
+
+		// Add camera + player entities last
 		entities.push(camera);
 		entities.push(drone);
 
+		// Set initial camera position and start game loop
+		update_camera();
 		_.start();
 	}
 
@@ -139,34 +178,74 @@ function GameInstance(assets)
 	// ------------- Input actions ------------- //
 	// ----------------------------------------- //
 
+	/**
+	 * Watch for key inputs and respond accordingly
+	 */
 	function listen_for_input()
 	{
+		var player = drone.get(Point);
 		var speed = drone.get(Drone).getSpeed();
 
 		if (keys.holding('UP'))
 		{
-			drone.get(MovingPoint).setVelocity(0, -1*speed, true);
+			player.setVelocity(0, -1*speed, true);
 		}
 
 		if (keys.holding('LEFT'))
 		{
-			drone.get(MovingPoint).setVelocity(-1*speed, 0, true);
+			player.setVelocity(-1*speed, 0, true);
 		}
 
 		if (keys.holding('DOWN'))
 		{
-			drone.get(MovingPoint).setVelocity(0, speed, true);
+			player.setVelocity(0, speed, true);
 		}
 
 		if (keys.holding('RIGHT'))
 		{
-			drone.get(MovingPoint).setVelocity(speed, 0, true);
+			player.setVelocity(speed, 0, true);
 		}
+	}
+
+	/**
+	 * Have the camera follow the player drone
+	 */
+	function update_camera()
+	{
+		var player = drone.get(Point).getPosition();
+
+		camera.get(Point)
+			.setPosition(
+				player.x - viewport.width/2,
+				player.y - viewport.height/2
+			);
 	}
 
 	// --------------------------------------- //
 	// ------------- Update loop ------------- //
 	// --------------------------------------- //
+
+	/**
+	 * Iterate over all Sprites and clear
+	 * the screen at their coordinates
+	 */
+	function clear_screen()
+	{
+		for (var e = 0 ; e < entities.length ; e++)
+		{
+			var sprite = entities[e].get(Sprite);
+
+			if (sprite !== null)
+			{
+				screen.game.clear(
+					sprite.getScreenX(),
+					sprite.getScreenY(),
+					sprite.scale * sprite.getWidth(),
+					sprite.scale * sprite.getHeight()
+				);
+			}
+		}
+	}
 
 	/**
 	 * Entity update cycle
@@ -191,9 +270,10 @@ function GameInstance(assets)
 				var new_time = Date.now();
 				var dt = (new_time - time) / 1000;
 
-				screen.game.clear();
+				clear_screen();
 				listen_for_input();
-				update(dt);
+				update_camera();
+				update(1/60);
 
 				time = new_time;
 
@@ -203,8 +283,7 @@ function GameInstance(assets)
 				}
 			}
 
-			//requestAnimationFrame(loop);
-			loop_timeout = setTimeout(loop, frametime);
+			requestAnimationFrame(loop);
 		}
 	}
 
@@ -212,8 +291,7 @@ function GameInstance(assets)
 	this.init = function()
 	{
 		_.unload();
-		add_background();
-
+		load_background();
 		return _;
 	}
 
@@ -258,15 +336,11 @@ function GameInstance(assets)
 		destroy_background();
 
 		// Reset game objects
-		clearTimeout(loop_timeout);
 		keys.unlisten().reset();
 		input.unlisten().unbindEvents();
 		camera = null;
 		drone = null;
 		entities.length = 0;
-
-		// Empty resize event queue
-		resize_event_queue.length = 0;
 
 		return _;
 	}

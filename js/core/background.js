@@ -5,6 +5,7 @@ function Background(assets)
 {
 	// Private:
 	var _ = this;
+
 	var loaded = false;                                // Whether or not prerendering has finished, enabling the background cycle to start
 	var terrain;                                       // Landscape instance
 	var terrain_renders = [];                          // Prerendered time-of-day terrain variants
@@ -228,27 +229,17 @@ function Background(assets)
 	// ------------- Initialization ------------- //
 	// ------------------------------------------ //
 
-	function on_resize()
-	{
-		if (loaded)
-		{
-			cloud_stage.setSize(viewport.width, viewport.height);
-		}
-	}
-
 	function start()
 	{
 		cloud_stage = new Canvas(new Element('canvas'))
 			.setSize(viewport.width, viewport.height);
 
-		camera = new MovingPoint()
+		camera = new Point()
 			.setVelocity(-1*configuration.scrollSpeed.x, -1*configuration.scrollSpeed.y);
 
 		set_shadow_offset();
 		spawn_cloud_layer();
 		advance_bg_cycle();
-
-		resize_event_queue.push(on_resize);
 
 		loaded = true;
 	}
@@ -407,7 +398,7 @@ function Background(assets)
 			y: configuration.scrollSpeed.y
 		};
 
-		var point = new MovingPoint()
+		var point = new Point()
 			.setVelocity(velocity.x, velocity.y)
 			.setPosition(x, y);
 
@@ -566,8 +557,8 @@ function Background(assets)
 
 			var spawn_offset =
 			{
-				x: 1250,
-				y: 1250
+				x: (index === 'large' ? 1350 : 1200),
+				y: (index === 'large' ? 1350 : 1200)
 			};
 
 			cloud_cooldown = 2000;
@@ -611,7 +602,7 @@ function Background(assets)
 	function cloud_purged(c)
 	{
 		var cloud = clouds[c];
-		var point = cloud.get(MovingPoint);
+		var point = cloud.get(Point);
 		var position = point.getPosition();
 		var velocity = point.getVelocity();
 		var image = cloud.get(Cloud).getImage();
@@ -697,8 +688,8 @@ function Background(assets)
 	 */
 	function render_bg()
 	{
-		var tile_size = terrain.getTileSize();
 		var map_size = terrain.getSize();
+		var tile_size = terrain.getTileSize();
 
 		// Tile offset 'pointer'
 		var tile_offset =
@@ -822,7 +813,7 @@ function Background(assets)
 		for (var c = 0 ; c < clouds.length ; c++)
 		{
 			cloud = clouds[c];
-			position = cloud.get(MovingPoint).getPosition(configuration.pixelSnapping);
+			position = cloud.get(Point).getPosition(configuration.pixelSnapping);
 			instance = cloud.get(Cloud);
 			sprite = instance.getImage();
 			shadow = instance.getShadow();
