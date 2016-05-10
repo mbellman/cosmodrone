@@ -22,8 +22,8 @@ include(
 // Global variables
 var viewport =
 {
-	width: 1300,
-	height: 650
+	width: 1200,
+	height: 600
 };
 
 var screen = {};

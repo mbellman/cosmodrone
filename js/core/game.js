@@ -12,7 +12,7 @@ function GameInstance(assets)
 	var keys = new Keys();
 	var camera;
 	var drone;
-	var spin = 0;
+	var speed;
 	var background;
 	var entities = [];
 
@@ -155,6 +155,7 @@ function GameInstance(assets)
 		// Handle input events
 		input.listen();
 		keys.listen();
+		bind_input_handlers();
 
 		// Instantiate camera
 		camera = new Entity().add(new Point());
@@ -168,6 +169,8 @@ function GameInstance(assets)
 					.pivot(camera.get(Point))
 					.centerOrigin()
 			);
+		// Store drone speed value
+		speed = drone.get(Drone).getSpeed();
 
 		// Build level structure
 		load_level();
@@ -186,54 +189,51 @@ function GameInstance(assets)
 	// ----------------------------------------- //
 
 	/**
-	 * Watch for key inputs and respond accordingly
+	 * Continually listen for key inputs and respond accordingly
 	 */
-	function listen_for_input(dt)
+	function poll_input(dt)
 	{
-		var player = drone.get(Point);
-		var sprite = drone.get(Sprite);
-		var speed = drone.get(Drone).getSpeed();
+		// 
+		var _drone =
+		{
+			position: drone.get(Point),
+			sprite: drone.get(Sprite),
+			speed: speed
+		};
 
 		if (keys.holding('UP'))
 		{
-			var x = Math.sin(sprite.rotation * Math.PI_RAD);
-			var y = Math.cos(sprite.rotation * Math.PI_RAD) * -1;
+			var x = Math.sin(_drone.sprite.rotation * Math.PI_RAD);
+			var y = Math.cos(_drone.sprite.rotation * Math.PI_RAD) * -1;
 
-			player.setVelocity(x*speed, y*speed, true);
+			_drone.position.setVelocity(
+				x * _drone.speed,
+				y * _drone.speed,
+				true
+			);
 		}
 
 		if (keys.holding('LEFT'))
 		{
-			spin -= speed;
+			drone.get(Drone).addSpin(-speed);
 		}
 
 		if (keys.holding('RIGHT'))
 		{
-			spin += speed;
+			drone.get(Drone).addSpin(speed);
 		}
 	}
 
 	/**
-	 * Cause drone to continually spin
-	 * according to [spin] velocity
+	 * One-time bindings for single-press inputs
 	 */
-	function update_spin(dt)
+	function bind_input_handlers()
 	{
-		drone.get(Sprite).rotation += (spin * dt);
-	}
-
-	/**
-	 * Have the camera follow the player drone
-	 */
-	function update_camera()
-	{
-		var view = camera.get(Point).getPosition();
-		var player = drone.get(Point).getPosition();
-
-		camera.get(Point).setPosition(
-			lerp(view.x, player.x, 0.075),
-			lerp(view.y, player.y, 0.075)
-		);
+		// Spin stabilization
+		input.on('S', function()
+		{
+			drone.get(Drone).stabilize();
+		});
 	}
 
 	// --------------------------------------- //
@@ -291,6 +291,20 @@ function GameInstance(assets)
 	}
 
 	/**
+	 * Have the camera follow the player drone
+	 */
+	function update_camera()
+	{
+		var view = camera.get(Point).getPosition();
+		var player = drone.get(Point).getPosition();
+
+		camera.get(Point).setPosition(
+			lerp(view.x, player.x, 0.075),
+			lerp(view.y, player.y, 0.075)
+		);
+	}
+
+	/**
 	 * Entity update cycle
 	 */
 	function update(dt)
@@ -314,8 +328,7 @@ function GameInstance(assets)
 				var dt = (new_time - time) / 1000;
 
 				clear_screen();
-				listen_for_input(1/60);
-				update_spin(1/60);
+				poll_input(1/60);
 				update_camera();
 				update(1/60);
 

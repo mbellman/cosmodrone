@@ -18,4 +18,5 @@ A game about space station maintenance...
 * "Queue" component of some kind to hold onto additional cyclical functions
 * Handy routine for checking on-screen condition
 * See which classes can instead use prototypes
+* Base "Component" class inherited by the others
 * Why don't public functions have descriptions?

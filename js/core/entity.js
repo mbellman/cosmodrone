@@ -34,12 +34,7 @@ function Entity()
 
 		if (typeof component.onAdded === 'function')
 		{
-			component.onAdded();
-		}
-
-		if (typeof component.setOwner === 'function')
-		{
-			component.setOwner(_);
+			component.onAdded(_);
 		}
 
 		return _;

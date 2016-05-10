@@ -1,30 +1,37 @@
-function Vec2(x, y) {
-	// Private:
-	var _ = this;
-
-	// Public:
+/**
+ * A simple 2-vector object
+ */
+function Vec2(x, y)
+{
 	this.x = x || 0;
 	this.y = y || 0;
+}
 
-	this.magnitude = function() {
-		return Math.sqrt(_.x*_.x + _.y*_.y);
-	}
+Vec2.prototype.magnitude = function()
+{
+	return Math.sqrt(this.x*this.x + this.y*this.y);
+}
 
-	this.normalize = function(magnitude) {
-		var mag = _.magnitude();
-		var ratio = mag / magnitude;
-		_.x *= ratio;
-		_.y *= ratio;
-	}
+Vec2.prototype.normalize = function(norm)
+{
+	var magnitude = this.magnitude();
+	var ratio = magnitude / norm;
+	this.x *= r;
+	this.y *= r;
+	return this;
+}
 
-	this.add = function(vec2, scalar) {
-		scalar = scalar || 1;
-		_.x += (vec2.x * scalar);
-		_.y += (vec2.y * scalar);
-	}
+Vec2.prototype.add = function(vec2, scalar)
+{
+	scalar = scalar || 1;
+	this.x += (vec2.x * scalar);
+	this.y += (vec2.y * scalar);
+	return this;
+}
 
-	this.reset = function() {
-		_.x = 0;
-		_.y = 0;
-	}
+Vec2.prototype.reset = function()
+{
+	this.x = 0;
+	this.y = 0;
+	return this;
 }

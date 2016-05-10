@@ -3,7 +3,11 @@ var KeyCodes =
 	37: 'LEFT',
 	38: 'UP',
 	39: 'RIGHT',
-	40: 'DOWN'
+	40: 'DOWN',
+	65: 'A',
+	68: 'D',
+	83: 'S',
+	87: 'W'
 };
 
 /**
@@ -33,21 +37,26 @@ function InputHandler()
 		}
 	}
 
-	/**
-	 * Sets up a listener for key input
-	 */
-	function listen()
-	{
-		$(document).on('keydown.InputHandler', handle_input);
-		bound = true;
-	}
-
 	// Public:
-	this.listen = listen;
+	this.listen = function()
+	{
+		if (!bound)
+		{
+			$(document).on('keydown.InputHandler', handle_input);
+			bound = true;
+		}
+
+		return _;
+	};
 
 	this.unlisten = function()
 	{
-		$(document).off('keydown.InputHandler');
+		if (bound)
+		{
+			$(document).off('keydown.InputHandler');
+			bound = false;
+		}
+
 		return _;
 	}
 
@@ -97,13 +106,18 @@ function Keys()
 {
 	// Private:
 	var _ = this;
+	var bound = false;
 	var listener = new InputHandler();
 	var state =
 	{
 		UP: false,
 		RIGHT: false,
 		DOWN: false,
-		LEFT: false
+		LEFT: false,
+		W: false,
+		A: false,
+		S: false,
+		D: false
 	};
 
 	/**
@@ -127,20 +141,26 @@ function Keys()
 		}
 	}
 
-	/**
-	 * Listen for key events and pass to set_state()
-	 */
-	function listen()
-	{
-		$(document).on('keydown.Keys keyup.Keys', set_state);
-	}
-
 	// Public:
-	this.listen = listen;
+	this.listen = function()
+	{
+		if (!bound)
+		{
+			$(document).on('keydown.Keys keyup.Keys', set_state);
+			bound = true;
+		}
+
+		return _;
+	}
 
 	this.unlisten = function()
 	{
-		$(document).off('keydown.Keys keyup.Keys');
+		if (bound)
+		{
+			$(document).off('keydown.Keys keyup.Keys');
+			bound = false;
+		}
+
 		return _;
 	}
 

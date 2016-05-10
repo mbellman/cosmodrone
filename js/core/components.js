@@ -185,6 +185,12 @@ function Point()
 		update_sprite();
 	}
 
+	this.onAdded = function(entity)
+	{
+		owner = entity;
+		return _;
+	}
+
 	this.getPosition = function(round)
 	{
 		return {
@@ -218,12 +224,6 @@ function Point()
 	{
 		velocity.x = (is_modifier ? velocity.x + x : x);
 		velocity.y = (is_modifier ? velocity.y + y : y);
-		return _;
-	}
-
-	this.setOwner = function(entity)
-	{
-		owner = entity;
 		return _;
 	}
 }
@@ -283,15 +283,51 @@ function Drone()
 {
 	// Private:
 	var _ = this;
+	var owner = null;
+	var stabilizing = false;
+	var spin = 0;
 
 	// Public:
 	this.update = function(dt)
 	{
+		// Spin stabilization
+		if (stabilizing)
+		{
+			spin *= 0.9;
 
+			if (Math.abs(spin) < 1)
+			{
+				spin = 0;
+				stabilizing = false;
+			}
+		}
+
+		owner.get(Sprite).rotation += (spin * dt);
+	}
+
+	this.onAdded = function(entity)
+	{
+		owner = entity;
+		return _;
 	}
 
 	this.getSpeed = function()
 	{
 		return 3;
+	}
+
+	this.addSpin = function(amount)
+	{
+		// Update spin
+		spin += amount;
+		// Automatically turn off stabilization
+		stabilizing = false;
+		return _;
+	}
+
+	this.stabilize = function()
+	{
+		stabilizing = true;
+		return _;
 	}
 }
