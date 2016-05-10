@@ -1,3 +1,5 @@
+Math.PI_RAD = Math.PI / 180;
+
 /**
  * RNG between two limits
  */
@@ -56,6 +58,14 @@ function minimum()
 	}
 
 	return min;
+}
+
+/**
+ * Linear interpolation between two values
+ */
+function lerp(value1, value2, factor)
+{
+	return value1 + (value2 - value1) * factor;
 }
 
 /**

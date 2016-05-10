@@ -5,16 +5,17 @@ function Sprite(source)
 {
 	// Private:
 	var _ = this;
+	var offset = {x: 0, y: 0};
 	var origin = {x: 0, y: 0};
-	var target;
+	var pivot;
 
 	/**
 	 * Return the on-screen position of the sprite
 	 */
 	function get_screen_coordinates()
 	{
-		var x = _.x - (!!target ? target.getPosition().x : 0) - origin.x;
-		var y = _.y - (!!target ? target.getPosition().y : 0) - origin.y;
+		var x = _.x - (!!pivot ? pivot.getPosition().x : 0) + offset.x - origin.x;
+		var y = _.y - (!!pivot ? pivot.getPosition().y : 0) + offset.y - origin.y;
 
 		return {
 			x: (_.snap ? Math.floor(x) : x),
@@ -22,10 +23,45 @@ function Sprite(source)
 		};
 	}
 
+	/**
+	 * Sets globalAlpha of [screen.game]
+	 */
+	function apply_alpha()
+	{
+		if (_.alpha < 1)
+		{
+			screen.game.alpha(_.alpha);
+		}
+	}
+
+	/**
+	 * Prepares [screen.game] for rendering rotated Sprite
+	 */
+	function apply_rotation(x, y)
+	{
+		_.rotation = mod(_.rotation, 360);
+
+		if (_.rotation > 0)
+		{
+			screen.game
+				.translate(x + origin.x, y + origin.y)
+				.rotate(_.rotation * Math.PI_RAD);
+		}
+	}
+
+	/**
+	 * Determines whether or not effects are used
+	 */
+	function has_effects()
+	{
+		return (_.alpha < 1 || _.rotation != 0);
+	}
+
 	// Public:
 	this.x = 0;
 	this.y = 0;
 	this.scale = 1;
+	this.rotation = 0;
 	this.alpha = 1;
 	this.snap = false;
 
@@ -37,24 +73,25 @@ function Sprite(source)
 		if (draw.x > viewport.width || draw.x + source.width < 0) return;
 		if (draw.y > viewport.height || draw.y + source.height < 0) return;
 
-		screen.game.alpha(_.alpha);
+		if (has_effects()) screen.game.save();
+
+		apply_alpha();
+		apply_rotation(draw.x, draw.y);
+
 		screen.game.draw.image(
 			source,
-			draw.x,
-			draw.y,
+			(_.rotation > 0 ? -origin.x : draw.x),
+			(_.rotation > 0 ? -origin.y : draw.y),
 			source.width * _.scale,
 			source.height * _.scale
 		);
+
+		if (has_effects()) screen.game.restore();
 	}
 
-	this.getScreenX = function()
+	this.getScreenCoordinates = function()
 	{
-		return get_screen_coordinates().x;
-	}
-
-	this.getScreenY = function()
-	{
-		return get_screen_coordinates().y;
+		return get_screen_coordinates();
 	}
 
 	this.getWidth = function()
@@ -81,21 +118,34 @@ function Sprite(source)
 		return _;
 	}
 
+	this.setAlpha = function(alpha)
+	{
+		_.alpha = alpha;
+		return _;
+	}
+
+	this.setRotation = function(rotation)
+	{
+		_.rotation = mod(rotation, 360);
+		return _;
+	}
+
 	this.centerOrigin = function()
 	{
 		_.setOrigin(source.width/2, source.height/2);
 		return _;
 	}
 
-	this.follow = function(_target)
+	this.pivot = function(_pivot)
 	{
-		target = _target;
+		pivot = _pivot;
 		return _;
 	}
 
-	this.setAlpha = function(alpha)
+	this.offset = function(x, y)
 	{
-		_.alpha = alpha;
+		offset.x = x;
+		offset.y = y;
 		return _;
 	}
 }
@@ -112,8 +162,8 @@ function Point()
 	var velocity = new Vec2();
 
 	/**
-	 * Method for updating the Sprite coordinates
-	 * of the owner entity where applicable
+	 * If the owner entity has a Sprite component,
+	 * internally update its [x, y] coordinates
 	 */
 	function update_sprite()
 	{
@@ -158,18 +208,16 @@ function Point()
 
 	this.setPosition = function(x, y, is_modifier)
 	{
-		position.x = (is_modifier ? position.x+x : x);
-		position.y = (is_modifier ? position.y+y : y);
-
+		position.x = (is_modifier ? position.x + x : x);
+		position.y = (is_modifier ? position.y + y : y);
 		update_sprite();
-
 		return _;
 	}
 
 	this.setVelocity = function(x, y, is_modifier)
 	{
-		velocity.x = (is_modifier ? velocity.x+x : x);
-		velocity.y = (is_modifier ? velocity.y+y : y);
+		velocity.x = (is_modifier ? velocity.x + x : x);
+		velocity.y = (is_modifier ? velocity.y + y : y);
 		return _;
 	}
 

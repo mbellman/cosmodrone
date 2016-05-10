@@ -868,7 +868,7 @@ function Terrain()
 
 	this.setLightAngle = function(angle)
 	{
-		light_angle = Math.PI/180 * angle;
+		light_angle = Math.PI_RAD * angle;
 		return _;
 	}
 

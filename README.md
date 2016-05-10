@@ -4,10 +4,8 @@ A game about space station maintenance...
 ### TODO:
 
 ##### GAME
-* Have camera "chase" drone with a slight delay
 * Scene zoom-out when speeding up (?)
-* Drone rotation + movement in pointed direction
-* Framerate still needs managing
+* Loading bar/indicator of some kind
 * UI
 * jQuery probably isn't necessary
 
@@ -17,4 +15,7 @@ A game about space station maintenance...
 * Brighten shadows
 
 ##### CODE STYLING
+* "Queue" component of some kind to hold onto additional cyclical functions
+* Handy routine for checking on-screen condition
+* See which classes can instead use prototypes
 * Why don't public functions have descriptions?

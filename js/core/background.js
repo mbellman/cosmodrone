@@ -169,12 +169,10 @@ function Background(assets)
 	 */
 	function set_shadow_offset()
 	{
-		var pi_factor = Math.PI / 180;
-
 		shadow_offset =
 		{
-			x: configuration.tileSize * 8 * Math.cos(configuration.lightAngle * pi_factor) * -1,
-			y: configuration.tileSize * 8 * Math.sin(configuration.lightAngle * pi_factor)
+			x: configuration.tileSize * 8 * Math.cos(configuration.lightAngle * Math.PI_RAD) * -1,
+			y: configuration.tileSize * 8 * Math.sin(configuration.lightAngle * Math.PI_RAD)
 		};
 	}
 
@@ -193,7 +191,7 @@ function Background(assets)
 		// Determine the progress between hours
 		var prev_hour = configuration.hours[cycle_forward(active_terrain-1, terrain_renders.length-1)];
 		var next_hour = configuration.hours[active_terrain];
-		var difference = (next_hour >= prev_hour ? next_hour-prev_hour : 24-prev_hour + next_hour);
+		var difference = (next_hour >= prev_hour ? next_hour - prev_hour : 24 - prev_hour + next_hour);
 		var granular_hour = clamp(prev_hour + progress*difference, 0, 24);
 
 		granular_light_level = Math.abs(12 - granular_hour);
@@ -234,7 +232,7 @@ function Background(assets)
 	}
 
 	// ------------------------------------------ //
-	// ------------- Initialization ------------- //
+	// ------------- INITIALIZATION ------------- //
 	// ------------------------------------------ //
 
 	function start()
@@ -253,7 +251,7 @@ function Background(assets)
 	}
 
 	// ------------------------------------------------ //
-	// ------------- Texture prerendering ------------- //
+	// ------------- TEXTURE PRERENDERING ------------- //
 	// ------------------------------------------------ //
 
 	/**
@@ -261,16 +259,8 @@ function Background(assets)
 	 */
 	function prerender_terrain_variant(hour)
 	{
-		var map_size = terrain.getSize();
-		var tile_size = terrain.getTileSize();
-
-		var terrain_canvas = new Canvas(new Element('canvas'))
-			.setSize(map_size * tile_size, map_size * tile_size);
-
 		terrain.setTime(hour);
-		terrain_canvas.draw.image(terrain.canvas);
-
-		terrain_renders.push(terrain_canvas.element());
+		terrain_renders.push(new TerrainTexture().divide(terrain.canvas, 32));
 	}
 
 	/**
@@ -387,7 +377,7 @@ function Background(assets)
 	}
 
 	// -------------------------------------------- //
-	// ------------- Cloud population ------------- //
+	// ------------- CLOUD POPULATION ------------- //
 	// -------------------------------------------- //
 
 	/**
@@ -478,7 +468,7 @@ function Background(assets)
 				var cloud_offset =
 				{
 					x: Math.round(magnitude * Math.cos(angle)),
-					y: Math.round(magnitude * Math.sin(angle) * -1)
+					y: Math.round(magnitude * Math.sin(angle)) * -1
 				};
 
 				spawn_cloud(index, x - w_half + cloud_offset.x, y - h_half + cloud_offset.y);
@@ -522,6 +512,7 @@ function Background(assets)
 		var screen_area = viewport.width * viewport.height;
 		var screen_area_ratio = screen_area / 720000;
 		var spawn_probability = screen_area_ratio * 0.00015 * bg_abs_velocity;
+		var type, index, size, spawn_offset;
 
 		var position =
 		{
@@ -544,11 +535,11 @@ function Background(assets)
 		{
 			// 98% chance of generating a normal cloud
 			// (higher chance of picking cirrus clouds)
-			var type = pick_random('cumulus', 'heavy_cumulus', 'small_cumulus', 'cirrus', 'cirrus', 'cirrus');
-			var index = random_cloud_index(type);
-			var size = cloud_renders[index].getSize();
+			type = pick_random('cumulus', 'heavy_cumulus', 'small_cumulus', 'cirrus', 'cirrus', 'cirrus');
+			index = random_cloud_index(type);
+			size = cloud_renders[index].getSize();
 
-			var spawn_offset =
+			spawn_offset =
 			{
 				x: 0,
 				y: 0
@@ -557,15 +548,15 @@ function Background(assets)
 		else
 		{
 			// 2% chance of generating a cyclone
-			var index = pick_random('large', 'small');
+			index = pick_random('large', 'small');
 
-			var size =
+			size =
 			{
 				width: 0,
 				height: 0
 			};
 
-			var spawn_offset =
+			spawn_offset =
 			{
 				x: (index === 'large' ? 1350 : 1200),
 				y: (index === 'large' ? 1350 : 1200)
@@ -619,24 +610,28 @@ function Background(assets)
 
 		if (velocity.x < 0 && position.x + image.width < 0)
 		{
+			// Cloud scrolling left and off left edge
 			clouds.splice(c, 1);
 			return true;
 		}
 
 		if (velocity.x > 0 && position.x > viewport.width)
 		{
+			// Cloud scrolling right and off right edge
 			clouds.splice(c, 1);
 			return true;
 		}
 
 		if (velocity.y < 0 && position.y + image.height < 0)
 		{
+			// Cloud scrolling up and off top edge
 			clouds.splice(c, 1);
 			return true;
 		}
 
 		if (velocity.y > 0 && position.y > viewport.height)
 		{
+			// Cloud scrolling down and off bottom edge
 			clouds.splice(c, 1);
 			return true;
 		}
@@ -645,12 +640,14 @@ function Background(assets)
 	}
 
 	// ---------------------------------------- //
-	// ------------- Render cycle ------------- //
+	// ------------- RENDER CYCLE ------------- //
 	// ---------------------------------------- //
 
 	/**
 	 * Sets the new time-of-day background in
 	 * front with opacity 0 and fades it in
+	 * (called at startup and self-invokes
+	 * once the time transition completes)
 	 */
 	function advance_bg_cycle()
 	{
@@ -707,110 +704,19 @@ function Background(assets)
 	 */
 	function render_bg()
 	{
-		var map_size = terrain.getSize();
-		var tile_size = terrain.getTileSize();
-
-		// Tile offset 'pointer'
-		var tile_offset =
-		{
-			x: 0,
-			y: 0
-		};
-		// Tiles needed for screen coverage
-		var tiles_to_draw =
-		{
-			x: Math.ceil(viewport.width/tile_size) + 2,
-			y: Math.ceil(viewport.height/tile_size) + 2
-		};
-		// Current tile the background camera is on
-		var bg_tile_offset =
-		{
-			x: mod(Math.floor(camera.getPosition().x / tile_size), map_size),
-			y: mod(Math.floor(camera.getPosition().y / tile_size), map_size)
-		};
-		// Sub-tile offset based on the background camera's pixel position
-		var bg_pixel_offset =
-		{
-			x: tile_size - mod(camera.getPosition().x, tile_size),
-			y: tile_size - mod(camera.getPosition().y, tile_size)
-		};
-
 		// Information for time-of-day rendering sources/targets
 		var new_bg = 'bg' + front_bg;
 		var old_bg = 'bg' + bit_flip(front_bg);
-		var terrain_before = cycle_forward(active_terrain-1, terrain_renders.length-1);
+		var last_terrain = cycle_forward(active_terrain-1, terrain_renders.length-1);
 		var new_terrain = terrain_renders[active_terrain];
-		var old_terrain = terrain_renders[terrain_before];
-		var map_limit, screen_limit, draw_offset, clip;
+		var old_terrain = terrain_renders[last_terrain];
 
-		while (tile_offset.x < tiles_to_draw.x || tile_offset.y < tiles_to_draw.y)
+		new_terrain.tileOnto(screen[new_bg], camera.getPosition().x, camera.getPosition().y);
+
+		if (time_transition)
 		{
-			// Remaining tiles to the end of the map from current tile offset
-			map_limit =
-			{
-				x: map_size - ((tile_offset.x + bg_tile_offset.x) % map_size),
-				y: map_size - ((tile_offset.y + bg_tile_offset.y) % map_size)
-			};
-			// Remaining tiles needed to fill the screen
-			screen_limit =
-			{
-				x: tiles_to_draw.x - tile_offset.x,
-				y: tiles_to_draw.y - tile_offset.y
-			};
-			// Position to draw the next map chunk at
-			draw_offset =
-			{
-				x: tile_size * tile_offset.x + bg_pixel_offset.x - tile_size,
-				y: tile_size * tile_offset.y + bg_pixel_offset.y - tile_size
-			};
-
-			if (configuration.pixelSnapping)
-			{
-				draw_offset.x = Math.floor(draw_offset.x);
-				draw_offset.y = Math.floor(draw_offset.y);
-			}
-			// Clipping parameters for next map chunk
-			clip =
-			{
-				x: tile_size * ((tile_offset.x + bg_tile_offset.x) % map_size),
-				y: tile_size * ((tile_offset.y + bg_tile_offset.y) % map_size),
-				width: tile_size * Math.min(map_limit.x, screen_limit.x),
-				height: tile_size * Math.min(map_limit.y, screen_limit.y)
-			};
-
-			// Draw the map chunk to both background
-			// screens for time-of-day transitioning
-			screen[new_bg].draw
-				.image(
-					new_terrain,
-					clip.x, clip.y, clip.width, clip.height,
-					draw_offset.x, draw_offset.y, clip.width, clip.height
-				);
-
-			if (time_transition)
-			{
-				// Only draw twice if the transition is active
-				screen[old_bg].draw
-					.image(
-						old_terrain,
-						clip.x, clip.y, clip.width, clip.height,
-						draw_offset.x, draw_offset.y, clip.width, clip.height
-					);
-			}
-
-			// Advance the tile 'pointer' to determine
-			// what and where to draw on the next cycle
-			tile_offset.x += clip.width/tile_size;
-
-			if (tile_offset.x >= tiles_to_draw.x)
-			{
-				tile_offset.y += clip.height/tile_size;
-
-				if (tile_offset.y < tiles_to_draw.y)
-				{
-					tile_offset.x = 0;
-				}
-			}
+			// Only draw to both screens if necessary
+			old_terrain.tileOnto(screen[old_bg], camera.getPosition().x, camera.getPosition().y);
 		}
 	}
 
@@ -831,6 +737,8 @@ function Background(assets)
 		// Cloud/shadow rendering
 		var viewport_w2 = viewport.width/2;
 		var viewport_h2 = viewport.height/2;
+		var cirrus_offset = (40 / viewport_w2);
+		var normal_offset = (15 / viewport_w2);
 		var cloud, position, instance, sprite, shadow, offset_factor, offset, draw;
 
 		for (var c = 0 ; c < clouds.length ; c++)
@@ -840,9 +748,8 @@ function Background(assets)
 			instance = cloud.get(Cloud);
 			sprite = instance.getImage();
 			shadow = instance.getShadow();
-			offset_factor = (instance.getType() === 'cirrus' ? (40 / viewport_w2) : (15 / viewport_w2));
+			offset_factor = (instance.getType() === 'cirrus' ? cirrus_offset : normal_offset);
 
-			// Shadow rendering
 			if (shadow !== null)
 			{
 				draw =
@@ -865,7 +772,9 @@ function Background(assets)
 				}
 			}
 
-			// Cloud rendering
+			// Determine cloud position shift by taking its
+			// center offset relative to the center of the
+			// game screen and multiplying it by [offset_factor]
 			offset =
 			{
 				x: (position.x + sprite.width/2 - viewport_w2) * offset_factor,
@@ -1011,5 +920,141 @@ function Background(assets)
 	{
 		loaded = false;
 		stop_bg_cycle();
+	}
+}
+
+/**
+ * A group of prerendered equal-sized contiguous
+ * map chunks representing a larger terrain region
+ */
+function TerrainTexture()
+{
+	// Private:
+	var _ = this;
+	var map_size = {};
+	var divisions = 1;
+	var chunks = [];
+
+	/**
+	 * Set up chunks array
+	 */
+	function create_chunks()
+	{
+		chunks.length = 0;
+
+		for (var y = 0 ; y < divisions ; y++)
+		{
+			chunks[y] = [];
+		}
+	}
+
+	// Public:
+	this.divide = function(source, _divisions)
+	{
+		divisions = _divisions;
+
+		create_chunks();
+
+		map_size.width = source.width;
+		map_size.height = source.height;
+
+		var width = source.width / divisions;
+		var height = source.height / divisions;
+		var clip, chunk;
+
+		for (var y = 0 ; y < divisions ; y++)
+		{
+			for (var x = 0 ; x < divisions ; x++)
+			{
+				clip =
+				{
+					x: x * width,
+					y: y * height,
+					width: width,
+					height: height
+				};
+
+				chunk = new Canvas(new Element('canvas')).setSize(width, height);
+				chunk.draw.image(
+					source,
+					clip.x, clip.y, clip.width, clip.height,
+					0, 0, width, height
+				);
+
+				chunks[y][x] = chunk.element();
+			}
+		}
+
+		return _;
+	}
+
+	this.tileOnto = function(canvas, offsetX, offsetY, x, y, width, height)
+	{
+		offsetX = offsetX || 0;
+		offsetY = offsetY || 0;
+		x = x || 0;
+		y = y || 0;
+		width = width || canvas.getSize().width;
+		height = height || canvas.getSize().height;
+
+		// Pixel loop pointer
+		var pixel =
+		{
+			x: x,
+			y: y
+		};
+
+		var chunk_w = map_size.width / divisions;
+		var chunk_h = map_size.height / divisions;
+		var map = {}, chunk = {}, source, draw = {}, clip = {}, loops = 0;
+
+		// Fill out the target pixel region of [canvas]
+		// with texture data from the [chunks] array
+		while (pixel.x < width || pixel.y < height)
+		{
+			// Failsafe against infinite looping (only
+			// occurs in the instance of unusual divisions)
+			if (++loops > 5000) break;
+
+			// Get position of pixel offset
+			// in original terrain coordinates
+			map.x = mod(pixel.x + offsetX, map_size.width);
+			map.y = mod(pixel.y + offsetY, map_size.height);
+
+			// Get new source chunk index
+			chunk.x = Math.floor(map.x / chunk_w);
+			chunk.y = Math.floor(map.y / chunk_h);
+
+			// Get source chunk
+			source = chunks[chunk.y][chunk.x];
+
+			// Get new draw position
+			draw.x = x + pixel.x,
+			draw.y = y + pixel.y;
+
+			// Get new clip region
+			clip.x = map.x % chunk_w;
+			clip.y = map.y % chunk_h;
+			// Clip width/height should stop either at the edge
+			// of the chunk or the edge of the target canvas
+			clip.width = Math.min(chunk_w - clip.x, width - draw.x);
+			clip.height = Math.min(chunk_h - clip.y, height - draw.y);
+
+			// Draw the clipped region to the target canvas
+			canvas.draw.image(source, clip.x, clip.y, clip.width, clip.height, draw.x, draw.y, clip.width, clip.height);
+
+			// Advance the pixel loop pointer
+			pixel.x += clip.width;
+
+			if (pixel.x >= width)
+			{
+				pixel.y += clip.height;
+
+				if (pixel.y < height)
+				{
+					pixel.x = 0;
+				}
+			}
+		}
 	}
 }

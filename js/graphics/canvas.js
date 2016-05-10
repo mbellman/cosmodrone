@@ -117,15 +117,15 @@ function Canvas(element) {
 		// Create a new canvas with this instance's image data
 		var image_w = element.width;
 		var image_h = element.height;
-		var base_canvas = new Canvas(document.createElement('canvas')).setSize(image_w, image_h);
-		base_canvas.draw.image(element);
-		var base_image = base_canvas.data.get();
+		var clone_canvas = new Canvas(document.createElement('canvas')).setSize(image_w, image_h);
+		clone_canvas.draw.image(element);
+		var base_image = clone_canvas.data.get();
 
-		// Establish target for data writing
+		// Prepare data for rewriting
 		_.setSize(multiple*image_w, multiple*image_h);
 		var scaled_image = _.data.get();
 
-		// Iterate over base image data
+		// Iterate over original image data
 		for (var y = 0 ; y < image_h ; y++)
 		{
 			for (var x = 0 ; x < image_w ; x++)
@@ -181,6 +181,18 @@ function Canvas(element) {
 		return _;
 	}
 
+	this.translate = function(x, y)
+	{
+		ctx.translate(x, y);
+		return _;
+	}
+
+	this.rotate = function(radians)
+	{
+		ctx.rotate(radians);
+		return _;
+	}
+
 	this.composite = function(type)
 	{
 		ctx.globalCompositeOperation = type;
@@ -190,6 +202,18 @@ function Canvas(element) {
 	this.alpha = function(alpha)
 	{
 		ctx.globalAlpha = alpha;
+		return _;
+	}
+
+	this.save = function()
+	{
+		ctx.save();
+		return _;
+	}
+
+	this.restore = function()
+	{
+		ctx.restore();
 		return _;
 	}
 

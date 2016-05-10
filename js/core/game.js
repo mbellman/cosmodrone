@@ -12,6 +12,7 @@ function GameInstance(assets)
 	var keys = new Keys();
 	var camera;
 	var drone;
+	var spin = 0;
 	var background;
 	var entities = [];
 
@@ -51,7 +52,7 @@ function GameInstance(assets)
 	/**
 	 * Sets up a scrolling planetary background
 	 */
-	function load_background()
+	function add_background()
 	{
 		var t = Date.now();
 
@@ -121,20 +122,25 @@ function GameInstance(assets)
 	function load_level()
 	{
 		var data = LevelData[level];
+		var object, file;
 
 		for (var d = 0 ; d < data.length ; d++)
 		{
-			var object = data[d];
-			var file = ObjectMap[object.type].file;
+			object = data[d];
+			file = ObjectMap[object.type].file;
 
 			entities.push(
 				new Entity()
 					.add(
 						new Sprite(assets.getImage(file))
-						.setXY(object.x, object.y)
-						.follow(camera.get(Point))
+							.setXY(object.x, object.y)
+							.offset(viewport.width/2, viewport.height/2)
+							.pivot(camera.get(Point))
 					)
-					.add(new Point().setPosition(object.x, object.y))
+					.add(
+						new Point()
+							.setPosition(object.x, object.y)
+					)
 			);
 		}
 	}
@@ -155,10 +161,11 @@ function GameInstance(assets)
 		// Instantiate player drone
 		drone = new Entity()
 			.add(new Drone())
-			.add(new Point().setPosition(viewport.width/2, viewport.height/2))
+			.add(new Point())
 			.add(
 				new Sprite(assets.getImage('drone/drone.png'))
-					.follow(camera.get(Point))
+					.offset(viewport.width/2, viewport.height/2)
+					.pivot(camera.get(Point))
 					.centerOrigin()
 			);
 
@@ -181,30 +188,38 @@ function GameInstance(assets)
 	/**
 	 * Watch for key inputs and respond accordingly
 	 */
-	function listen_for_input()
+	function listen_for_input(dt)
 	{
 		var player = drone.get(Point);
+		var sprite = drone.get(Sprite);
 		var speed = drone.get(Drone).getSpeed();
 
 		if (keys.holding('UP'))
 		{
-			player.setVelocity(0, -1*speed, true);
+			var x = Math.sin(sprite.rotation * Math.PI_RAD);
+			var y = Math.cos(sprite.rotation * Math.PI_RAD) * -1;
+
+			player.setVelocity(x*speed, y*speed, true);
 		}
 
 		if (keys.holding('LEFT'))
 		{
-			player.setVelocity(-1*speed, 0, true);
-		}
-
-		if (keys.holding('DOWN'))
-		{
-			player.setVelocity(0, speed, true);
+			spin -= speed;
 		}
 
 		if (keys.holding('RIGHT'))
 		{
-			player.setVelocity(speed, 0, true);
+			spin += speed;
 		}
+	}
+
+	/**
+	 * Cause drone to continually spin
+	 * according to [spin] velocity
+	 */
+	function update_spin(dt)
+	{
+		drone.get(Sprite).rotation += (spin * dt);
 	}
 
 	/**
@@ -212,13 +227,13 @@ function GameInstance(assets)
 	 */
 	function update_camera()
 	{
+		var view = camera.get(Point).getPosition();
 		var player = drone.get(Point).getPosition();
 
-		camera.get(Point)
-			.setPosition(
-				player.x - viewport.width/2,
-				player.y - viewport.height/2
-			);
+		camera.get(Point).setPosition(
+			lerp(view.x, player.x, 0.075),
+			lerp(view.y, player.y, 0.075)
+		);
 	}
 
 	// --------------------------------------- //
@@ -227,22 +242,23 @@ function GameInstance(assets)
 
 	/**
 	 * Iterate over all Sprites and clear
-	 * the screen at their coordinates
+	 * the screen at their drawn coordinates
 	 */
 	function clear_screen()
 	{
-		var coordinates, buffer;
+		var sprite, position, coordinates, buffer;
 
 		for (var e = 0 ; e < entities.length ; e++)
 		{
-			var sprite = entities[e].get(Sprite);
+			sprite = entities[e].get(Sprite);
 
 			if (sprite !== null)
 			{
+				position = sprite.getScreenCoordinates();
 				coordinates =
 				{
-					x: sprite.getScreenX(),
-					y: sprite.getScreenY(),
+					x: position.x,
+					y: position.y,
 					width: sprite.scale * sprite.getWidth(),
 					height: sprite.scale * sprite.getHeight()
 				};
@@ -253,7 +269,15 @@ function GameInstance(assets)
 					(coordinates.y < viewport.height && coordinates.y + coordinates.height > 0)
 				)
 				{
-					buffer = (sprite.snap ? 0 : 2);
+					if (sprite.rotation > 0)
+					{
+						buffer = Math.max(coordinates.width, coordinates.height);
+					}
+					else
+					{
+						if (sprite.snap) buffer = 0;
+						else buffer = 1;
+					}
 
 					screen.game.clear(
 						coordinates.x - buffer,
@@ -290,7 +314,8 @@ function GameInstance(assets)
 				var dt = (new_time - time) / 1000;
 
 				clear_screen();
-				listen_for_input();
+				listen_for_input(1/60);
+				update_spin(1/60);
 				update_camera();
 				update(1/60);
 
@@ -310,7 +335,7 @@ function GameInstance(assets)
 	this.init = function()
 	{
 		_.unload();
-		load_background();
+		add_background();
 		return _;
 	}
 
