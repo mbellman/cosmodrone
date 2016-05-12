@@ -62,7 +62,7 @@ function anti_alias() {
 function generate_cirrus_clouds(x, y) {
 	var start_alpha = 1;
 
-	canvas.setGlobalAlpha(start_alpha);
+	canvas.alpha(start_alpha);
 
 	// Cirrus clouds
 	var group = [];
@@ -101,12 +101,10 @@ function generate_cirrus_clouds(x, y) {
 		for (var p = 0 ; p < points ; p++) {
 			var brush = group[p];
 			var _scale = brush[2] * (5 * t/25);
-			canvas.setGlobalAlpha(start_alpha * Math.random());
+			canvas.alpha(start_alpha * Math.random());
 			canvas.draw.image(brush[3], position.x + brush[0], position.y + brush[1], brush[3].width * _scale * scale, brush[3].height * _scale * scale);
 		}
 	}
-
-	return;
 
 	// Have the clouds wisp away in an arc
 	var dist = Math.round(35 * size * random(1, 1.25) * scale);
@@ -134,9 +132,9 @@ function generate_cirrus_clouds(x, y) {
 
 			var pos_x = position.x + brush[0] + Math.pow((1 - ratio), 1/3) * (max - brush[0]);
 
-			canvas.setGlobalAlpha(start_alpha * Math.pow(ratio,2));
+			canvas.alpha(start_alpha * Math.pow(ratio,2));
 			canvas.draw.image(brush[3], pos_x, position.y + brush[1], brush[3].width * scale_r * _scale, brush[3].height * scale_r * _scale);
-			canvas.setGlobalAlpha(0.1 * start_alpha * Math.pow(ratio,2));
+			canvas.alpha(0.1 * start_alpha * Math.pow(ratio,2));
 			canvas.draw.image(brush[3], pos_x - spread_w, position.y + brush[1], spread_w, spread_h);
 		}
 	}
@@ -147,7 +145,7 @@ function generate_clouds() {
 	shadow.clear();
 
 	if (type !== 'cirrus') {
-		canvas.setGlobalAlpha(1);
+		canvas.alpha(1);
 
 		// Cumulus clouds or cyclones
 		var size_half = size/2;

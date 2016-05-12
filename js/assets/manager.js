@@ -8,7 +8,11 @@
 		// Private:
 		var _ = this;
 		var loaded = false;
+		var onComplete = function(){};
 
+		/**
+		 * Create a media object for the asset
+		 */
 		function create_media()
 		{
 			switch (type)
@@ -22,12 +26,25 @@
 			}
 		}
 
+		/**
+		 * Check to see if the asset
+		 * has already failed to load
+		 */
 		function check_fail_state()
 		{
 			return (
 				(_.type === 'image' && _.media.complete && _.media.naturalWidth === 0) ||
 				(_.type === 'audio' && _.media.error !== null)
 			);
+		}
+
+		/**
+		 * Called once asset successfully loads
+		 */
+		function load_complete()
+		{
+			loaded = true;
+			onComplete(_);
 		}
 
 		// Public:
@@ -49,14 +66,10 @@
 		{
 			if (!loaded)
 			{
-				function loadComplete()
-				{
-					loaded = true;
-					callback(_);
-				}
+				onComplete = callback;
 
 				var loadEvent = (_.type === 'image' ? 'onload' : 'oncanplay');
-				_.media[loadEvent] = loadComplete;
+				_.media[loadEvent] = load_complete;
 				_.media.src = _.path;
 			}
 
@@ -81,7 +94,8 @@
 	}
 
 	/**
-	 * Instance of a loaded asset library, used to retrieve assets during game
+	 * Instance of a loaded asset library,
+	 * used to retrieve assets during game
 	 */
 	function AssetManager(_root)
 	{
@@ -105,7 +119,8 @@
 		 */
 		function asset_error(path, file)
 		{
-			console.warn('Asset error: ' (root.base + path + file));
+			console.warn('Asset error: ' + (root.base + path + file));
+			return null;
 		}
 
 		// Public:
@@ -137,7 +152,7 @@
 			}
 			catch(e)
 			{
-				asset_error(root.images, file);
+				return asset_error(root.images, file);
 			}
 		}
 
@@ -149,7 +164,7 @@
 			}
 			catch(e)
 			{
-				asset_error(root.audio, file);
+				return asset_error(root.audio, file);
 			}
 		}
 
@@ -160,8 +175,10 @@
 	}
 
 	/**
-	 * Instance of the asset loader resource, which can be used to load a list
-	 * of assets into memory and then handle them through the returned asset manager
+	 * Instance of the asset loader resource,
+	 * which can be used to load a list of
+	 * assets into memory and then handle them
+	 * through the returned asset manager
 	 */
 	function AssetLoader()
 	{
@@ -173,6 +190,10 @@
 		var onError = function(){};
 		var onComplete = function(){};
 
+		/**
+		 * Run through the queued asset list and
+		 * load them as usable Asset instances
+		 */
 		function load_assets()
 		{
 			var images = assets.images.files || [];
@@ -182,6 +203,9 @@
 			var asset_count = images.length + audio.length;
 			var loaded = 0;
 
+			/**
+			 * Temporary asset load handler callback
+			 */
 			function INTERNAL_load_progress(asset)
 			{
 				asset_manager.store(asset);

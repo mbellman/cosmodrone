@@ -121,27 +121,20 @@ function GameInstance(assets)
 	 */
 	function load_level()
 	{
-		var data = LevelData[level];
-		var object, file;
+		// Save camera component reference
+		var view = camera.get(Point);
+		// Get and build level layout
+		var level_data = LevelData[level];
+		var level_entities = new LevelLoader(assets)
+			.setLayout(level_data.layout)
+			.getEntities();
+		var entity;
 
-		for (var d = 0 ; d < data.length ; d++)
+		for (var e = 0 ; e < level_entities.length ; e++)
 		{
-			object = data[d];
-			file = ObjectMap[object.type].file;
-
-			entities.push(
-				new Entity()
-					.add(
-						new Sprite(assets.getImage(file))
-							.setXY(object.x, object.y)
-							.offset(viewport.width/2, viewport.height/2)
-							.pivot(camera.get(Point))
-					)
-					.add(
-						new Point()
-							.setPosition(object.x, object.y)
-					)
-			);
+			entity = level_entities[e];
+			entity.get(Sprite).pivot(view);
+			entities.push(entity);
 		}
 	}
 
@@ -246,44 +239,42 @@ function GameInstance(assets)
 	 */
 	function clear_screen()
 	{
-		var sprite, position, coordinates, buffer;
+		var sprite = {}, buffer;
 
 		for (var e = 0 ; e < entities.length ; e++)
 		{
-			sprite = entities[e].get(Sprite);
+			sprite.component = entities[e].get(Sprite);
 
-			if (sprite !== null)
+			if (sprite.component !== null)
 			{
-				position = sprite.getScreenCoordinates();
-				coordinates =
-				{
-					x: position.x,
-					y: position.y,
-					width: sprite.scale * sprite.getWidth(),
-					height: sprite.scale * sprite.getHeight()
-				};
+				// Get rendering information about the Sprite
+				sprite.position = sprite.component.getScreenCoordinates();
+				sprite.width = sprite.component.scale * sprite.component.getWidth();
+				sprite.height = sprite.component.scale * sprite.component.getHeight();
 
-				// Only clear screen for visible Sprites
+				// Only clear screen around visible Sprites
 				if (
-					(coordinates.x < viewport.width && coordinates.x + coordinates.width > 0) &&
-					(coordinates.y < viewport.height && coordinates.y + coordinates.height > 0)
+					(sprite.position.x < viewport.width && sprite.position.x + sprite.width > 0) &&
+					(sprite.position.y < viewport.height && sprite.position.y + sprite.height > 0)
 				)
 				{
-					if (sprite.rotation > 0)
+					if (sprite.component.rotation > 0)
 					{
-						buffer = Math.max(coordinates.width, coordinates.height);
+						// Clear more space surrounding the sprite
+						// if it is rotated to ensure proper erasure
+						buffer = Math.max(sprite.width, sprite.height);
 					}
 					else
 					{
-						if (sprite.snap) buffer = 0;
+						if (sprite.component.snap) buffer = 0;
 						else buffer = 1;
 					}
 
 					screen.game.clear(
-						coordinates.x - buffer,
-						coordinates.y - buffer,
-						coordinates.width + 2*buffer,
-						coordinates.height + 2*buffer
+						sprite.position.x - buffer,
+						sprite.position.y - buffer,
+						sprite.width + 2*buffer,
+						sprite.height + 2*buffer
 					);
 				}
 			}
@@ -305,10 +296,16 @@ function GameInstance(assets)
 	}
 
 	/**
-	 * Entity update cycle
+	 * Game update loop
 	 */
 	function update(dt)
 	{
+		// Game system updates
+		clear_screen();
+		poll_input(dt);
+		update_camera();
+
+		// Entity updates
 		for (var e = 0 ; e < entities.length ; e++)
 		{
 			entities[e].update(dt);
@@ -327,9 +324,6 @@ function GameInstance(assets)
 				var new_time = Date.now();
 				var dt = (new_time - time) / 1000;
 
-				clear_screen();
-				poll_input(1/60);
-				update_camera();
 				update(1/60);
 
 				time = new_time;

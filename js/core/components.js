@@ -216,7 +216,9 @@ function Point()
 	{
 		position.x = (is_modifier ? position.x + x : x);
 		position.y = (is_modifier ? position.y + y : y);
+
 		update_sprite();
+
 		return _;
 	}
 

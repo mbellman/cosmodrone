@@ -101,6 +101,14 @@ function Background(assets)
 			file: 'cirrus-7',
 			type: 'cirrus'
 		},
+		{
+			file: 'cirrus-8',
+			type: 'cirrus'
+		},
+		{
+			file: 'cirrus-9',
+			type: 'cirrus'
+		},
 	];
 
 	/**
@@ -260,7 +268,7 @@ function Background(assets)
 	function prerender_terrain_variant(hour)
 	{
 		terrain.setTime(hour);
-		terrain_renders.push(new TerrainTexture().divide(terrain.canvas, 32));
+		terrain_renders.push(new TextureCache().divide(terrain.canvas, 32));
 	}
 
 	/**
@@ -925,18 +933,18 @@ function Background(assets)
 
 /**
  * A group of prerendered equal-sized contiguous
- * map chunks representing a larger terrain region
+ * texture chunks comprising a larger texture
  */
-function TerrainTexture()
+function TextureCache()
 {
 	// Private:
 	var _ = this;
-	var map_size = {};
+	var texture_size = {};
 	var divisions = 1;
 	var chunks = [];
 
 	/**
-	 * Set up chunks array
+	 * Set up texture chunk array for writing
 	 */
 	function create_chunks()
 	{
@@ -949,23 +957,28 @@ function TerrainTexture()
 	}
 
 	// Public:
-	this.divide = function(source, _divisions)
+	this.divide = function(texture, _divisions)
 	{
 		divisions = _divisions;
 
+		// Prepare array of blank chunks
 		create_chunks();
 
-		map_size.width = source.width;
-		map_size.height = source.height;
+		// Save size of full texture
+		texture_size.width = texture.width;
+		texture_size.height = texture.height;
 
-		var width = source.width / divisions;
-		var height = source.height / divisions;
+		// Get width/height for chunks
+		var width = texture.width / divisions;
+		var height = texture.height / divisions;
 		var clip, chunk;
 
+		// Iterate over all blank chunks
 		for (var y = 0 ; y < divisions ; y++)
 		{
 			for (var x = 0 ; x < divisions ; x++)
 			{
+				// Define new chunk clipping region
 				clip =
 				{
 					x: x * width,
@@ -974,13 +987,16 @@ function TerrainTexture()
 					height: height
 				};
 
+				// Instantiate a new Canvas for the chunk
+				// and render the clipped texture to it
 				chunk = new Canvas(new Element('canvas')).setSize(width, height);
 				chunk.draw.image(
-					source,
+					texture,
 					clip.x, clip.y, clip.width, clip.height,
 					0, 0, width, height
 				);
 
+				// Save the chunk texture
 				chunks[y][x] = chunk.element();
 			}
 		}
@@ -997,35 +1013,36 @@ function TerrainTexture()
 		width = width || canvas.getSize().width;
 		height = height || canvas.getSize().height;
 
-		// Pixel loop pointer
+		// Pixel buffer pointer
 		var pixel =
 		{
 			x: x,
 			y: y
 		};
 
-		var chunk_w = map_size.width / divisions;
-		var chunk_h = map_size.height / divisions;
-		var map = {}, chunk = {}, source, draw = {}, clip = {}, loops = 0;
+		// Get chunk size, prepare additional variables
+		var chunk_w = texture_size.width / divisions;
+		var chunk_h = texture_size.height / divisions;
+		var texture = {}, chunk = {}, source, draw = {}, clip = {}, loops = 0;
 
 		// Fill out the target pixel region of [canvas]
-		// with texture data from the [chunks] array
+		// with texture data from various [chunks]
 		while (pixel.x < width || pixel.y < height)
 		{
 			// Failsafe against infinite looping (only
-			// occurs in the instance of unusual divisions)
+			// occurs in the case of unusual [divisions])
 			if (++loops > 5000) break;
 
-			// Get position of pixel offset
-			// in original terrain coordinates
-			map.x = mod(pixel.x + offsetX, map_size.width);
-			map.y = mod(pixel.y + offsetY, map_size.height);
+			// Get wrapped position of pixel
+			// in original texture coordinates
+			texture.x = mod(pixel.x + offsetX, texture_size.width);
+			texture.y = mod(pixel.y + offsetY, texture_size.height);
 
-			// Get new source chunk index
-			chunk.x = Math.floor(map.x / chunk_w);
-			chunk.y = Math.floor(map.y / chunk_h);
+			// Get index for the texture chunk based on coordinates
+			chunk.x = Math.floor(texture.x / chunk_w);
+			chunk.y = Math.floor(texture.y / chunk_h);
 
-			// Get source chunk
+			// Get the texture chunk
 			source = chunks[chunk.y][chunk.x];
 
 			// Get new draw position
@@ -1033,23 +1050,25 @@ function TerrainTexture()
 			draw.y = y + pixel.y;
 
 			// Get new clip region
-			clip.x = map.x % chunk_w;
-			clip.y = map.y % chunk_h;
+			clip.x = texture.x % chunk_w;
+			clip.y = texture.y % chunk_h;
 			// Clip width/height should stop either at the edge
 			// of the chunk or the edge of the target canvas
 			clip.width = Math.min(chunk_w - clip.x, width - draw.x);
 			clip.height = Math.min(chunk_h - clip.y, height - draw.y);
 
 			// Draw the clipped region to the target canvas
-			canvas.draw.image(source, clip.x, clip.y, clip.width, clip.height, draw.x, draw.y, clip.width, clip.height);
+			canvas.draw.image(
+				source,
+				clip.x, clip.y, clip.width, clip.height,
+				draw.x, draw.y, clip.width, clip.height
+			);
 
-			// Advance the pixel loop pointer
+			// Advance the pixel buffer pointer
 			pixel.x += clip.width;
-
 			if (pixel.x >= width)
 			{
 				pixel.y += clip.height;
-
 				if (pixel.y < height)
 				{
 					pixel.x = 0;
