@@ -4,9 +4,9 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
-* Drone: split energy into power/fuel, health into material/hardware
-* Handler for drone running out of power
+* Handler for drone running out of power/fuel
 * Hardware terminals for station modules
+* Drone docking
 * Hardware/part maintenance interface
 * Ability to move drone "down" a layer, underneath the station
 * Collisions/drone damage

@@ -9,7 +9,7 @@ function HUD(assets)
 	{
 		droneHUD: assets.getImage('ui/drone.png')
 	};
-	var coordinates =
+	var UI =
 	{
 		droneHUD:
 		{
@@ -23,14 +23,32 @@ function HUD(assets)
 				x: 56,
 				y: 58,
 				width: 178,
-				height: 10
+				height: 10,
+				color: '#00e4ff'
+			},
+			fuel:
+			{
+				x: 56,
+				y: 61,
+				width: 178,
+				height: 4,
+				color: '#eed800'
 			},
 			health:
 			{
 				x: 56,
 				y: 82,
 				width: 178,
-				height: 10
+				height: 10,
+				color: '#00ff30'
+			},
+			hardware:
+			{
+				x: 56,
+				y: 85,
+				width: 178,
+				height: 4,
+				color: '#3d584c'
 			}
 		},
 		indicators:
@@ -47,26 +65,26 @@ function HUD(assets)
 	{
 		// Clear drone HUD
 		screen.HUD.clear(
-			coordinates.droneHUD.x,
-			coordinates.droneHUD.y,
+			UI.droneHUD.x,
+			UI.droneHUD.y,
 			graphics.droneHUD.width,
 			graphics.droneHUD.height
 		);
 	}
 
 	/**
-	 * Draws any one of similar system stat meters
+	 * Draws a stat meter from a specific offset
 	 */
-	function draw_meter(meter, offsetX, offsetY, width, color)
+	function draw_meter(meter, offsetX, offsetY, width)
 	{
 		screen.HUD.draw
 			.rectangle(
-				offsetX + coordinates.meters[meter].x,
-				offsetY + coordinates.meters[meter].y,
-				clamp(width, 0, coordinates.meters[meter].width),
-				coordinates.meters[meter].height
+				offsetX + UI.meters[meter].x,
+				offsetY + UI.meters[meter].y,
+				clamp(width, 0, UI.meters[meter].width),
+				UI.meters[meter].height
 			)
-			.fill(color);
+			.fill(UI.meters[meter].color);
 	}
 
 	/**
@@ -74,39 +92,42 @@ function HUD(assets)
 	 */
 	function redraw_drone_HUD(system)
 	{
-		// Power meter
-		var power_ratio = system.power / system.MAX_POWER;
-		var power_width = Math.round(power_ratio * coordinates.meters.power.width);
+		// Draw drone stat meters
+		var meters = ['power', 'fuel', 'health', 'hardware'];
+		var meter, ratio, width;
 
-		draw_meter('power', coordinates.droneHUD.x, coordinates.droneHUD.y, power_width, '#00e4ff');
+		for (var m = 0 ; m < meters.length ; m++)
+		{
+			meter = meters[m];
+			ratio = system[meter] / system['MAX_' + meter.toUpperCase()];
+			width = Math.round(ratio * UI.meters[meter].width);
 
-		// Health meter
-		var health_ratio = system.health / system.MAX_HEALTH;
-		var health_width = Math.round(health_ratio * coordinates.meters.health.width);
-
-		draw_meter('health', coordinates.droneHUD.x, coordinates.droneHUD.y, health_width, '#00ff30');
+			draw_meter(meter, UI.droneHUD.x, UI.droneHUD.y, width);
+		}
 
 		// Draw the static UI over the meters
 		screen.HUD.draw
 			.image(
 				graphics.droneHUD,
-				coordinates.droneHUD.x,
-				coordinates.droneHUD.y
+				UI.droneHUD.x,
+				UI.droneHUD.y
 			);
 
-		// Draw system state indicators
+		// Draw system indicators
 		var indicators = ['stabilizing', 'docking'];
 
 		for (var i = 0 ; i < indicators.length ; i++)
 		{
+			// Get indicator name
 			var indicator = indicators[i];
+			// Get correct indicator graphic for on/off state
 			var file = 'ui/indicators/' + indicator + '-' + (system[indicator] ? 'on.png' : 'off.png');
 
 			screen.HUD.draw
 				.image(
 					assets.getImage(file),
-					coordinates.droneHUD.x + coordinates.indicators[indicator].x,
-					coordinates.droneHUD.y + coordinates.indicators[indicator].y
+					UI.droneHUD.x + UI.indicators[indicator].x,
+					UI.droneHUD.y + UI.indicators[indicator].y
 				);
 		}
 	}

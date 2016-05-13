@@ -932,6 +932,54 @@ function Background(assets)
 }
 
 /**
+ * Clouds above the terrain layer
+ */
+function Cloud()
+{
+	// Private:
+	var _ = this;
+	var image;
+	var shadow;
+	var type;
+
+	// Public:
+	this.update = function(dt){}
+
+	this.getImage = function()
+	{
+		return image;
+	}
+
+	this.getShadow = function()
+	{
+		return shadow;
+	}
+
+	this.getType = function()
+	{
+		return type;
+	}
+
+	this.setImage = function(_image)
+	{
+		image = _image;
+		return _;
+	}
+
+	this.setShadow = function(_shadow)
+	{
+		shadow = _shadow;
+		return _;
+	}
+
+	this.setType = function(_type)
+	{
+		type = _type;
+		return _;
+	}
+}
+
+/**
  * A group of prerendered equal-sized contiguous
  * texture chunks comprising a larger texture
  */

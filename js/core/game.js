@@ -124,11 +124,14 @@ function GameInstance(assets)
 	{
 		// Save camera component reference
 		var view = camera.get(Point);
+
 		// Get and build level layout
 		var level_data = LevelData[level];
 		var level_entities = new LevelLoader(assets)
 			.setLayout(level_data.layout)
 			.getEntities();
+
+		// Add level entities to local list
 		var entity;
 
 		for (var e = 0 ; e < level_entities.length ; e++)
@@ -198,8 +201,7 @@ function GameInstance(assets)
 			speed: speed
 		};
 
-		// Make sure drone hasn't run out of energy
-		if (player.drone.hasPower())
+		if (player.drone.isControllable())
 		{
 			if (keys.holding('UP'))
 			{
@@ -212,17 +214,17 @@ function GameInstance(assets)
 					true
 				);
 
-				player.drone.consumePower(2*dt);
+				player.drone.consumeFuel(3*dt);
 			}
 
 			if (keys.holding('LEFT'))
 			{
-				player.drone.consumePower(2*dt).addSpin(-speed);
+				player.drone.consumeFuel(2*dt).addSpin(-speed);
 			}
 
 			if (keys.holding('RIGHT'))
 			{
-				player.drone.consumePower(2*dt).addSpin(speed);
+				player.drone.consumeFuel(2*dt).addSpin(speed);
 			}
 		}
 	}
