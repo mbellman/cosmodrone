@@ -45,6 +45,11 @@ var AssetManifest =
 			'shadows/small-cyclone-1.png',
 			'station/modules/horizontal/general-large.png',
 			'station/modules/vertical/general-small.png',
+			'ui/drone.png',
+			'ui/indicators/docking-off.png',
+			'ui/indicators/docking-on.png',
+			'ui/indicators/stabilizing-off.png',
+			'ui/indicators/stabilizing-on.png',
 		],
 	},
 	audio:

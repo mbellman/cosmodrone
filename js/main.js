@@ -15,6 +15,7 @@ include(
 		'js/core/components.js',
 		'js/core/background.js',
 		'js/core/levels.js',
+		'js/core/HUD.js',
 		'js/core/game.js'
 	]
 ).then(main);
@@ -22,7 +23,7 @@ include(
 // Global variables
 var viewport =
 {
-	width: 1300,
+	width: 1200,
 	height: 650
 };
 
@@ -63,8 +64,13 @@ function createScreens()
 	screen.game = gameScreen();
 	screen.game.element().style.zIndex = '2';
 
+	// UI screen overlaying everything else
+	screen.HUD = gameScreen();
+	screen.HUD.element().style.zIndex = '3';
+
 	$('#game')
-		.append(screen.game.element());
+		.append(screen.game.element())
+		.append(screen.HUD.element());
 
 	// Apply CSS to various screens
 	$('#game')

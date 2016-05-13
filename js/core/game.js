@@ -14,6 +14,7 @@ function GameInstance(assets)
 	var drone;
 	var speed;
 	var background;
+	var hud;
 	var entities = [];
 
 	var DEBUG_MODE = false;
@@ -172,6 +173,9 @@ function GameInstance(assets)
 		entities.push(camera);
 		entities.push(drone);
 
+		// Set up HUD
+		hud = new HUD(assets);
+
 		// Set initial camera position and start game loop
 		update_camera();
 		_.start();
@@ -182,38 +186,44 @@ function GameInstance(assets)
 	// ----------------------------------------- //
 
 	/**
-	 * Continually listen for key inputs and respond accordingly
+	 * Continually listen for key inputs
 	 */
 	function poll_input(dt)
 	{
-		// 
-		var _drone =
+		var player =
 		{
+			drone: drone.get(Drone),
 			position: drone.get(Point),
 			sprite: drone.get(Sprite),
 			speed: speed
 		};
 
-		if (keys.holding('UP'))
+		// Make sure drone hasn't run out of energy
+		if (player.drone.hasPower())
 		{
-			var x = Math.sin(_drone.sprite.rotation * Math.PI_RAD);
-			var y = Math.cos(_drone.sprite.rotation * Math.PI_RAD) * -1;
+			if (keys.holding('UP'))
+			{
+				var x = Math.sin(player.sprite.rotation * Math.PI_RAD);
+				var y = Math.cos(player.sprite.rotation * Math.PI_RAD) * -1;
 
-			_drone.position.setVelocity(
-				x * _drone.speed,
-				y * _drone.speed,
-				true
-			);
-		}
+				player.position.setVelocity(
+					x * player.speed,
+					y * player.speed,
+					true
+				);
 
-		if (keys.holding('LEFT'))
-		{
-			drone.get(Drone).addSpin(-speed);
-		}
+				player.drone.consumePower(2*dt);
+			}
 
-		if (keys.holding('RIGHT'))
-		{
-			drone.get(Drone).addSpin(speed);
+			if (keys.holding('LEFT'))
+			{
+				player.drone.consumePower(2*dt).addSpin(-speed);
+			}
+
+			if (keys.holding('RIGHT'))
+			{
+				player.drone.consumePower(2*dt).addSpin(speed);
+			}
 		}
 	}
 
@@ -296,6 +306,18 @@ function GameInstance(assets)
 	}
 
 	/**
+	 * Pass game state information to HUD and refresh it
+	 */
+	function update_HUD()
+	{
+		// Clear [screen.HUD]
+		hud.clear();
+
+		// Update the drone system stats HUD
+		hud.updateDroneStats(drone.get(Drone));
+	}
+
+	/**
 	 * Game update loop
 	 */
 	function update(dt)
@@ -304,6 +326,7 @@ function GameInstance(assets)
 		clear_screen();
 		poll_input(dt);
 		update_camera();
+		update_HUD();
 
 		// Entity updates
 		for (var e = 0 ; e < entities.length ; e++)

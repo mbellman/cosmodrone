@@ -4,13 +4,13 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
-* Loading bar/indicator of some kind
-* UI
-* Gradual drone energy depletion
-* Collisions/drone damage
-* Ability to move drone "down" a layer, underneath the station
+* Drone: split energy into power/fuel, health into material/hardware
+* Handler for drone running out of power
 * Hardware terminals for station modules
 * Hardware/part maintenance interface
+* Ability to move drone "down" a layer, underneath the station
+* Collisions/drone damage
+* Loading bar/indicator of some kind
 * Scene zoom-out when speeding up (?)
 * Replace jQuery with vanilla JS (?)
 

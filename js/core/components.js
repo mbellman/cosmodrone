@@ -286,14 +286,40 @@ function Drone()
 	// Private:
 	var _ = this;
 	var owner = null;
-	var stabilizing = false;
 	var spin = 0;
+	var power = 500;
+	var health = 100;
+	var stabilizing = false;
+	var docking = false;
+	var out_of_power = false;
+
+	/**
+	 * Internal power consumption cycle
+	 */
+	function consume_power(dt)
+	{
+		if (out_of_power) return;
+
+		// Idle energy consumption
+		power -= dt;
+
+		// Consume more power during stabilization
+		if (stabilizing) power -= 2*dt;
+
+		if (power < 0)
+		{
+			power = 0;
+			out_of_power = true;
+
+			// TODO: Custom out-of-power event callback
+		}
+	}
 
 	// Public:
 	this.update = function(dt)
 	{
 		// Spin stabilization
-		if (stabilizing)
+		if (stabilizing && !out_of_power)
 		{
 			spin *= 0.9;
 
@@ -304,7 +330,10 @@ function Drone()
 			}
 		}
 
+		// Update drone Sprite rotation with new [spin] value
 		owner.get(Sprite).rotation += (spin * dt);
+		// Gradually reduce drone energy
+		consume_power(dt);
 	}
 
 	this.onAdded = function(entity)
@@ -318,6 +347,24 @@ function Drone()
 		return 3;
 	}
 
+	this.getSystem = function()
+	{
+		return {
+			stabilizing: stabilizing,
+			docking: docking,
+			power: power,
+			health: health,
+			MAX_POWER: 500,
+			MAX_HEALTH: 100
+		};
+	}
+
+	this.consumePower = function(dt)
+	{
+		consume_power(dt);
+		return _;
+	}
+
 	this.addSpin = function(amount)
 	{
 		// Update spin
@@ -329,7 +376,16 @@ function Drone()
 
 	this.stabilize = function()
 	{
-		stabilizing = true;
+		if (!out_of_power)
+		{
+			stabilizing = true;
+		}
+
 		return _;
+	}
+
+	this.hasPower = function()
+	{
+		return !out_of_power;
 	}
 }
