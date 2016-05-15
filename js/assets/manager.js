@@ -1,5 +1,4 @@
-(function(scope)
-{
+(function(scope){
 	/**
 	 * Instance of an image or audio asset
 	 */
