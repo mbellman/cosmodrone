@@ -294,6 +294,10 @@ function HardwarePart()
 	this.onAdded = function(entity)
 	{
 		owner = entity;
+	}
+
+	this.onOwnerAddedToParent = function()
+	{
 		update_coordinates();
 	}
 
@@ -477,8 +481,19 @@ function Drone()
 		return _;
 	}
 
+	this.abortDocking = function()
+	{
+		docking = false;
+		return _;
+	}
+
 	this.isControllable = function()
 	{
 		return (!out_of_power && !out_of_fuel && !docking);
+	}
+
+	this.isDocking = function()
+	{
+		return docking;
 	}
 }

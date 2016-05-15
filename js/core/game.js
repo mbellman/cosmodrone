@@ -183,6 +183,19 @@ function GameInstance(assets)
 		_.start();
 	}
 
+	// ----------------------------------------------------- //
+	// ------------- INTERNAL GAMEPLAY METHODS ------------- //
+	// ----------------------------------------------------- //
+
+	/**
+	 * Looks for HardwarePart instances close in proximity
+	 * to the player Drone and docks with the nearest
+	 */
+	function enter_docking_mode()
+	{
+		
+	}
+
 	// ----------------------------------------- //
 	// ------------- INPUT ACTIONS ------------- //
 	// ----------------------------------------- //
@@ -237,6 +250,19 @@ function GameInstance(assets)
 		input.on('S', function()
 		{
 			drone.get(Drone).stabilize();
+		});
+
+		// Docking mode
+		input.on('D', function()
+		{
+			if (!drone.get(Drone).isDocking())
+			{
+				enter_docking_mode();
+			}
+			else
+			{
+				drone.get(Drone).abortDocking();
+			}
 		});
 	}
 

@@ -44,6 +44,21 @@ function Entity()
 	// Public:
 	this.parent = null;
 
+	this.update = function(dt)
+	{
+		// Update all components first
+		for (var c = 0 ; c < components.length ; c++)
+		{
+			components[c].update(dt);
+		}
+
+		// Then update all child entities
+		for (var c = 0 ; c < children.length ; c++)
+		{
+			children[c].update(dt);
+		}
+	}
+
 	this.add = function(component)
 	{
 		components.push(component);
@@ -58,9 +73,24 @@ function Entity()
 
 	this.addChild = function(entity)
 	{
-		entity.parent = _;
+		entity.onAddedToParent(_);
 		children.push(entity);
 		return _;
+	}
+
+	this.onAddedToParent = function(entity)
+	{
+		_.parent = entity;
+
+		for (var c = 0 ; c < components.length ; c++)
+		{
+			var _component = components[c];
+
+			if (_component.onOwnerAddedToParent === 'function')
+			{
+				_component.onOwnerAddedToParent();
+			}
+		}
 	}
 
 	this.disposeChildren = function()
@@ -102,20 +132,5 @@ function Entity()
 		}
 
 		return _;
-	}
-
-	this.update = function(dt)
-	{
-		// Update all components first
-		for (var c = 0 ; c < components.length ; c++)
-		{
-			components[c].update(dt);
-		}
-
-		// Then update all child entities
-		for (var c = 0 ; c < children.length ; c++)
-		{
-			children[c].update(dt);
-		}
 	}
 }
