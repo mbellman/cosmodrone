@@ -14,6 +14,7 @@ include(
 		'js/core/entity.js',
 		'js/core/components.js',
 		'js/core/background.js',
+		'js/core/station.js',
 		'js/core/levels.js',
 		'js/core/HUD.js',
 		'js/core/game.js'

@@ -7,6 +7,8 @@ function Entity()
 	// Private:
 	var _ = this;
 	var components = [];
+	var children = [];
+	var searched_component = null;
 
 	/**
 	 * Depending on [action], either returns the component or
@@ -14,10 +16,22 @@ function Entity()
 	 */
 	function component_data(component, action)
 	{
+		if (action === 'get' && searched_component instanceof component)
+		{
+			// If a component type specified by get()
+			// matches the saved reference, return
+			// it immediately without further lookups
+			return searched_component;
+		}
+
 		for (var c = 0 ; c < components.length ; c++)
 		{
 			if (components[c] instanceof component)
 			{
+				// Save the component reference to optimize
+				// consecutive same-component lookups
+				searched_component = components[c];
+
 				if (action === 'get') return components[c];
 				if (action === 'has') return true;
 			}
@@ -28,6 +42,8 @@ function Entity()
 	}
 
 	// Public:
+	this.parent = null;
+
 	this.add = function(component)
 	{
 		components.push(component);
@@ -37,6 +53,19 @@ function Entity()
 			component.onAdded(_);
 		}
 
+		return _;
+	}
+
+	this.addChild = function(entity)
+	{
+		entity.parent = _;
+		children.push(entity);
+		return _;
+	}
+
+	this.disposeChildren = function()
+	{
+		children.length = 0;
 		return _;
 	}
 
@@ -77,9 +106,16 @@ function Entity()
 
 	this.update = function(dt)
 	{
+		// Update all components first
 		for (var c = 0 ; c < components.length ; c++)
 		{
 			components[c].update(dt);
+		}
+
+		// Then update all child entities
+		for (var c = 0 ; c < children.length ; c++)
+		{
+			children[c].update(dt);
 		}
 	}
 }

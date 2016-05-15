@@ -5,22 +5,33 @@ function Sprite(source)
 {
 	// Private:
 	var _ = this;
-	var offset = {x: 0, y: 0};
-	var origin = {x: 0, y: 0};
-	var pivot;
+	var owner = null;
+	var parent_offset = {x: 0, y: 0};      // The offset of the owner's parent entity Sprite (updated internally)
+	var offset = {x: 0, y: 0};             // A persistent offset as specified via Sprite.offset(x, y)
+	var origin = {x: 0, y: 0};             // Origin point of the Sprite
+	var render = {x: 0, y: 0};             // On-screen coordinates of the Sprite (updated internally)
+	var pivot;                             // Target Point for movement pivoting (motion opposite to)
 
 	/**
-	 * Return the on-screen position of the sprite
+	 * Update the internal on-screen position of the sprite
 	 */
-	function get_screen_coordinates()
+	function update_screen_coordinates()
 	{
-		var x = _.x - (!!pivot ? pivot.getPosition().x : 0) + offset.x - origin.x;
-		var y = _.y - (!!pivot ? pivot.getPosition().y : 0) + offset.y - origin.y;
+		// Update info on owner's parent entity Sprite offset
+		if (owner.parent !== null && owner.parent.has(Sprite))
+		{
+			parent_offset = owner.parent.get(Sprite).getScreenCoordinates();
+		}
 
-		return {
-			x: (_.snap ? Math.floor(x) : x),
-			y: (_.snap ? Math.floor(y) : y)
-		};
+		// Update screen coordinates
+		render.x = _.x - (!!pivot ? pivot.getPosition().x : 0) + parent_offset.x + offset.x - origin.x;
+		render.y = _.y - (!!pivot ? pivot.getPosition().y : 0) + parent_offset.y + offset.y - origin.y;
+
+		if (_.snap)
+		{
+			render.x = Math.floor(render.x);
+			render.y = Math.floor(render.y);
+		}
 	}
 
 	/**
@@ -37,14 +48,14 @@ function Sprite(source)
 	/**
 	 * Prepares [screen.game] for rendering rotated Sprite
 	 */
-	function apply_rotation(x, y)
+	function apply_rotation()
 	{
 		_.rotation = mod(_.rotation, 360);
 
 		if (_.rotation > 0)
 		{
 			screen.game
-				.translate(x + origin.x, y + origin.y)
+				.translate(render.x + origin.x, render.y + origin.y)
 				.rotate(_.rotation * Math.PI_RAD);
 		}
 	}
@@ -67,21 +78,21 @@ function Sprite(source)
 
 	this.update = function(dt)
 	{
-		var draw = get_screen_coordinates();
+		update_screen_coordinates();
 
 		// Avoid drawing offscreen objects
-		if (draw.x > viewport.width || draw.x + source.width < 0) return;
-		if (draw.y > viewport.height || draw.y + source.height < 0) return;
+		if (render.x > viewport.width || render.x + source.width < 0) return;
+		if (render.y > viewport.height || render.y + source.height < 0) return;
 
 		if (has_effects()) screen.game.save();
 
 		apply_alpha();
-		apply_rotation(draw.x, draw.y);
+		apply_rotation();
 
 		screen.game.draw.image(
 			source,
-			(_.rotation > 0 ? -origin.x : draw.x),
-			(_.rotation > 0 ? -origin.y : draw.y),
+			(_.rotation > 0 ? -origin.x : render.x),
+			(_.rotation > 0 ? -origin.y : render.y),
 			source.width * _.scale,
 			source.height * _.scale
 		);
@@ -89,9 +100,19 @@ function Sprite(source)
 		if (has_effects()) screen.game.restore();
 	}
 
+	this.onAdded = function(entity)
+	{
+		owner = entity;
+
+		if (!(source instanceof Image))
+		{
+			console.warn('Sprite: ' + source + ' is not an Image object');
+		}
+	}
+
 	this.getScreenCoordinates = function()
 	{
-		return get_screen_coordinates();
+		return render;
 	}
 
 	this.getWidth = function()
@@ -169,11 +190,9 @@ function Point()
 	{
 		if (owner !== null)
 		{
-			var sprite = owner.get(Sprite);
-
-			if (sprite !== null)
+			if (owner.has(Sprite))
 			{
-				sprite.setXY(position.x, position.y);
+				owner.get(Sprite).setXY(position.x, position.y);
 			}
 		}
 	}
@@ -188,7 +207,6 @@ function Point()
 	this.onAdded = function(entity)
 	{
 		owner = entity;
-		return _;
 	}
 
 	this.getPosition = function(round)
@@ -226,6 +244,70 @@ function Point()
 	{
 		velocity.x = (is_modifier ? velocity.x + x : x);
 		velocity.y = (is_modifier ? velocity.y + y : y);
+		return _;
+	}
+}
+
+/**
+ * A dockable hardware part unit fixed to space station modules
+ */
+function HardwarePart()
+{
+	// Private:
+	var _ = this;
+	var owner = null;
+	var x = 0;
+	var y = 0;
+	var moving = false;
+
+	/**
+	 * Updates the internal x and y position values
+	 * for this hardware part to maintain them within
+	 * the coordinate system of the player Drone
+	 */
+	function update_coordinates()
+	{
+		if (owner !== null && owner.parent !== null)
+		{
+			if (owner.parent.has(Point) && owner.has(Sprite))
+			{
+				// Get position of the parent station module
+				var position = owner.parent.get(Point).getPosition();
+
+				// Get base [x, y] coordinates of the
+				// owner Sprite in local (module) space
+				var sprite = owner.get(Sprite);
+
+				// Set the part coordinates as a sum of the two
+				x = sprite.x + position.x;
+				y = sprite.y + position.y;
+			}
+		}
+	}
+
+	// Public:
+	this.update = function(dt)
+	{
+		if (moving) update_coordinates();
+	}
+
+	this.onAdded = function(entity)
+	{
+		owner = entity;
+		update_coordinates();
+	}
+
+	this.getPosition = function()
+	{
+		return {
+			x: x,
+			y: y
+		};
+	}
+
+	this.moving = function(boolean)
+	{
+		moving = boolean;
 		return _;
 	}
 }
@@ -329,11 +411,15 @@ function Drone()
 			}
 		}
 
-		// Update drone Sprite rotation with new [spin] value
-		owner.get(Sprite).rotation += (spin * dt);
+		if (owner !== null)
+		{
+			// Update drone Sprite rotation with new [spin] value
+			owner.get(Sprite).rotation += (spin * dt);
+		}
+
 		// Gradually reduce drone energy
 		consume_power(dt);
-		// Only reduce fuel during maneuvers
+		// Gradually reduce fuel during maneuvers
 		if (stabilizing || docking)
 		{
 			consume_fuel(dt);
@@ -343,7 +429,6 @@ function Drone()
 	this.onAdded = function(entity)
 	{
 		owner = entity;
-		return _;
 	}
 
 	this.getSpeed = function()

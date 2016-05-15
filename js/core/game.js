@@ -21,7 +21,7 @@ function GameInstance(assets)
 	var DEBUG_stats_cycle = 0;
 
 	// ------------------------------------- //
-	// ------------- Debugging ------------- //
+	// ------------- DEBUGGING ------------- //
 	// ------------------------------------- //
 
 	function DEBUG_show_stats(dt)
@@ -47,7 +47,7 @@ function GameInstance(assets)
 	}
 
 	// ------------------------------------------ //
-	// ------------- Initialization ------------- //
+	// ------------- INITIALIZATION ------------- //
 	// ------------------------------------------ //
 
 	/**
@@ -125,10 +125,9 @@ function GameInstance(assets)
 		// Save camera component reference
 		var view = camera.get(Point);
 
-		// Get and build level layout
-		var level_data = LevelData[level];
+		// Construct level layout
 		var level_entities = new LevelLoader(assets)
-			.setLayout(level_data.layout)
+			.buildLevel(level)
 			.getEntities();
 
 		// Add level entities to local list
@@ -185,7 +184,7 @@ function GameInstance(assets)
 	}
 
 	// ----------------------------------------- //
-	// ------------- Input actions ------------- //
+	// ------------- INPUT ACTIONS ------------- //
 	// ----------------------------------------- //
 
 	/**
@@ -242,7 +241,7 @@ function GameInstance(assets)
 	}
 
 	// --------------------------------------- //
-	// ------------- Update loop ------------- //
+	// ------------- UPDATE LOOP ------------- //
 	// --------------------------------------- //
 
 	/**
@@ -255,11 +254,10 @@ function GameInstance(assets)
 
 		for (var e = 0 ; e < entities.length ; e++)
 		{
-			sprite.component = entities[e].get(Sprite);
-
-			if (sprite.component !== null)
+			if (entities[e].has(Sprite))
 			{
 				// Get rendering information about the Sprite
+				sprite.component = entities[e].get(Sprite);
 				sprite.position = sprite.component.getScreenCoordinates();
 				sprite.width = sprite.component.scale * sprite.component.getWidth();
 				sprite.height = sprite.component.scale * sprite.component.getHeight();

@@ -4,9 +4,9 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
-* Hardware terminals for station modules
 * Drone docking
 * Radio signal reception mechanic
+* Make sure hardware asset "light source" is adjusted based on the side of the module
 * Hardware/part maintenance interface
 * Collisions/drone damage
 * Handler for drone running out of power/fuel
