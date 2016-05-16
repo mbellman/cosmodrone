@@ -163,7 +163,7 @@ function GameInstance(assets)
 					.centerOrigin()
 			);
 		// Store drone speed value
-		speed = drone.get(Drone).getSpeed();
+		speed = drone.get(Drone).getMaxSpeed();
 
 		// Build level structure
 		load_level();

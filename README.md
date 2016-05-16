@@ -4,7 +4,7 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
-* Drone docking
+* Final step of drone docking/terminal alignment
 * Radio signal reception mechanic
 * Make sure hardware asset "light source" is adjusted based on the side of the module
 * Hardware/part maintenance interface
