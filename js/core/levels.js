@@ -322,6 +322,7 @@
 				{
 					// Ascertain the specs (mostly size/coordinates) for the part
 					specs = get_part_specs(part.name, part.side);
+					specs.orientation = part.side;
 					// Establish Sprite position
 					position.x = module.terminals[terminal].x - specs.x;
 					position.y = module.terminals[terminal].y - specs.y;

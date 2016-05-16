@@ -9,12 +9,14 @@ A game about space station maintenance!
 * Make sure hardware asset "light source" is adjusted based on the side of the module
 * Hardware/part maintenance interface
 * Components with update cycles/architecture for various hardware parts
+* Alerts screen with ability to select hardware maintenance jobs
 * Collisions/drone damage
 * Handler for drone running out of power/fuel
 * Ability to move drone above or below the station
 * Text boxes/string printing
 * Title/menus
 * Loading bar/indicator of some kind
+* Moving docking targets (later-stage development) (?)
 * Scene zoom-out when speeding up (?)
 * Replace jQuery with vanilla JS (?)
 

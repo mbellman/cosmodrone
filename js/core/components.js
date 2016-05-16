@@ -302,6 +302,11 @@ function HardwarePart()
 		update_coordinates();
 	}
 
+	this.getOwner = function()
+	{
+		return owner;
+	}
+
 	this.getPosition = function()
 	{
 		return {
@@ -342,7 +347,12 @@ function Drone()
 	var health = 100;
 	var hardware = 100;
 	var stabilizing = false;
+
 	var docking = false;
+	var docking_target = null;
+	var docking_angle = 0;
+	var docking_distance = {};
+	var docking_speed = 15;
 
 	var out_of_power = false;
 	var out_of_fuel = false;
@@ -353,12 +363,187 @@ function Drone()
 	var MAX_HARDWARE = 100;
 
 	/**
+	 * Returns one of 4 angles depending
+	 * on top/right/bottom/left orientation
+	 */
+	function get_docking_angle(orientation)
+	{
+		switch (orientation)
+		{
+			case 'top':
+				return 180;
+			case 'right':
+				return 270;
+			case 'bottom':
+				return 0;
+			case 'left':
+				return 90;
+			default:
+				return 0;
+		}
+	}
+
+	/**
+	 * Returns +/- depending on the shortest rotation to [docking_angle]
+	 */
+	function get_rotation_increment()
+	{
+		var rotation = owner.get(Sprite).rotation;
+		var forward = (360 - rotation) + docking_angle;
+		var back = Math.abs(docking_angle - rotation);
+
+		return (
+			forward > back ?
+				(rotation > docking_angle ? -1 : 1)
+			:
+				(rotation > docking_angle ? 1 : -1)
+		);
+	}
+
+	/**
+	 * Checks and caches the distance between
+	 * the player drone and the docking target
+	 */
+	function track_target_distance()
+	{
+		var player = owner.get(Point).getPosition();
+		var target = docking_target.get(HardwarePart).getPosition();
+
+		docking_distance.x = player.x - target.x;
+		docking_distance.y = player.y - target.y;
+	}
+
+	/**
+	 * Checks the offset between the drone and
+	 * the target docking terminal and returns
+	 * repositioning coordinates used to nudge
+	 * the drone into alignment for docking
+	 */
+	function get_alignment_increment()
+	{
+		var increment =
+		{
+			x: 0,
+			y: 0
+		};
+
+		if (docking_angle === 0 || docking_angle === 180)
+		{
+			// Align along the x-axis
+			increment.x = (docking_distance.x > 1 ? -1 : 1);
+		}
+		else
+		{
+			// Align along the y-axis
+			increment.y = (docking_distance.y > 1 ? -1 : 1);
+		}
+
+		return increment;
+	}
+
+	/**
+	 * Returns a boolean representing the drone's first-
+	 * stage x or y alignment with the docking target
+	 */
+	function is_aligned_with_target()
+	{
+		if (docking_angle === 0 || docking_angle === 180)
+		{
+			// Check x-axis alignment
+			return (Math.abs(docking_distance.x) < 1);
+		}
+		else
+		{
+			// Check y-axis alignment
+			return (Math.abs(docking_distance.y) < 1);
+		}
+	}
+
+	/**
 	 * Invoked upon power/fuel loss
 	 */
 	function system_shutdown()
 	{
 		stabilizing = false;
 		docking = false;
+	}
+
+	/**
+	 * Triggers docking cycle
+	 */
+	function launch_docking_procedure(target)
+	{
+		stabilizing = false;
+
+		docking = true;
+		docking_target = target;
+		docking_angle = get_docking_angle(docking_target.get(HardwarePart).getSpecs().orientation);
+		docking_in_position = false;
+
+		owner.get(Point).setVelocity(0, 0);
+	}
+
+	/**
+	 * Handle docking cycle as it progresses
+	 */
+	function control_docking_procedure(dt)
+	{
+		if (spin !== 0)
+		{
+			// Reduce spin to 0
+			stabilize_spin();
+		}
+		else
+		{
+			// Verify distance to docking target
+			track_target_distance();
+
+			if (owner.get(Sprite).rotation === docking_angle && is_aligned_with_target())
+			{
+				// Approach hardware terminal
+				console.log('Approach!');
+				docking = false;
+			}
+			else
+			{
+				if (owner.get(Sprite).rotation !== docking_angle)
+				{
+					// Move into proper docking orientation
+					owner.get(Sprite).rotation += get_rotation_increment() * docking_speed * dt;
+
+					if (Math.abs(owner.get(Sprite).rotation - docking_angle) < 1)
+					{
+						owner.get(Sprite).rotation = docking_angle;
+					}
+				}
+
+				if (!is_aligned_with_target())
+				{
+					// Move into proper docking alignment
+					var align = get_alignment_increment();
+
+					owner.get(Point).setPosition(
+						align.x * docking_speed * dt,
+						align.y * docking_speed * dt,
+						true
+					);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Gradually reduces spin to 0
+	 */
+	function stabilize_spin()
+	{
+		spin *= 0.9;
+
+		if (Math.abs(spin) < 1)
+		{
+			spin = 0;
+			stabilizing = false;
+		}
 	}
 
 	/**
@@ -415,24 +600,20 @@ function Drone()
 	// Public:
 	this.update = function(dt)
 	{
+		// Docking procedure
+		if (docking && !out_of_power && !out_of_fuel)
+		{
+			control_docking_procedure(dt);
+		}
+
 		// Spin stabilization
 		if (stabilizing && !out_of_power && !out_of_fuel)
 		{
-			spin *= 0.9;
-
-			if (Math.abs(spin) < 1)
-			{
-				spin = 0;
-				stabilizing = false;
-			}
+			stabilize_spin();
 		}
 
-		if (owner !== null)
-		{
-			// Update drone Sprite rotation with new [spin] value
-			owner.get(Sprite).rotation += (spin * dt);
-		}
-
+		// Update drone Sprite rotation with new [spin] value
+		owner.get(Sprite).rotation += (spin * dt);
 		// Gradually reduce drone energy
 		consume_power(dt);
 		// Gradually reduce fuel during maneuvers
@@ -455,6 +636,7 @@ function Drone()
 	this.getSystem = function()
 	{
 		return {
+			velocity: owner.get(Point).getAbsoluteVelocity(),
 			stabilizing: stabilizing,
 			docking: docking,
 			power: power,
@@ -490,6 +672,12 @@ function Drone()
 			stabilizing = true;
 		}
 
+		return _;
+	}
+
+	this.dockWith = function(target)
+	{
+		launch_docking_procedure(target);
 		return _;
 	}
 

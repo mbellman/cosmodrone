@@ -192,18 +192,33 @@ function GameInstance(assets)
 	{
 		var player = drone.get(Point).getPosition();
 		var minimum_distance = Number.POSITIVE_INFINITY;
-		var position, distance;
+		var position, distance, entity;
+
+		// Get center point of player
+		player.x += drone.get(Sprite).getWidth()/2;
+		player.y += drone.get(Sprite).getHeight()/2;
 
 		stage.forAllComponentsOfType(HardwarePart, function(part)
 		{
+			// Get center point of part
 			position = part.getPosition();
+			position.x += part.getSpecs().width/2;
+			position.y += part.getSpecs().height/2;
+
+			// Get and compare distances
 			distance = Vec2.distance(player.x, player.y, position.x, position.y);
 
 			if (distance < minimum_distance)
 			{
+				entity = part.getOwner();
 				minimum_distance = distance;
 			}
 		});
+
+		if (minimum_distance < 150 && drone.get(Point).getAbsoluteVelocity() < 20)
+		{
+			drone.get(Drone).dockWith(entity);
+		}
 	}
 
 	// ----------------------------------------- //
