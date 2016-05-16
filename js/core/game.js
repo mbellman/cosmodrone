@@ -15,7 +15,7 @@ function GameInstance(assets)
 	var speed;
 	var background;
 	var hud;
-	var entities = [];
+	var stage = new Entity();
 
 	var DEBUG_MODE = false;
 	var DEBUG_stats_cycle = 0;
@@ -101,7 +101,7 @@ function GameInstance(assets)
 			)
 		);
 
-		entities.push(background);
+		stage.addChild(background);
 	}
 
 	/**
@@ -122,22 +122,19 @@ function GameInstance(assets)
 	 */
 	function load_level()
 	{
-		// Save camera component reference
-		var view = camera.get(Point);
-
 		// Construct level layout
-		var level_entities = new LevelLoader(assets)
+		var entities = new LevelLoader(assets)
 			.buildLevel(level)
 			.getEntities();
 
-		// Add level entities to local list
-		var entity;
-
-		for (var e = 0 ; e < level_entities.length ; e++)
+		// Add level entities (station modules) to [stage]
+		for (var e = 0 ; e < entities.length ; e++)
 		{
-			entity = level_entities[e];
-			entity.get(Sprite).pivot(view);
-			entities.push(entity);
+			var module = entities[e];
+			module.get(Sprite)
+				.offset(viewport.width/2, viewport.height/2)
+				.pivot(camera.get(Point));
+			stage.addChild(module);
 		}
 	}
 
@@ -172,8 +169,8 @@ function GameInstance(assets)
 		load_level();
 
 		// Add camera + player entities last
-		entities.push(camera);
-		entities.push(drone);
+		stage.addChild(camera);
+		stage.addChild(drone);
 
 		// Set up HUD
 		hud = new HUD(assets);
@@ -193,7 +190,20 @@ function GameInstance(assets)
 	 */
 	function enter_docking_mode()
 	{
-		
+		var player = drone.get(Point).getPosition();
+		var minimum_distance = Number.POSITIVE_INFINITY;
+		var position, distance;
+
+		stage.forAllComponentsOfType(HardwarePart, function(part)
+		{
+			position = part.getPosition();
+			distance = Vec2.distance(player.x, player.y, position.x, position.y);
+
+			if (distance < minimum_distance)
+			{
+				minimum_distance = distance;
+			}
+		});
 	}
 
 	// ----------------------------------------- //
@@ -276,45 +286,41 @@ function GameInstance(assets)
 	 */
 	function clear_screen()
 	{
-		var sprite = {}, buffer;
+		var position, width, height, buffer;
 
-		for (var e = 0 ; e < entities.length ; e++)
+		stage.forAllComponentsOfType(Sprite, function(sprite)
 		{
-			if (entities[e].has(Sprite))
+			// Get rendering information about the Sprite
+			position = sprite.getScreenCoordinates();
+			width = sprite.scale * sprite.getWidth();
+			height = sprite.scale * sprite.getHeight();
+
+			// Only clear screen around visible Sprites
+			if (
+				(position.x < viewport.width && position.x + width > 0) &&
+				(position.y < viewport.height && position.y + height > 0)
+			)
 			{
-				// Get rendering information about the Sprite
-				sprite.component = entities[e].get(Sprite);
-				sprite.position = sprite.component.getScreenCoordinates();
-				sprite.width = sprite.component.scale * sprite.component.getWidth();
-				sprite.height = sprite.component.scale * sprite.component.getHeight();
-
-				// Only clear screen around visible Sprites
-				if (
-					(sprite.position.x < viewport.width && sprite.position.x + sprite.width > 0) &&
-					(sprite.position.y < viewport.height && sprite.position.y + sprite.height > 0)
-				)
+				if (sprite.rotation > 0)
 				{
-					if (sprite.component.rotation > 0)
-					{
-						// Clear more space surrounding the sprite
-						// if it is rotated to ensure proper erasure
-						buffer = Math.max(sprite.width, sprite.height);
-					}
-					else
-					{
-						if (sprite.component.snap) buffer = 0;
-						else buffer = 1;
-					}
-
-					screen.game.clear(
-						sprite.position.x - buffer,
-						sprite.position.y - buffer,
-						sprite.width + 2*buffer,
-						sprite.height + 2*buffer
-					);
+					// Clear more space surrounding the sprite
+					// if it is rotated to ensure proper erasure
+					buffer = Math.max(width, height);
 				}
+				else
+				{
+					if (sprite.snap) buffer = 0;
+					else buffer = 1;
+				}
+
+				screen.game.clear(
+					position.x - buffer,
+					position.y - buffer,
+					width + 2*buffer,
+					height + 2*buffer
+				);
 			}
-		}
+		});
 	}
 
 	/**
@@ -355,10 +361,7 @@ function GameInstance(assets)
 		update_HUD();
 
 		// Entity updates
-		for (var e = 0 ; e < entities.length ; e++)
-		{
-			entities[e].update(dt);
-		}
+		stage.update(dt);
 	}
 
 	/**
@@ -440,7 +443,7 @@ function GameInstance(assets)
 		input.unlisten().unbindEvents();
 		camera = null;
 		drone = null;
-		entities.length = 0;
+		stage.disposeChildren();
 
 		return _;
 	}

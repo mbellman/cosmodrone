@@ -1,6 +1,6 @@
 /**
  * A blank template object which can store
- * and manage multiple component instances
+ * and manage component/entity instances
  */
 function Entity()
 {
@@ -86,7 +86,7 @@ function Entity()
 		{
 			var _component = components[c];
 
-			if (_component.onOwnerAddedToParent === 'function')
+			if (typeof _component.onOwnerAddedToParent === 'function')
 			{
 				_component.onOwnerAddedToParent();
 			}
@@ -132,5 +132,18 @@ function Entity()
 		}
 
 		return _;
+	}
+
+	this.forAllComponentsOfType = function(component, handler)
+	{
+		if (_.has(component))
+		{
+			handler(_.get(component));
+		}
+
+		for (var c = 0 ; c < children.length ; c++)
+		{
+			children[c].forAllComponentsOfType(component, handler);
+		}
 	}
 }

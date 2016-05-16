@@ -258,6 +258,7 @@ function HardwarePart()
 	var owner = null;
 	var x = 0;
 	var y = 0;
+	var specs = {};
 	var moving = false;
 
 	/**
@@ -307,6 +308,17 @@ function HardwarePart()
 			x: x,
 			y: y
 		};
+	}
+
+	this.getSpecs = function()
+	{
+		return specs;
+	}
+
+	this.setSpecs = function(_specs)
+	{
+		specs = _specs;
+		return _;
 	}
 
 	this.moving = function(boolean)

@@ -331,6 +331,7 @@
 						new Entity()
 							.add(
 								new HardwarePart()
+									.setSpecs(specs)
 									.moving(LevelData[level].moving)
 							)
 							.add(

@@ -23,7 +23,6 @@ A game about space station maintenance!
 * Brighten shadows
 
 ##### CODE
-* "EntityManager" class with automatic update-all/entity tree traversal/etc. methods
 * Handy routine for checking on-screen condition
 * See which classes can instead use prototypes
 * Base "Component" class inherited by all components
