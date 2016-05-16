@@ -1,4 +1,5 @@
 Math.PI_RAD = Math.PI / 180;
+Math.RAD_PI = 180 / Math.PI;
 
 /**
  * RNG between two limits

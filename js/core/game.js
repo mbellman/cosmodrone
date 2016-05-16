@@ -215,7 +215,7 @@ function GameInstance(assets)
 			}
 		});
 
-		if (minimum_distance < 150 && drone.get(Point).getAbsoluteVelocity() < 20)
+		if (minimum_distance < 150 && drone.get(Point).getAbsoluteVelocity() < 75)
 		{
 			drone.get(Drone).dockWith(entity);
 		}
@@ -226,42 +226,25 @@ function GameInstance(assets)
 	// ----------------------------------------- //
 
 	/**
-	 * Continually listen for key inputs
+	 * Continually listen for held keys
 	 */
 	function poll_input(dt)
 	{
-		var player =
-		{
-			drone: drone.get(Drone),
-			position: drone.get(Point),
-			sprite: drone.get(Sprite),
-			speed: speed
-		};
-
-		if (player.drone.isControllable())
+		if (drone.get(Drone).isControllable())
 		{
 			if (keys.holding('UP'))
 			{
-				var x = Math.sin(player.sprite.rotation * Math.PI_RAD);
-				var y = Math.cos(player.sprite.rotation * Math.PI_RAD) * -1;
-
-				player.position.setVelocity(
-					x * player.speed,
-					y * player.speed,
-					true
-				);
-
-				player.drone.consumeFuel(3*dt);
+				drone.get(Drone).consumeFuel(3*dt).addVelocity(speed);
 			}
 
 			if (keys.holding('LEFT'))
 			{
-				player.drone.consumeFuel(2*dt).addSpin(-speed);
+				drone.get(Drone).consumeFuel(2*dt).addSpin(-speed);
 			}
 
 			if (keys.holding('RIGHT'))
 			{
-				player.drone.consumeFuel(2*dt).addSpin(speed);
+				drone.get(Drone).consumeFuel(2*dt).addSpin(speed);
 			}
 		}
 	}

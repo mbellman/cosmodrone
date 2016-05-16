@@ -341,6 +341,9 @@ function Drone()
 	// Private:
 	var _ = this;
 	var owner = null;
+
+	// Properties of the drone
+	var speed = 3;
 	var spin = 0;
 	var power = 500;
 	var fuel = 350;
@@ -348,15 +351,26 @@ function Drone()
 	var hardware = 100;
 	var stabilizing = false;
 
+	// Values/flags for automatic retrograde rotation
+	var retrograde = false;
+	var retrograde_angle = 180;
+	var retrograde_angle_approach = false;
+	var retrograde_angle_stop = false;
+
+	// Values/flags for automatic docking
 	var docking = false;
+	var docking_slowdown = false;
 	var docking_target = null;
 	var docking_angle = 0;
+	var docking_angle_stop = false;
 	var docking_distance = {};
 	var docking_speed = 15;
 
+	// Flags which determine whether the drone can operate
 	var out_of_power = false;
 	var out_of_fuel = false;
 
+	// Max values
 	var MAX_POWER = 500;
 	var MAX_FUEL = 350;
 	var MAX_HEALTH = 100;
@@ -384,33 +398,47 @@ function Drone()
 	}
 
 	/**
-	 * Returns +/- depending on the shortest rotation to [docking_angle]
+	 * Return the drone's retrograde angle
 	 */
-	function get_rotation_increment()
+	function get_retrograde_angle()
+	{
+		var velocity = owner.get(Point).getVelocity();
+		return mod(Math.RAD_PI * -1 * Math.atan2(velocity.x, velocity.y), 360);
+	}
+
+	/**
+	 * Returns +/- depending on the shortest rotation to [angle]
+	 */
+	function get_rotation_direction(angle)
 	{
 		var rotation = owner.get(Sprite).rotation;
-		var forward = (360 - rotation) + docking_angle;
-		var back = Math.abs(docking_angle - rotation);
+
+		var high = Math.max(rotation, angle);
+		var low = Math.min(rotation, angle);
+
+		var forward = (360 - high) + low;
+		var back = high - low;
 
 		return (
 			forward > back ?
-				(rotation > docking_angle ? -1 : 1)
+				(rotation > angle ? -1 : 1)
 			:
-				(rotation > docking_angle ? 1 : -1)
+				(rotation > angle ? 1 : -1)
 		);
 	}
 
 	/**
-	 * Checks and caches the distance between
-	 * the player drone and the docking target
+	 * Returns the distance in degrees between two angles
 	 */
-	function track_target_distance()
+	function get_rotation_distance(angle1, angle2)
 	{
-		var player = owner.get(Point).getPosition();
-		var target = docking_target.get(HardwarePart).getPosition();
+		var high = Math.max(angle1, angle2);
+		var low = Math.min(angle1, angle2);
 
-		docking_distance.x = player.x - target.x;
-		docking_distance.y = player.y - target.y;
+		var d1 = high - low;
+		var d2 = (360 - high) + low;
+
+		return Math.min(d1, d2);
 	}
 
 	/**
@@ -419,7 +447,7 @@ function Drone()
 	 * repositioning coordinates used to nudge
 	 * the drone into alignment for docking
 	 */
-	function get_alignment_increment()
+	function get_alignment_direction()
 	{
 		var increment =
 		{
@@ -439,6 +467,19 @@ function Drone()
 		}
 
 		return increment;
+	}
+
+	/**
+	 * Checks and caches the distance between
+	 * the player drone and the docking target
+	 */
+	function track_target_distance()
+	{
+		var player = owner.get(Point).getPosition();
+		var target = docking_target.get(HardwarePart).getPosition();
+
+		docking_distance.x = player.x - target.x;
+		docking_distance.y = player.y - target.y;
 	}
 
 	/**
@@ -475,12 +516,18 @@ function Drone()
 	{
 		stabilizing = false;
 
+		// Set docking parameters
 		docking = true;
+		docking_slowdown = false;
 		docking_target = target;
 		docking_angle = get_docking_angle(docking_target.get(HardwarePart).getSpecs().orientation);
-		docking_in_position = false;
+		docking_angle_stop = false;
 
-		owner.get(Point).setVelocity(0, 0);
+		// Set retrograde orientation parameters
+		retrograde = true;
+		retrograde_angle = get_retrograde_angle();
+		retrograde_angle_approach = false;
+		retrograde_angle_stop = false;
 	}
 
 	/**
@@ -488,46 +535,161 @@ function Drone()
 	 */
 	function control_docking_procedure(dt)
 	{
-		if (spin !== 0)
+		if (retrograde)
 		{
-			// Reduce spin to 0
-			stabilize_spin();
+			// 1. Set the drone to a retrograde orientation
+			spin_retrograde(dt);
 		}
 		else
 		{
-			// Verify distance to docking target
-			track_target_distance();
-
-			if (owner.get(Sprite).rotation === docking_angle && is_aligned_with_target())
+			if (docking_slowdown)
 			{
-				// Approach hardware terminal
-				console.log('Approach!');
-				docking = false;
+				// 2. Slow the drone to a halt
+				if (owner.get(Point).getAbsoluteVelocity() > speed)
+				{
+					_.addVelocity(speed);
+					return;
+				}
+
+				owner.get(Point).setVelocity(0, 0);
+				docking_slowdown = false;
 			}
 			else
 			{
 				if (owner.get(Sprite).rotation !== docking_angle)
 				{
-					// Move into proper docking orientation
-					owner.get(Sprite).rotation += get_rotation_increment() * docking_speed * dt;
-
-					if (Math.abs(owner.get(Sprite).rotation - docking_angle) < 1)
+					// 3. Move into proper docking orientation
+					if (docking_angle_stop)
 					{
-						owner.get(Sprite).rotation = docking_angle;
+						// Slow down as drone Sprite rotation approaches [docking_angle]
+						stabilize_spin();
+
+						if (spin === 0)
+						{
+							owner.get(Sprite).rotation = docking_angle;
+						}
+
+						return;
+					}
+
+					// Get rotational "distance" from [docking_angle]
+					var distance = get_rotation_distance(owner.get(Sprite).rotation, docking_angle);
+					// Determine spin direction of the shortest rotation to [docking_angle]
+					var direction = get_rotation_direction(docking_angle);
+
+					// Spin toward [docking_angle]
+					if (spin < 100)
+					{
+						_.addSpin(speed * get_rotation_direction(docking_angle));
+					}
+
+					if (distance < (10 * Math.abs(spin) * dt))
+					{
+						// Rotation is approaching [docking_angle], so trigger slowdown!
+						docking_angle_stop = true;
+						return;
 					}
 				}
-
-				if (!is_aligned_with_target())
+				else
 				{
-					// Move into proper docking alignment
-					var align = get_alignment_increment();
+					// TODO: Improve the docking transition at this step
+					// (Verify distance to docking target)
+					track_target_distance();
 
-					owner.get(Point).setPosition(
-						align.x * docking_speed * dt,
-						align.y * docking_speed * dt,
-						true
-					);
+					if (!is_aligned_with_target())
+					{
+						// 4. Move into proper docking alignment
+						var align = get_alignment_direction();
+
+						owner.get(Point).setPosition(
+							align.x * docking_speed * dt,
+							align.y * docking_speed * dt,
+							true
+						);
+					}
+					else
+					{
+						// 5. TODO: Approach hardware terminal
+						docking = false;
+					}
 				}
+			}
+		}
+	}
+
+	/**
+	 * Gradually spins the drone to its retrograde orientation
+	 */
+	function spin_retrograde(dt)
+	{
+		var velocity = owner.get(Point).getAbsoluteVelocity();
+
+		if (retrograde_angle_stop || velocity === 0)
+		{
+			// Slow down spin to arrive at [retrograde_angle] or,
+			// if velocity is 0, just to stop the drone's rotation
+			stabilize_spin();
+
+			if (spin === 0)
+			{
+				// Done spinning!
+				if (velocity > 0)
+				{
+					// Lock the drone to the precise [retrograde_angle]
+					// if it is moving in preparation for deceleration
+					owner.get(Sprite).rotation = retrograde_angle;
+				}
+
+				retrograde = false;
+				docking_slowdown = true;
+			}
+
+			return;
+		}
+
+		// Get rotational "distance" from [retrograde_angle]
+		var distance = get_rotation_distance(owner.get(Sprite).rotation, retrograde_angle);
+		// Determine spin direction of the shortest rotation to [retrograde_angle]
+		var direction = get_rotation_direction(retrograde_angle);
+
+		if (retrograde_angle_approach && spin < 100)
+		{
+			// Rotate drone toward [retrograde_angle]
+			_.addSpin(speed * direction);
+		}
+
+		// Start spin stabilization if the drone's
+		// rotation is close enough to [retrograde_angle]
+		// (proportional to its angular velocity).
+		// 10 is an arbitrary constant that happens
+		// to yield an optimally smooth deceleration
+		// when dt reflects a ~60fps refresh rate.
+		if (distance < (10 * Math.abs(spin) * dt))
+		{
+			retrograde_angle_stop = true;
+			return;
+		}
+
+		// For slower angular velocities...
+		if (spin < 75)
+		{
+			if ((direction < 0 && spin > 0) || (direction > 0 && spin < 0))
+			{
+				// If we're spinning "away" from [retrograde_angle],
+				// slow down and prepare to spin the other way
+				stabilize_spin();
+
+				if (spin === 0)
+				{
+					// Slowed to 0, so start spinning the other way
+					retrograde_angle_approach = true;
+					return;
+				}
+			}
+			else
+			{
+				// If we're spinning toward [retrograde_angle], speed up as necessary
+				retrograde_angle_approach = true;
 			}
 		}
 	}
@@ -537,6 +699,7 @@ function Drone()
 	 */
 	function stabilize_spin()
 	{
+		stabilizing = true;
 		spin *= 0.9;
 
 		if (Math.abs(spin) < 1)
@@ -557,9 +720,9 @@ function Drone()
 		power -= dt;
 
 		// Consume more power during stabilization
-		if (stabilizing) power -= 2*dt;
+		if (stabilizing) power -= dt;
 		// Consume additional power during docking
-		if (docking) power -= 3*dt;
+		if (docking) power -= 2*dt;
 
 		if (power < 0)
 		{
@@ -583,8 +746,8 @@ function Drone()
 
 		// Consume fuel during stabilization
 		if (stabilizing) fuel -= 2*dt;
-		// Consume a little fuel during docking
-		if (docking) fuel -= (dt / 2);
+		// Consume additional fuel during docking
+		if (docking) fuel -= 2*dt;
 
 		if (fuel < 0)
 		{
@@ -606,8 +769,8 @@ function Drone()
 			control_docking_procedure(dt);
 		}
 
-		// Spin stabilization
-		if (stabilizing && !out_of_power && !out_of_fuel)
+		// Regular spin stabilization
+		if (stabilizing && !docking && !out_of_power && !out_of_fuel)
 		{
 			stabilize_spin();
 		}
@@ -630,7 +793,7 @@ function Drone()
 
 	this.getSpeed = function()
 	{
-		return 3;
+		return speed;
 	}
 
 	this.getSystem = function()
@@ -653,6 +816,21 @@ function Drone()
 	this.consumeFuel = function(dt)
 	{
 		consume_fuel(dt);
+		return _;
+	}
+
+	this.addVelocity = function(amount)
+	{
+		var rotation = owner.get(Sprite).rotation;
+		var x = Math.sin(rotation * Math.PI_RAD);
+		var y = Math.cos(rotation * Math.PI_RAD) * -1;
+
+		owner.get(Point).setVelocity(
+			x * amount,
+			y * amount,
+			true
+		);
+
 		return _;
 	}
 
