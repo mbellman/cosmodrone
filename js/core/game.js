@@ -24,9 +24,11 @@ function GameInstance(assets)
 	// ------------- DEBUGGING ------------- //
 	// ------------------------------------- //
 
+	/**
+	 * Update stats every 3 frames
+	 */
 	function DEBUG_show_stats(dt)
 	{
-		// Update stats every 3 frames
 		if (++DEBUG_stats_cycle > 2)
 		{
 			DEBUG_stats_cycle = 0;
@@ -44,6 +46,14 @@ function GameInstance(assets)
 
 			DEBUG.innerHTML = data.join('<br />');
 		}
+	}
+
+	/**
+	 * Debug-mode-specific cycle updates
+	 */
+	function DEBUG_update()
+	{
+		drone.get(Drone).restoreEnergy();
 	}
 
 	// ------------------------------------------ //
@@ -381,6 +391,7 @@ function GameInstance(assets)
 				if (DEBUG_MODE)
 				{
 					DEBUG_show_stats(dt);
+					DEBUG_update();
 				}
 			}
 

@@ -506,6 +506,16 @@ function Drone()
 	{
 		var player = owner.get(Point).getPosition();
 		var target = docking.target.get(HardwarePart).getPosition();
+		var specs = docking.target.get(HardwarePart).getSpecs();
+
+		// Pinpoint the hardware part's docking terminal.
+		// (For the top and left terminals we want to
+		// negatively offset the stopping point so the
+		// drone halts at the proper coordinates)
+		var top = (specs.orientation === 'top');
+		var left = (specs.orientation === 'left');
+		target.x += (specs.x + (left ? -1 : 1) * owner.get(Sprite).getWidth()/2);
+		target.y += (specs.y + (top ? -1 : 1) * owner.get(Sprite).getHeight()/2);
 
 		docking.distance.x = player.x - target.x;
 		docking.distance.y = player.y - target.y;
@@ -713,7 +723,7 @@ function Drone()
 				track_target_distance();
 				var distance = (docking.angle === 0 || docking.angle === 180) ? docking.distance.x : docking.distance.y;
 
-				if (Math.abs(distance) < 4*MAX_SPEED)
+				if (Math.abs(distance) < 1)
 				{
 					if (owner.get(Point).getAbsoluteVelocity() > MAX_SPEED)
 					{
@@ -733,7 +743,7 @@ function Drone()
 				{
 					if (owner.get(Sprite).rotation === get_docking_alignment_angle())
 					{
-						// Inadvertently moving away from target; reset to phase 2
+						// Overshot target; reset to phase 2
 						docking.phase = 2;
 					}
 				}
@@ -745,13 +755,30 @@ function Drone()
 
 				if (owner.get(Sprite).rotation === docking.angle)
 				{
+					// Give a small forward pulse
+					_.addVelocity(4*MAX_SPEED);
+					consume_fuel(4*dt);
 					docking.phase = 7;
 				}
 
 				break;
 			// 7. Thrust toward docking terminal
 			case 7:
-				docking.on = false;
+				track_target_distance();
+
+				// Continually check approach distance
+				if (
+					// For top/bottom terminals, check y-axis distance
+					((docking.angle === 0 || docking.angle === 180) && Math.abs(docking.distance.y) < 1) ||
+					// For left/right terminals, check x-axis distance
+					((docking.angle === 90 || docking.angle === 270) && Math.abs(docking.distance.x) < 1)
+				)
+				{
+					// Docked!
+					owner.get(Point).setVelocity(0, 0);
+					docking.on = false;
+				}
+
 				break;
 		}
 	}
@@ -862,6 +889,12 @@ function Drone()
 	{
 		consume_fuel(dt);
 		return _;
+	}
+
+	this.restoreEnergy = function()
+	{
+		power = MAX_POWER;
+		fuel = MAX_FUEL;
 	}
 
 	this.addVelocity = function(amount)
