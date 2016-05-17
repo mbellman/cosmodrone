@@ -4,11 +4,14 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
+* Make GameInstance a component
+* Title/menus
+* Loading bar/indicator of some kind
+* New drone sprite
+* "Autospin" system indicator
 * Radio signal reception mechanic
 * Make sure hardware asset "light source" is adjusted based on the side of the module
 * Collisions/drone damage
-* Title/menus
-* Loading bar/indicator of some kind
 * Hardware/part maintenance interface
 * Components with update cycles/architecture for various hardware parts
 * Alerts screen with ability to select hardware maintenance jobs
