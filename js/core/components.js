@@ -580,7 +580,7 @@ function Drone()
 		// Determine spin direction of the shortest rotation to [angle]
 		var direction = get_rotation_direction(angle);
 
-		if (angle_approach && spin < 150)
+		if (angle_approach && spin < 200)
 		{
 			// Rotate drone toward [angle] up to a speed limit
 			_.addSpin(MAX_SPEED * direction);
@@ -741,7 +741,7 @@ function Drone()
 				}
 				else
 				{
-					if (owner.get(Sprite).rotation === get_docking_alignment_angle())
+					if (owner.get(Sprite).rotation === get_docking_alignment_angle() && Math.abs(distance) > 30)
 					{
 						// Overshot target; reset to phase 2
 						docking.phase = 2;
