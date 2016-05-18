@@ -7,8 +7,8 @@ function Sprite(source)
 	var _ = this;
 	var owner = null;
 	var parent_offset = {x: 0, y: 0};      // The offset of the owner's parent entity Sprite (updated internally)
-	var offset = {x: 0, y: 0};             // A persistent offset as specified via Sprite.offset(x, y)
-	var origin = {x: 0, y: 0};             // Origin point of the Sprite
+	var offset = {x: 0, y: 0};             // A persistent offset as specified via Sprite.setOffset(x, y)
+	var origin = {x: 0, y: 0};             // Origin point of the Sprite (for positioning, rotations, scaling, etc.)
 	var render = {x: 0, y: 0};             // On-screen coordinates of the Sprite (updated internally)
 	var pivot;                             // Target Point for movement pivoting (motion opposite to)
 
@@ -112,7 +112,10 @@ function Sprite(source)
 
 	this.getScreenCoordinates = function()
 	{
-		return render;
+		return {
+			x: render.x,
+			y: render.y
+		};
 	}
 
 	this.getWidth = function()
@@ -151,22 +154,22 @@ function Sprite(source)
 		return _;
 	}
 
-	this.centerOrigin = function()
-	{
-		_.setOrigin(source.width/2, source.height/2);
-		return _;
-	}
-
-	this.pivot = function(_pivot)
+	this.setPivot = function(_pivot)
 	{
 		pivot = _pivot;
 		return _;
 	}
 
-	this.offset = function(x, y)
+	this.setOffset = function(x, y)
 	{
 		offset.x = x;
 		offset.y = y;
+		return _;
+	}
+
+	this.centerOrigin = function()
+	{
+		_.setOrigin(source.width/2, source.height/2);
 		return _;
 	}
 }
@@ -566,9 +569,11 @@ function Drone()
 			// Slow down spin to arrive at [angle]
 			stabilize_spin();
 
-			if (spin === 0)
+			if (spin === 0 || get_rotation_distance(owner.get(Sprite).rotation, angle) < 1)
 			{
 				// Done spinning!
+				spin = 0;
+				stabilizing = false;
 				owner.get(Sprite).rotation = angle;
 			}
 

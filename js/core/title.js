@@ -35,10 +35,7 @@ function TitleScene(controller, assets)
 	}
 
 	// Public:
-	this.update = function(dt)
-	{
-		stage.update(dt);
-	}
+	this.update = function(dt){}
 
 	this.onAdded = function()
 	{
@@ -48,5 +45,7 @@ function TitleScene(controller, assets)
 		stage
 			.addChild(new Entity().add(stars))
 			.addChild(new Entity().add(sky));
+
+		owner.addChild(stage);
 	}
 }

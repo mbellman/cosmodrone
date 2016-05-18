@@ -142,8 +142,8 @@ function GameInstance(controller, assets)
 		{
 			var module = entities[e];
 			module.get(Sprite)
-				.offset(viewport.width/2, viewport.height/2)
-				.pivot(camera.get(Point));
+				.setOffset(viewport.width/2, viewport.height/2)
+				.setPivot(camera.get(Point));
 			stage.addChild(module);
 		}
 	}
@@ -168,8 +168,8 @@ function GameInstance(controller, assets)
 			.add(new Point())
 			.add(
 				new Sprite(assets.getImage('game/drone/drone.png'))
-					.offset(viewport.width/2, viewport.height/2)
-					.pivot(camera.get(Point))
+					.setOffset(viewport.width/2, viewport.height/2)
+					.setPivot(camera.get(Point))
 					.centerOrigin()
 			);
 		// Store drone speed value
