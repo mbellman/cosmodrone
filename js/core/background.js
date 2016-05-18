@@ -464,7 +464,7 @@
 		function prerender_terrain_variant(hour)
 		{
 			terrain.setTime(hour);
-			terrain_renders.push(new TextureCache().divide(terrain.canvas, 32));
+			terrain_renders.push(new TextureCache().divide(terrain.canvas, 16));
 		}
 
 		/**
@@ -476,7 +476,7 @@
 			var name = cloud_bank[cloud].file;
 			var type = cloud_bank[cloud].type;
 
-			var cloud_asset = assets.getImage('clouds/' + name + '.png');
+			var cloud_asset = assets.getImage('game/clouds/' + name + '.png');
 			var cloud_canvas = new Canvas(new Element('canvas'))
 				.setSize(cloud_asset.width, cloud_asset.height);
 
@@ -486,7 +486,7 @@
 			if (type !== 'cirrus')
 			{
 				// Store shadow for normal clouds
-				var shadow_asset = assets.getImage('shadows/' + name + '.png');
+				var shadow_asset = assets.getImage('game/shadows/' + name + '.png');
 				var shadow_canvas = new Canvas(new Element('canvas'))
 					.setSize(shadow_asset.width, shadow_asset.height);
 

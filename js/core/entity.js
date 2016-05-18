@@ -59,6 +59,21 @@ function Entity()
 		}
 	}
 
+	this.onAddedToParent = function(entity)
+	{
+		_.parent = entity;
+
+		for (var c = 0 ; c < components.length ; c++)
+		{
+			var _component = components[c];
+
+			if (typeof _component.onOwnerAddedToParent === 'function')
+			{
+				_component.onOwnerAddedToParent();
+			}
+		}
+	}
+
 	this.add = function(component)
 	{
 		components.push(component);
@@ -76,21 +91,6 @@ function Entity()
 		entity.onAddedToParent(_);
 		children.push(entity);
 		return _;
-	}
-
-	this.onAddedToParent = function(entity)
-	{
-		_.parent = entity;
-
-		for (var c = 0 ; c < components.length ; c++)
-		{
-			var _component = components[c];
-
-			if (typeof _component.onOwnerAddedToParent === 'function')
-			{
-				_component.onOwnerAddedToParent();
-			}
-		}
 	}
 
 	this.disposeChildren = function()
@@ -111,9 +111,7 @@ function Entity()
 
 	this.remove = function(component)
 	{
-		var c = 0;
-
-		while (c < components.length)
+		for (var c = 0 ; c < components.length ; c++)
 		{
 			var _component = components[c];
 
@@ -125,10 +123,8 @@ function Entity()
 				}
 
 				components.splice(c, 1);
-				continue;
+				break;
 			}
-
-			c++;
 		}
 
 		return _;

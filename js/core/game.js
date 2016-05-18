@@ -1,9 +1,9 @@
-function GameInstance(assets)
+function GameInstance(controller, assets)
 {
 	// Private:
 	var _ = this;
 
-	var time;
+	var owner = null;
 	var active = false;
 	var running = true;
 	var initialized = false;
@@ -167,7 +167,7 @@ function GameInstance(assets)
 			.add(new Drone())
 			.add(new Point())
 			.add(
-				new Sprite(assets.getImage('drone/drone.png'))
+				new Sprite(assets.getImage('game/drone/drone.png'))
 					.offset(viewport.width/2, viewport.height/2)
 					.pivot(camera.get(Point))
 					.centerOrigin()
@@ -289,49 +289,6 @@ function GameInstance(assets)
 	// --------------------------------------- //
 
 	/**
-	 * Iterate over all Sprites and clear
-	 * the screen at their drawn coordinates
-	 */
-	function clear_screen()
-	{
-		var position, width, height, buffer;
-
-		stage.forAllComponentsOfType(Sprite, function(sprite)
-		{
-			// Get rendering information about the Sprite
-			position = sprite.getScreenCoordinates();
-			width = sprite.scale * sprite.getWidth();
-			height = sprite.scale * sprite.getHeight();
-
-			// Only clear screen around visible Sprites
-			if (
-				(position.x < viewport.width && position.x + width > 0) &&
-				(position.y < viewport.height && position.y + height > 0)
-			)
-			{
-				if (sprite.rotation > 0)
-				{
-					// Clear more space surrounding the sprite
-					// if it is rotated to ensure proper erasure
-					buffer = Math.max(width, height);
-				}
-				else
-				{
-					if (sprite.snap) buffer = 0;
-					else buffer = 1;
-				}
-
-				screen.game.clear(
-					position.x - buffer,
-					position.y - buffer,
-					width + 2*buffer,
-					height + 2*buffer
-				);
-			}
-		});
-	}
-
-	/**
 	 * Have the camera follow the player drone
 	 */
 	function update_camera()
@@ -357,36 +314,16 @@ function GameInstance(assets)
 		hud.updateDroneStats(drone.get(Drone));
 	}
 
-	/**
-	 * Game update loop
-	 */
-	function update(dt)
-	{
-		// Game system updates
-		clear_screen();
-		poll_input(dt);
-		update_camera();
-		update_HUD();
-
-		// Entity updates
-		stage.update(dt);
-	}
-
-	/**
-	 * Game loop
-	 */
-	function loop()
+	// Public:
+	this.update = function(dt)
 	{
 		if (active)
 		{
 			if (running && initialized)
 			{
-				var new_time = Date.now();
-				var dt = (new_time - time) / 1000;
-
-				update(1/60);
-
-				time = new_time;
+				poll_input(dt);
+				update_camera();
+				update_HUD();
 
 				if (DEBUG_MODE)
 				{
@@ -394,14 +331,29 @@ function GameInstance(assets)
 					DEBUG_update();
 				}
 			}
-
-			requestAnimationFrame(loop);
 		}
 	}
 
-	// Public:
+	this.onAdded = function(entity)
+	{
+		owner = entity;
+		owner.addChild(stage);
+	}
+
+	this.setLevel = function(_level)
+	{
+		level = _level;
+		return _;
+	}
+
 	this.init = function()
 	{
+		// Stop requestAnimationFrame() in the
+		// SceneManager loop from causing script
+		// hangs in tandem with level generation
+		controller.scenes.pause();
+		// Safeguard for calling init()
+		// again on a loaded instance
 		_.unload();
 		add_background();
 		return _;
@@ -411,17 +363,11 @@ function GameInstance(assets)
 	{
 		if (initialized)
 		{
-			if (!active)
-			{
-				active = true;
-				time = Date.now();
-				loop();
-			}
+			if (!active) active = true;
+			if (!running) running = true;
 
-			if (!running)
-			{
-				running = true;
-			}
+			// Restart SceneManager loop
+			controller.scenes.resume();
 		}
 
 		return _;
@@ -455,6 +401,11 @@ function GameInstance(assets)
 		stage.disposeChildren();
 
 		return _;
+	}
+
+	this.isLoaded = function()
+	{
+		return initialized;
 	}
 
 	this.debug = function(state)

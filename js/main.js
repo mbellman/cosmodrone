@@ -2,8 +2,8 @@
 include(
 	[
 		'js/dependencies/jquery-2.2.3.js',
-		'js/assets/manifest.js',
 		'js/assets/manager.js',
+		'js/assets/manifest.js',
 		'js/graphics/canvas.js',
 		'js/system/tools.js',
 		'js/system/vector.js',
@@ -13,10 +13,13 @@ include(
 		'js/system/terrain.js',
 		'js/core/entity.js',
 		'js/core/components.js',
+		'js/core/scene.js',
+		'js/core/controller.js',
 		'js/core/background.js',
 		'js/core/station.js',
 		'js/core/levels.js',
 		'js/core/HUD.js',
+		'js/core/title.js',
 		'js/core/game.js'
 	]
 ).then(main);
@@ -27,9 +30,7 @@ var viewport =
 	width: 1200,
 	height: 650
 };
-
 var screen = {};
-var game;
 var DEBUG;
 
 /**
@@ -45,14 +46,14 @@ function main()
 }
 
 /**
- * Set up screen structure
+ * Set up Canvas element structure
  */
 function createScreens()
 {
 	// Backgrounds (for planet surface, starfield, etc.)
-	screen.bg0 = gameScreen();
-	screen.bg1 = gameScreen();
-	screen.clouds = gameScreen();
+	screen.bg0 = new Screen();
+	screen.bg1 = new Screen();
+	screen.clouds = new Screen();
 	screen.clouds.element().style.zIndex = '3';
 
 	// Add background canvases to the document
@@ -62,11 +63,11 @@ function createScreens()
 		.append(screen.clouds.element());
 
 	// Primary game screen
-	screen.game = gameScreen();
+	screen.game = new Screen();
 	screen.game.element().style.zIndex = '2';
 
 	// UI screen overlaying everything else
-	screen.HUD = gameScreen();
+	screen.HUD = new Screen();
 	screen.HUD.element().style.zIndex = '3';
 
 	$('#game')
@@ -105,18 +106,17 @@ function loadGame()
 	{
 		console.log('Loading...' + percent + '%');
 	})
-	.then(function(pack)
+	.then(function(assets)
 	{
-		game = new GameInstance(pack);
-		game.debug(true).init().start();
+		var controller = new Controller(assets);
+		controller.showTitle();
 	});
 }
 
 /**
- * Shorthand for obtaining a game
- * screen-sized Canvas instance
+ * Shorthand for getting a game screen-sized Canvas instance
  */
-function gameScreen()
+function Screen()
 {
 	return new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
 }

@@ -4,7 +4,6 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
-* Make GameInstance a component
 * Title/menus
 * Loading bar/indicator of some kind
 * New drone sprite

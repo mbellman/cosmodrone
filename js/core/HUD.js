@@ -7,7 +7,7 @@ function HUD(assets)
 	var _ = this;
 	var graphics =
 	{
-		droneHUD: assets.getImage('ui/drone.png')
+		droneHUD: assets.getImage('game/ui/drone.png')
 	};
 	var UI =
 	{
@@ -121,7 +121,7 @@ function HUD(assets)
 			// Get indicator name
 			var indicator = indicators[i];
 			// Get correct indicator graphic for on/off state
-			var file = 'ui/indicators/' + indicator + '-' + (system[indicator] ? 'on.png' : 'off.png');
+			var file = 'game/ui/indicators/' + indicator + '-' + (system[indicator] ? 'on.png' : 'off.png');
 
 			screen.HUD.draw
 				.image(

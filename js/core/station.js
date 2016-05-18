@@ -5,7 +5,7 @@ var Modules =
 {
 	MODULE_GENERAL_HORIZONTAL_LARGE:
 	{
-		file: 'station/modules/horizontal/general-large.png',
+		file: 'game/station/modules/horizontal/general-large.png',
 		orientation: 'horizontal',
 		size:
 		{
@@ -29,7 +29,7 @@ var Modules =
 	},
 	MODULE_GENERAL_VERTICAL_SMALL:
 	{
-		file: 'station/modules/vertical/general-small.png',
+		file: 'game/station/modules/vertical/general-small.png',
 		orientation: 'vertical',
 		size:
 		{
@@ -69,7 +69,7 @@ var HardwareParts =
 {
 	SATELLITE_1:
 	{
-		file: 'station/parts/satellite1/',
+		file: 'game/station/parts/satellite1/',
 		width: 80,
 		height: 76,
 		x: 20,
