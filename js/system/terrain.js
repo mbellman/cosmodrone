@@ -841,11 +841,11 @@ function Terrain()
 			}
 		);
 		// Instantiate each layer as its own Canvas
-		terrain_canvas = new Canvas(new Element('canvas'));
-		city_canvas = new Canvas(new Element('canvas'));
-		time_canvas = new Canvas(new Element('canvas'));
-		// Public canvas is sourced from [time_canvas]
-		_.canvas = time_canvas.element();
+		terrain_canvas = new Canvas();
+		city_canvas = new Canvas();
+		time_canvas = new Canvas();
+		// Set public [canvas] property as an alias of [time_canvas]
+		_.canvas = time_canvas.element;
 		// Seed the PRNG
 		Generator.seed('seedy');
 

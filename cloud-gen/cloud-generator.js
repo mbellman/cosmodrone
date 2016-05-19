@@ -62,7 +62,7 @@ function anti_alias() {
 function generate_cirrus_clouds(x, y) {
 	var start_alpha = 1;
 
-	canvas.alpha(start_alpha);
+	canvas.setAlpha(start_alpha);
 
 	// Cirrus clouds
 	var group = [];
@@ -101,7 +101,7 @@ function generate_cirrus_clouds(x, y) {
 		for (var p = 0 ; p < points ; p++) {
 			var brush = group[p];
 			var _scale = brush[2] * (5 * t/25);
-			canvas.alpha(start_alpha * Math.random());
+			canvas.setAlpha(start_alpha * Math.random());
 			canvas.draw.image(brush[3], position.x + brush[0], position.y + brush[1], brush[3].width * _scale * scale, brush[3].height * _scale * scale);
 		}
 	}
@@ -132,9 +132,9 @@ function generate_cirrus_clouds(x, y) {
 
 			var pos_x = position.x + brush[0] + Math.pow((1 - ratio), 1/3) * (max - brush[0]);
 
-			canvas.alpha(start_alpha * Math.pow(ratio,2));
+			canvas.setAlpha(start_alpha * Math.pow(ratio,2));
 			canvas.draw.image(brush[3], pos_x, position.y + brush[1], brush[3].width * scale_r * _scale, brush[3].height * scale_r * _scale);
-			canvas.alpha(0.1 * start_alpha * Math.pow(ratio,2));
+			canvas.setAlpha(0.1 * start_alpha * Math.pow(ratio,2));
 			canvas.draw.image(brush[3], pos_x - spread_w, position.y + brush[1], spread_w, spread_h);
 		}
 	}
@@ -145,11 +145,11 @@ function generate_clouds() {
 	shadow.clear();
 
 	if (type !== 'cirrus') {
-		canvas.alpha(1);
+		canvas.setAlpha(1);
 
 		// Cumulus clouds or cyclones
 		var size_half = size/2;
-		var composite = new Canvas(document.createElement('canvas')).setSize(size, size);
+		var composite = new Canvas().setSize(size, size);
 		var noise_levels = [];
 		var noise_data = [];
 		var density = Number(document.getElementById('density').value);
@@ -178,7 +178,7 @@ function generate_clouds() {
 			var square_size = Math.pow(2,i);
 			var canvas_size = Math.round(size/square_size);
 			var cs_half = canvas_size/2;
-			var noise_canvas = new Canvas(document.createElement('canvas')).setSize(canvas_size, canvas_size);
+			var noise_canvas = new Canvas().setSize(canvas_size, canvas_size);
 			var color = 255 - 30*(5-i);
 			noise_canvas.draw.rectangle(0, 0, canvas_size, canvas_size).fill('#000');
 
@@ -204,8 +204,8 @@ function generate_clouds() {
 				}
 			}
 
-			var full_canvas = new Canvas(document.createElement('canvas')).setSize(size, size);
-			full_canvas.draw.image(noise_canvas.element(), 0, 0, size, size);
+			var full_canvas = new Canvas().setSize(size, size);
+			full_canvas.draw.image(noise_canvas.element, 0, 0, size, size);
 			noise_levels.push(full_canvas);
 			noise_data.push(full_canvas.data.get());
 		}
@@ -265,10 +265,10 @@ var spread = new Image();
 spread.src = 'cirrus-spread.png';
 
 function cirrus_canvas() {
-	canvas.element().style.width = 700 + 'px';
-	canvas.element().style.height = 700 + 'px';
-	canvas.element().width = 700;
-	canvas.element().height = 700;
+	canvas.element.style.width = 700 + 'px';
+	canvas.element.style.height = 700 + 'px';
+	canvas.element.width = 700;
+	canvas.element.height = 700;
 }
 
 function change_size(button) {
@@ -277,15 +277,15 @@ function change_size(button) {
 	var newSize = button.getAttribute('data-size');
 	button.className = 'size selected';
 
-	canvas.element().style.width = newSize + 'px';
-	canvas.element().style.height = newSize + 'px';
-	canvas.element().width = newSize;
-	canvas.element().height = newSize;
+	canvas.element.style.width = newSize + 'px';
+	canvas.element.style.height = newSize + 'px';
+	canvas.element.width = newSize;
+	canvas.element.height = newSize;
 
-	shadow.element().style.width = newSize + 'px';
-	shadow.element().style.height = newSize + 'px';
-	shadow.element().width = newSize;
-	shadow.element().height = newSize;
+	shadow.element.style.width = newSize + 'px';
+	shadow.element.style.height = newSize + 'px';
+	shadow.element.width = newSize;
+	shadow.element.height = newSize;
 
 	size = newSize;
 }

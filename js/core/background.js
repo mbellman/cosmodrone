@@ -57,7 +57,7 @@
 
 					// Instantiate a new Canvas for the chunk
 					// and render the clipped texture to it
-					chunk = new Canvas(new Element('canvas')).setSize(width, height);
+					chunk = new Canvas().setSize(width, height);
 					chunk.draw.image(
 						texture,
 						clip.x, clip.y, clip.width, clip.height,
@@ -65,7 +65,7 @@
 					);
 
 					// Save the chunk texture
-					chunks[y][x] = chunk.element();
+					chunks[y][x] = chunk.element;
 				}
 			}
 
@@ -441,7 +441,7 @@
 
 		function start()
 		{
-			cloud_stage = new Canvas(new Element('canvas'))
+			cloud_stage = new Canvas()
 				.setSize(viewport.width, viewport.height);
 
 			camera = new Point()
@@ -468,8 +468,8 @@
 		}
 
 		/**
-		 * Prerender cloud + shadow pair as
-		 * non-interpolated scaled Canvas data
+		 * Prerender cloud + shadow pair
+		 * scaled to [configuration.tileSize]
 		 */
 		function prerender_cloud_variant(cloud)
 		{
@@ -477,17 +477,18 @@
 			var type = cloud_bank[cloud].type;
 
 			var cloud_asset = assets.getImage('game/clouds/' + name + '.png');
-			var cloud_canvas = new Canvas(new Element('canvas'))
+			var cloud_canvas = new Canvas()
 				.setSize(cloud_asset.width, cloud_asset.height);
 
 			cloud_canvas.draw.image(cloud_asset);
-			cloud_renders.push(cloud_canvas.scale(configuration.tileSize));
+			cloud_canvas.scale(configuration.tileSize);
+			cloud_renders.push(cloud_canvas);
 
 			if (type !== 'cirrus')
 			{
 				// Store shadow for normal clouds
 				var shadow_asset = assets.getImage('game/shadows/' + name + '.png');
-				var shadow_canvas = new Canvas(new Element('canvas'))
+				var shadow_canvas = new Canvas()
 					.setSize(shadow_asset.width, shadow_asset.height);
 
 				shadow_canvas.draw.image(shadow_asset);
@@ -592,8 +593,8 @@
 		{
 			var type = cloud_bank[index].type;
 			var is_cirrus = (type === 'cirrus');
-			var cloud_image = cloud_renders[index].element();
-			var shadow_image = (is_cirrus ? null : shadow_renders[index].element());
+			var cloud_image = cloud_renders[index].element;
+			var shadow_image = (is_cirrus ? null : shadow_renders[index].element);
 			var velocity =
 			{
 				x: configuration.scrollSpeed.x,
@@ -872,8 +873,8 @@
 			var old_bg = 'bg' + bit_flip(front_bg);
 
 			// Swap the actual screen elements and fade the new one in
-			$(screen[old_bg].element()).css('z-index', '1');
-			$(screen[new_bg].element()).css(
+			$(screen[old_bg].element).css('z-index', '1');
+			$(screen[new_bg].element).css(
 				{
 					'opacity': '0',
 					'z-index': '2'
@@ -899,8 +900,8 @@
 		 */
 		function stop_bg_cycle()
 		{
-			$(screen.bg0.element()).stop();
-			$(screen.bg1.element()).stop();
+			$(screen.bg0.element).stop();
+			$(screen.bg1.element).stop();
 		}
 
 		/**
@@ -933,7 +934,7 @@
 
 			// Light level rendering
 			var color = get_time_color();
-			screen.clouds.composite('source-over').alpha(0.7);
+			screen.clouds.setCompositing('source-over').setAlpha(0.7);
 			screen.clouds.draw
 				.rectangle(0, 0, viewport.width, viewport.height)
 				.fill(rgb(color.red, color.green, color.blue));
@@ -1002,8 +1003,8 @@
 			}
 
 			// Composite [cloud_stage] onto the primary cloud screen
-			screen.clouds.composite('destination-atop').alpha(1);
-			screen.clouds.draw.image(cloud_stage.element());
+			screen.clouds.setCompositing('destination-atop').setAlpha(1);
+			screen.clouds.draw.image(cloud_stage.element);
 
 			// Clear [cloud_stage] before the cycle completes
 			// so we don't have to at the beginning of the next

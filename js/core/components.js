@@ -41,7 +41,7 @@ function Sprite(source)
 	{
 		if (_.alpha < 1)
 		{
-			screen.game.alpha(_.alpha);
+			screen.game.setAlpha(_.alpha);
 		}
 	}
 

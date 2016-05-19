@@ -5,6 +5,7 @@ function TitleScene(controller, assets)
 {
 	// Private:
 	var _ = this;
+	var owner = null;
 	var stage = new Entity();
 	var stars;
 	var sky;
@@ -37,8 +38,10 @@ function TitleScene(controller, assets)
 	// Public:
 	this.update = function(dt){}
 
-	this.onAdded = function()
+	this.onAdded = function(entity)
 	{
+		owner = entity;
+
 		stars = new Sprite(assets.getImage('title/starfield.png'));
 		sky = new Sprite(assets.getImage('title/sky.png'));
 

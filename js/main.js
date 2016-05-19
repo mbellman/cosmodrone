@@ -2,25 +2,25 @@
 include(
 	[
 		'js/dependencies/jquery-2.2.3.js',
-		'js/assets/manager.js',
-		'js/assets/manifest.js',
-		'js/graphics/canvas.js',
-		'js/system/tools.js',
-		'js/system/vector.js',
-		'js/system/input.js',
-		'js/system/rng.js',
-		'js/system/map.js',
-		'js/system/terrain.js',
-		'js/core/entity.js',
-		'js/core/components.js',
-		'js/core/scene.js',
-		'js/core/controller.js',
-		'js/core/background.js',
-		'js/core/station.js',
-		'js/core/levels.js',
+		'js/assets/AssetLoader.js',
+		'js/assets/AssetManifest.js',
+		'js/graphics/Canvas.js',
+		'js/system/Tools.js',
+		'js/system/Vector.js',
+		'js/system/Input.js',
+		'js/system/RNG.js',
+		'js/system/HeightMap.js',
+		'js/system/Terrain.js',
+		'js/core/Entity.js',
+		'js/core/Components.js',
+		'js/core/SceneManager.js',
+		'js/core/Controller.js',
+		'js/core/Background.js',
+		'js/core/Station.js',
+		'js/core/LevelLoader.js',
 		'js/core/HUD.js',
-		'js/core/title.js',
-		'js/core/game.js'
+		'js/core/TitleScene.js',
+		'js/core/GameInstance.js'
 	]
 ).then(main);
 
@@ -54,25 +54,25 @@ function createScreens()
 	screen.bg0 = new Screen();
 	screen.bg1 = new Screen();
 	screen.clouds = new Screen();
-	screen.clouds.element().style.zIndex = '3';
+	screen.clouds.element.style.zIndex = '3';
 
 	// Add background canvases to the document
 	$('#game #bg')
-		.append(screen.bg0.element())
-		.append(screen.bg1.element())
-		.append(screen.clouds.element());
+		.append(screen.bg0.element)
+		.append(screen.bg1.element)
+		.append(screen.clouds.element);
 
 	// Primary game screen
 	screen.game = new Screen();
-	screen.game.element().style.zIndex = '2';
+	screen.game.element.style.zIndex = '2';
 
 	// UI screen overlaying everything else
 	screen.HUD = new Screen();
-	screen.HUD.element().style.zIndex = '3';
+	screen.HUD.element.style.zIndex = '3';
 
 	$('#game')
-		.append(screen.game.element())
-		.append(screen.HUD.element());
+		.append(screen.game.element)
+		.append(screen.HUD.element);
 
 	// Apply CSS to various screens
 	$('#game')
@@ -118,5 +118,5 @@ function loadGame()
  */
 function Screen()
 {
-	return new Canvas(new Element('canvas')).setSize(viewport.width, viewport.height);
+	return new Canvas().setSize(viewport.width, viewport.height);
 }

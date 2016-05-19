@@ -1,11 +1,8 @@
-/**
- * Asynchronous script loader
- *
- * Returns an instance with chainable on() event
- * delegation and a then() completion callback.
- */
-function include(scripts)
-{
+(function(scope){
+	/**
+	 * Internal asynchronous script loader resource;
+	 * features progress/error/completion handlers
+	 */
 	function IncludeManager(includes)
 	{
 		// Private:
@@ -69,5 +66,13 @@ function include(scripts)
 		}
 	}
 
-	return new IncludeManager(scripts);
-}
+	/**
+	 * Asynchronous script loader
+	 */
+	function include(scripts)
+	{
+		return new IncludeManager(scripts);
+	}
+
+	scope.include = include;
+})(window);
