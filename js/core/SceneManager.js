@@ -18,13 +18,21 @@ function SceneManager()
 	function clear_sprites()
 	{
 		var position, width, height, buffer, box = {};
+		var cleared = false;
 
 		scenes[active_scene].forAllComponentsOfType(Sprite, function(sprite)
 		{
+			if (cleared)
+			{
+				// Whole screen area already cleared;
+				// skip the remaining clear operations
+				return;
+			}
+
 			// Get rendering information about the Sprite
 			position = sprite.getScreenCoordinates();
-			width = sprite.scale * sprite.getWidth();
-			height = sprite.scale * sprite.getHeight();
+			width = sprite.scale._ * sprite.getWidth();
+			height = sprite.scale._ * sprite.getHeight();
 
 			// Only clear screen around visible Sprites
 			if (
@@ -32,7 +40,7 @@ function SceneManager()
 				(position.y < viewport.height && position.y + height > 0)
 			)
 			{
-				if (sprite.rotation > 0)
+				if (sprite.rotation._ > 0)
 				{
 					// Clear more space surrounding the sprite
 					// if it is rotated to ensure proper erasure
@@ -51,6 +59,13 @@ function SceneManager()
 				box.height = Math.min(height + 2*buffer, viewport.height);
 
 				screen.game.clear(box.x, box.y, box.width, box.height);
+
+				if (box.x === 0 && box.y === 0 && box.width === viewport.width && box.height === viewport.height)
+				{
+					// Last clear region took up whole screen
+					// area, so no need to clear any more sprites
+					cleared = true;
+				}
 			}
 		});
 	}

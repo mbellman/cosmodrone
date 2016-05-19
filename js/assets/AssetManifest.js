@@ -54,6 +54,7 @@ var AssetManifest =
 			'game/ui/indicators/docking-on.png',
 			'game/ui/indicators/stabilizing-off.png',
 			'game/ui/indicators/stabilizing-on.png',
+			'title/ground.png',
 			'title/nova1.png',
 			'title/nova2.png',
 			'title/sky.png',

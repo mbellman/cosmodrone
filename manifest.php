@@ -61,7 +61,7 @@
 	$manifest .= "\t}\n";
 	$manifest .= "};";
 
-	file_put_contents('js/assets/manifest.js', $manifest);
+	file_put_contents('js/assets/AssetManifest.js', $manifest);
 ?>
 
 <!doctype html>

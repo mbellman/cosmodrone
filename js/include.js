@@ -16,7 +16,10 @@
 			complete: function(){}
 		};
 
-		function loadScript(file)
+		/**
+		 * Load an individual script
+		 */
+		function load_script(file)
 		{
 			var script = document.createElement('script');
 			script.src = file;
@@ -40,11 +43,14 @@
 			document.body.appendChild(script);
 		}
 
-		function loadScripts()
+		/**
+		 * Load all included scripts
+		 */
+		function load_scripts()
 		{
 			for (var s = 0 ; s < scriptCount ; s++)
 			{
-				loadScript(includes[s]);
+				load_script(includes[s]);
 			}
 		}
 
@@ -62,12 +68,12 @@
 		this.then = function(callback)
 		{
 			events.complete = callback || events.complete;
-			loadScripts();
+			load_scripts();
 		}
 	}
 
 	/**
-	 * Asynchronous script loader
+	 * Public script loader instance 'factory' function
 	 */
 	function include(scripts)
 	{

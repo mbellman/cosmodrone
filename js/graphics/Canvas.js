@@ -306,6 +306,9 @@
 		return this;
 	}
 
+	/**
+	 * Get Canvas dimensions
+	 */
 	Canvas.prototype.getSize = function()
 	{
 		return {
@@ -314,6 +317,9 @@
 		};
 	}
 
+	/**
+	 * Change Canvas dimensions
+	 */
 	Canvas.prototype.setSize = function(width, height)
 	{
 		this.element.width = width;
@@ -321,36 +327,55 @@
 		return this;
 	}
 
+	/**
+	 * Set global Canvas compositing mode
+	 */
 	Canvas.prototype.setCompositing = function(type)
 	{
 		this.ctx.globalCompositeOperation = type;
 		return this;
 	}
 
+	/**
+	 * Set global Canvas rendering alpha
+	 */
 	Canvas.prototype.setAlpha = function(alpha)
 	{
 		this.ctx.globalAlpha = alpha;
 		return this;
 	}
 
+	/**
+	 * Translate Canvas origin to [x, y]
+	 */
 	Canvas.prototype.translate = function(x, y)
 	{
 		this.ctx.translate(x, y);
 		return this;
 	}
 
+	/**
+	 * Set Canvas rendering rotation angle in [radians]
+	 */
 	Canvas.prototype.rotate = function(radians)
 	{
 		this.ctx.rotate(radians);
 		return this;
 	}
 
+	/**
+	 * Save the Canvas context state
+	 */
 	Canvas.prototype.save = function()
 	{
 		this.ctx.save();
 		return this;
 	}
 
+	/**
+	 * Restore the Canvas context state to
+	 * that of the previously saved instance
+	 */
 	Canvas.prototype.restore = function()
 	{
 		this.ctx.restore();

@@ -1,3 +1,6 @@
+/**
+ * Active Game object
+ */
 function GameInstance(controller, assets)
 {
 	// Private:

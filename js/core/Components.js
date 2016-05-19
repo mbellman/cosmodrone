@@ -13,7 +13,19 @@ function Sprite(source)
 	var pivot;                             // Target Point for movement pivoting (motion opposite to)
 
 	/**
-	 * Update the internal on-screen position of the sprite
+	 * Update all Tweenable instances
+	 */
+	function update_tweens(dt)
+	{
+		_.x.update(dt);
+		_.y.update(dt);
+		_.scale.update(dt);
+		_.rotation.update(dt);
+		_.alpha.update(dt);
+	}
+
+	/**
+	 * Update the saved on-screen coordinates of the sprite
 	 */
 	function update_screen_coordinates()
 	{
@@ -24,8 +36,8 @@ function Sprite(source)
 		}
 
 		// Update screen coordinates
-		render.x = _.x - (!!pivot ? pivot.getPosition().x : 0) + parent_offset.x + offset.x - origin.x;
-		render.y = _.y - (!!pivot ? pivot.getPosition().y : 0) + parent_offset.y + offset.y - origin.y;
+		render.x = _.x._ - (!!pivot ? pivot.getPosition().x : 0) + parent_offset.x + offset.x - origin.x;
+		render.y = _.y._ - (!!pivot ? pivot.getPosition().y : 0) + parent_offset.y + offset.y - origin.y;
 
 		if (_.snap)
 		{
@@ -39,9 +51,9 @@ function Sprite(source)
 	 */
 	function apply_alpha()
 	{
-		if (_.alpha < 1)
+		if (_.alpha._ < 1)
 		{
-			screen.game.setAlpha(_.alpha);
+			screen.game.setAlpha(_.alpha._);
 		}
 	}
 
@@ -50,13 +62,13 @@ function Sprite(source)
 	 */
 	function apply_rotation()
 	{
-		_.rotation = mod(_.rotation, 360);
+		_.rotation._ = mod(_.rotation._, 360);
 
-		if (_.rotation > 0)
+		if (_.rotation._ > 0)
 		{
 			screen.game
 				.translate(render.x + origin.x, render.y + origin.y)
-				.rotate(_.rotation * Math.PI_RAD);
+				.rotate(_.rotation._ * Math.PI_RAD);
 		}
 	}
 
@@ -65,19 +77,20 @@ function Sprite(source)
 	 */
 	function has_effects()
 	{
-		return (_.alpha < 1 || _.rotation != 0);
+		return (_.alpha._ < 1 || _.rotation._ != 0);
 	}
 
 	// Public:
-	this.x = 0;
-	this.y = 0;
-	this.scale = 1;
-	this.rotation = 0;
-	this.alpha = 1;
+	this.x = new Tweenable(0);
+	this.y = new Tweenable(0);
+	this.scale = new Tweenable(1);
+	this.rotation = new Tweenable(0);
+	this.alpha = new Tweenable(1);
 	this.snap = false;
 
 	this.update = function(dt)
 	{
+		update_tweens(dt);
 		update_screen_coordinates();
 
 		// Avoid drawing offscreen objects
@@ -91,10 +104,10 @@ function Sprite(source)
 
 		screen.game.draw.image(
 			source,
-			(_.rotation > 0 ? -origin.x : render.x),
-			(_.rotation > 0 ? -origin.y : render.y),
-			source.width * _.scale,
-			source.height * _.scale
+			(_.rotation._ > 0 ? -origin.x : render.x),
+			(_.rotation._ > 0 ? -origin.y : render.y),
+			source.width * _.scale._,
+			source.height * _.scale._
 		);
 
 		if (has_effects()) screen.game.restore();
@@ -104,9 +117,9 @@ function Sprite(source)
 	{
 		owner = entity;
 
-		if (!(source instanceof Image))
+		if (!(source instanceof Image) && !(source instanceof HTMLCanvasElement))
 		{
-			console.warn('Sprite: ' + source + ' is not an Image object');
+			console.warn('Sprite: ' + source + ' is not an Image or HTMLCanvasElement object!');
 		}
 	}
 
@@ -130,8 +143,8 @@ function Sprite(source)
 
 	this.setXY = function(x, y)
 	{
-		_.x = x;
-		_.y = y;
+		_.x._ = x;
+		_.y._ = y;
 		return _;
 	}
 
@@ -144,13 +157,13 @@ function Sprite(source)
 
 	this.setAlpha = function(alpha)
 	{
-		_.alpha = alpha;
+		_.alpha._ = alpha;
 		return _;
 	}
 
 	this.setRotation = function(rotation)
 	{
-		_.rotation = mod(rotation, 360);
+		_.rotation._ = mod(rotation, 360);
 		return _;
 	}
 
@@ -170,6 +183,87 @@ function Sprite(source)
 	this.centerOrigin = function()
 	{
 		_.setOrigin(source.width/2, source.height/2);
+		return _;
+	}
+
+	this.stopTweens = function()
+	{
+		_.x.stop();
+		_.y.stop();
+		_.scale.stop();
+		_.rotation.stop();
+		_.alpha.stop();
+		return _;
+	}
+}
+
+/**
+ * A solid-color Sprite variant which
+ * inherits Sprite's functionality
+ */
+function FillSprite(color, width, height)
+{
+	// Private:
+	var sprite = new Canvas().setSize(width, height);
+
+	/**
+	 * Create a [width] x [height] Canvas
+	 * and fill it with a solid [color]
+	 */
+	sprite.draw.rectangle(0, 0, width, height).fill(color);
+
+	/**
+	 * Treat [this] as an instance of Sprite
+	 */
+	Sprite.call(this, sprite.element);
+}
+
+/**
+ * An alpha-flickering effect for Sprites
+ */
+function Flicker()
+{
+	// Private:
+	var _ = this;
+	var owner = null;
+	var sprite;
+	var range =
+	{
+		alpha: {low: 0, high: 1},
+		time: {low: 0.5, high: 1.0}
+	};
+
+	// Public:
+	this.update = function(dt)
+	{
+		if (!sprite.alpha.isTweening())
+		{
+			// Start new flicker tween
+			sprite.alpha.tweenTo(
+				random(range.alpha.low, range.alpha.high),
+				random(range.time.low, range.time.high),
+				Ease.quad.inOut
+			);
+		}
+	}
+
+	this.onAdded = function(entity)
+	{
+		owner = entity;
+		sprite = owner.get(Sprite);
+	}
+
+	this.setAlphaRange = function(low, high)
+	{
+		range.alpha.low = low;
+		range.alpha.high = high;
+		return _;
+	}
+
+	this.setTimeRange = function(low, high)
+	{
+		range.time.low = low;
+		range.time.high = high;
 		return _;
 	}
 }
@@ -458,7 +552,7 @@ function Drone()
 	 */
 	function get_rotation_direction(angle)
 	{
-		var rotation = owner.get(Sprite).rotation;
+		var rotation = owner.get(Sprite).rotation._;
 
 		var high = Math.max(rotation, angle);
 		var low = Math.min(rotation, angle);
@@ -569,19 +663,19 @@ function Drone()
 			// Slow down spin to arrive at [angle]
 			stabilize_spin();
 
-			if (spin === 0 || get_rotation_distance(owner.get(Sprite).rotation, angle) < 1)
+			if (spin === 0 || get_rotation_distance(owner.get(Sprite).rotation._, angle) < 1)
 			{
 				// Done spinning!
 				spin = 0;
 				stabilizing = false;
-				owner.get(Sprite).rotation = angle;
+				owner.get(Sprite).rotation._ = angle;
 			}
 
 			return;
 		}
 
 		// Get rotational "distance" from [angle]
-		var distance = get_rotation_distance(owner.get(Sprite).rotation, angle);
+		var distance = get_rotation_distance(owner.get(Sprite).rotation._, angle);
 		// Determine spin direction of the shortest rotation to [angle]
 		var direction = get_rotation_direction(angle);
 
@@ -667,7 +761,7 @@ function Drone()
 				// Spin retrograde in preparation for slowdown
 				spin_to_angle(retrograde_angle, dt);
 
-				if (owner.get(Sprite).rotation === retrograde_angle)
+				if (owner.get(Sprite).rotation._ === retrograde_angle)
 				{
 					// [retrograde_angle] reached; advance docking phase
 					docking.phase = 2;
@@ -698,7 +792,7 @@ function Drone()
 
 				spin_to_angle(angle, dt);
 
-				if (owner.get(Sprite).rotation === angle)
+				if (owner.get(Sprite).rotation._ === angle)
 				{
 					// Alignment approach angle reached; give a small forward pulse
 					_.addVelocity(4*MAX_SPEED);
@@ -715,7 +809,7 @@ function Drone()
 			case 4:
 				spin_to_angle(retrograde_angle, dt);
 
-				if (owner.get(Sprite).rotation === retrograde_angle)
+				if (owner.get(Sprite).rotation._ === retrograde_angle)
 				{
 					// [retrograde_angle] reached; advance docking phase
 					docking.phase = 5;
@@ -746,7 +840,7 @@ function Drone()
 				}
 				else
 				{
-					if (owner.get(Sprite).rotation === get_docking_alignment_angle() && Math.abs(distance) > 30)
+					if (owner.get(Sprite).rotation._ === get_docking_alignment_angle() && Math.abs(distance) > 30)
 					{
 						// Overshot target; reset to phase 2
 						docking.phase = 2;
@@ -758,7 +852,7 @@ function Drone()
 			case 6:
 				spin_to_angle(docking.angle, dt);
 
-				if (owner.get(Sprite).rotation === docking.angle)
+				if (owner.get(Sprite).rotation._ === docking.angle)
 				{
 					// Give a small forward pulse
 					_.addVelocity(4*MAX_SPEED);
@@ -853,7 +947,7 @@ function Drone()
 		}
 
 		// Update drone Sprite rotation with new [spin] value
-		owner.get(Sprite).rotation += (spin * dt);
+		owner.get(Sprite).rotation._ += (spin * dt);
 		// Gradually reduce drone energy
 		consume_power(dt);
 		// Gradually reduce fuel during stabilization
@@ -904,7 +998,7 @@ function Drone()
 
 	this.addVelocity = function(amount)
 	{
-		var rotation = owner.get(Sprite).rotation;
+		var rotation = owner.get(Sprite).rotation._;
 		var x = Math.sin(rotation * Math.PI_RAD);
 		var y = Math.cos(rotation * Math.PI_RAD) * -1;
 

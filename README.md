@@ -23,6 +23,7 @@ A game about space station maintenance!
 * Replace jQuery with vanilla JS (?)
 
 ##### BACKGROUND
+* Try drawing both times to one canvas using globalAlpha for transitions
 * Rivers
 
 ##### CODE
