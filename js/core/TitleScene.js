@@ -11,7 +11,7 @@ function TitleScene(controller, assets)
 	var stage = new Entity();
 	var props = {};
 	var nova = {};
-	var stars = 0;
+	var star_counter = 0;
 	var slide = 1.5;
 
 	// --------------------------------------- //
@@ -23,7 +23,7 @@ function TitleScene(controller, assets)
 	 */
 	function create_star(type, x, y)
 	{
-		props['star' + (++stars)] = new Entity()
+		props['star' + (++star_counter)] = new Entity()
 			.add(
 				new Sprite(assets.getImage('title/star' + type + '.png'))
 					.setXY(x, y)
@@ -33,6 +33,55 @@ function TitleScene(controller, assets)
 					.setAlphaRange(0.5, 1.0)
 					.setTimeRange(0.2, 0.5)
 			);
+	}
+
+	/**
+	 * Introduces the game title with an animation
+	 */
+	function create_title()
+	{
+		// Sprite coordinates
+		var stars =
+		{
+			x: [150, 240, 300, 430, 505, 580, 660, 755, 835, 925, 1005],
+			y: [150, 270, 200, 240, 255, 200, 225, 190, 200, 250, 140],
+			type: ['1', '3', '2', '1', '2', '3', '2', '3', '1', '2', '1']
+		};
+
+		var logo =
+		{
+			x: [10, 182, 276, 354, 455, 548, 632, 724, 816, 900],
+			y: [0, 35, 35, 36, 35, 35, 37, 35, 37, 35],
+			characters: ['c', 'o', 's', 'm', 'o2', 'd', 'r', 'o3', 'n', 'e']
+		}
+
+		// Lay out twinkling stars
+		for (var t = 0 ; t < stars.x.length ; t++)
+		{
+			create_star(stars.type[t], stars.x[t], stars.y[t]);
+		}
+
+		// Set up a parent entity for the logo
+		props.logo = new Entity().add(new Sprite().setXY(95, 150));
+
+		// Add individual letters to the
+		// logo Entity and fade them in
+		for (var c = 0 ; c < logo.characters.length ; c++)
+		{
+			var character = logo.characters[c];
+			var file = 'title/letters/' + character + '.png';
+			var entity = new Entity().add(
+				new Sprite(assets.getImage(file))
+					.setXY(logo.x[c], logo.y[c])
+					.setAlpha(0)
+			);
+
+			entity.get(Sprite).alpha
+				.delay(0.5 + (c * 0.1))
+				.tweenTo(1, 1.5, Ease.quad.in);
+
+			props.logo.addChild(entity);
+		}
 	}
 
 	// -------------------------------------------- //
@@ -52,7 +101,7 @@ function TitleScene(controller, assets)
 		props.sky.get(Sprite).stopTweens().y.tweenTo(-1200 + viewport.height, slide, Ease.quad.inOut);
 		props.nova.get(Sprite).stopTweens().y.tweenTo(-50, slide, Ease.quad.inOut);
 		props.nova2.get(Sprite).stopTweens().y.tweenTo(-50, slide, Ease.quad.inOut);
-		props.stars.get(Sprite).stopTweens().alpha.tweenTo(0.5, slide, Ease.quad.in);
+		props.stars.get(Sprite).stopTweens().alpha.tweenTo(0.2, slide, Ease.quad.out);
 		props.ground.get(Sprite).stopTweens().y.tweenTo(viewport.height - 208, slide, Ease.quad.inOut);
 	}
 
@@ -66,11 +115,11 @@ function TitleScene(controller, assets)
 		props.nova.add(new Flicker().setAlphaRange(0.8, 1.0));
 		props.nova2.add(new Flicker().setAlphaRange(0.8, 1.0));
 
-		props.sky.get(Sprite).stopTweens().y.tweenTo(400, slide, Ease.quad.inOut);
+		props.sky.get(Sprite).stopTweens().y.tweenTo(viewport.height - 100, slide, Ease.quad.inOut);
 		props.nova.get(Sprite).stopTweens().y.tweenTo(0, slide, Ease.quad.inOut);
 		props.nova2.get(Sprite).stopTweens().y.tweenTo(0, slide, Ease.quad.inOut);
 		props.stars.get(Sprite).stopTweens().alpha.tweenTo(1.0, slide, Ease.quad.in);
-		props.ground.get(Sprite).stopTweens().y.tweenTo(viewport.height * 3, slide * 0.7, Ease.quad.inOut);
+		props.ground.get(Sprite).stopTweens().y.tweenTo(viewport.height * 2, slide, Ease.quad.inOut);
 	}
 
 	/**
@@ -163,13 +212,11 @@ function TitleScene(controller, assets)
 		);
 		props.stars = new Entity().add(
 			new Sprite(assets.getImage('title/starfield.png'))
-				.setAlpha(0.5)
+				.setAlpha(0.2)
 		);
 
-		// Twinkling stars
-		create_star('1', 120, 245);
-		create_star('2', 1000, 325);
-		create_star('3', 675, 40);
+		// Set up title introduction animation
+		create_title();
 
 		// Foreground layer
 		props.ground = new Entity().add(

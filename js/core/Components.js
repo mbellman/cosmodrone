@@ -1,11 +1,12 @@
 /**
  * A sprite to be rendered onto [screen.game]
  */
-function Sprite(source)
+function Sprite(_source)
 {
 	// Private:
 	var _ = this;
 	var owner = null;
+	var source = _source || null;
 	var parent_offset = {x: 0, y: 0};      // The offset of the owner's parent entity Sprite (updated internally)
 	var offset = {x: 0, y: 0};             // A persistent offset as specified via Sprite.setOffset(x, y)
 	var origin = {x: 0, y: 0};             // Origin point of the Sprite (for positioning, rotations, scaling, etc.)
@@ -47,13 +48,29 @@ function Sprite(source)
 	}
 
 	/**
+	 * Returns the Sprite's true alpha
+	 * as inherited by parent Sprites
+	 */
+	function get_proper_alpha()
+	{
+		if (owner.parent !== null && owner.parent.has(Sprite))
+		{
+			return _.alpha._ * owner.parent.get(Sprite).getProperAlpha();
+		}
+
+		return _.alpha._;
+	}
+
+	/**
 	 * Sets globalAlpha of [screen.game]
 	 */
 	function apply_alpha()
 	{
-		if (_.alpha._ < 1)
+		var alpha = get_proper_alpha();
+
+		if (alpha < 1)
 		{
-			screen.game.setAlpha(_.alpha._);
+			screen.game.setAlpha(alpha);
 		}
 	}
 
@@ -90,8 +107,16 @@ function Sprite(source)
 
 	this.update = function(dt)
 	{
+		// Handle property tweens and
+		// recalculate render coordinates
 		update_tweens(dt);
 		update_screen_coordinates();
+
+		if (source === null)
+		{
+			// No need to draw blank Sprites
+			return;
+		}
 
 		// Avoid drawing offscreen objects
 		if (render.x > viewport.width || render.x + source.width < 0) return;
@@ -117,7 +142,7 @@ function Sprite(source)
 	{
 		owner = entity;
 
-		if (!(source instanceof Image) && !(source instanceof HTMLCanvasElement))
+		if (source !== null && !(source instanceof Image) && !(source instanceof HTMLCanvasElement))
 		{
 			console.warn('Sprite: ' + source + ' is not an Image or HTMLCanvasElement object!');
 		}
@@ -129,6 +154,11 @@ function Sprite(source)
 			x: render.x,
 			y: render.y
 		};
+	}
+
+	this.getProperAlpha = function()
+	{
+		return get_proper_alpha();
 	}
 
 	this.getWidth = function()
@@ -377,8 +407,8 @@ function HardwarePart()
 				var sprite = owner.get(Sprite);
 
 				// Set the part coordinates as a sum of the two
-				x = sprite.x + position.x;
-				y = sprite.y + position.y;
+				x = sprite.x._ + position.x;
+				y = sprite.y._ + position.y;
 			}
 		}
 	}

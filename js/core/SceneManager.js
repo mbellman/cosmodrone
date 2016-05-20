@@ -127,8 +127,7 @@ function SceneManager()
 			if (!running)
 			{
 				// Start update cycle for the first time
-				running = true;
-				loop();
+				_.resume();
 			}
 		}
 

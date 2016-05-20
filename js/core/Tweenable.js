@@ -11,28 +11,27 @@ var Ease =
 	{
 		return t;
 	},
-    quad:
-    {
-        out: function(t)
-        {
-            return t * (2-t);
-        },
-        in: function(t)
-        {
-            t -= 1;
-            return 1 + t * (2+t);
-        },
-        inOut: function(t)
-        {
-            t *= 2;
-            t -= 1;
+	quad:
+	{
+		out: function(t)
+		{
+			return t * (2-t);
+		},
+		in: function(t)
+		{
+			return t * t;
+		},
+	    inOut: function(t)
+	    {
+	        t *= 2;
+	        t -= 1;
 
-            if(t < 0)
-                return  (1 + t * (2+t)) / 2;
-            else
-                return  (1 + t * (2-t)) / 2;
-        }
-    }
+	        if(t < 0)
+	            return  (1 + t * (2+t)) / 2;
+	        else
+	            return  (1 + t * (2-t)) / 2;
+	    }
+	}
 }
 
 /**

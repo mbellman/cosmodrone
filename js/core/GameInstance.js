@@ -228,7 +228,7 @@ function GameInstance(controller, assets)
 			}
 		});
 
-		if (minimum_distance < 150 && drone.get(Point).getAbsoluteVelocity() < 75)
+		if (minimum_distance < 150 && drone.get(Point).getAbsoluteVelocity() < 50)
 		{
 			drone.get(Drone).dockWith(entity);
 		}
