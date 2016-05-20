@@ -12,6 +12,7 @@ function Sprite(_source)
 	var origin = {x: 0, y: 0};             // Origin point of the Sprite (for positioning, rotations, scaling, etc.)
 	var render = {x: 0, y: 0};             // On-screen coordinates of the Sprite (updated internally)
 	var pivot;                             // Target Point for movement pivoting (motion opposite to)
+	var alpha = 1;                         // Proper Sprite alpha, influenced by parent Sprite alpha (update internally)
 
 	/**
 	 * Update all Tweenable instances
@@ -48,17 +49,18 @@ function Sprite(_source)
 	}
 
 	/**
-	 * Returns the Sprite's true alpha
-	 * as inherited by parent Sprites
+	 * Updates the Sprite's true [alpha]
+	 * as influenced by parent Sprites
 	 */
-	function get_proper_alpha()
+	function update_proper_alpha()
 	{
 		if (owner.parent !== null && owner.parent.has(Sprite))
 		{
-			return _.alpha._ * owner.parent.get(Sprite).getProperAlpha();
+			alpha = _.alpha._ * owner.parent.get(Sprite).getProperAlpha();
+			return;
 		}
 
-		return _.alpha._;
+		alpha = _.alpha._;
 	}
 
 	/**
@@ -66,8 +68,6 @@ function Sprite(_source)
 	 */
 	function apply_alpha()
 	{
-		var alpha = get_proper_alpha();
-
 		if (alpha < 1)
 		{
 			screen.game.setAlpha(alpha);
@@ -94,7 +94,7 @@ function Sprite(_source)
 	 */
 	function has_effects()
 	{
-		return (_.alpha._ < 1 || _.rotation._ != 0);
+		return (alpha < 1 || _.rotation._ != 0);
 	}
 
 	// Public:
@@ -108,13 +108,14 @@ function Sprite(_source)
 	this.update = function(dt)
 	{
 		// Handle property tweens and
-		// recalculate render coordinates
+		// recalculate [x, y] & [alpha]
 		update_tweens(dt);
 		update_screen_coordinates();
+		update_proper_alpha();
 
-		if (source === null)
+		if (source === null || alpha === 0)
 		{
-			// No need to draw blank Sprites
+			// No need to draw blank/invisible Sprites
 			return;
 		}
 
@@ -158,7 +159,7 @@ function Sprite(_source)
 
 	this.getProperAlpha = function()
 	{
-		return get_proper_alpha();
+		return alpha;
 	}
 
 	this.getWidth = function()
