@@ -35,4 +35,5 @@ A game about space station maintenance!
 * Base "Component" class inherited by all components
 * Why don't public functions have descriptions?
 * Continue skimming through and clarifying variable names/comments
+* Check to see if all comments are really necessary...
 * Background, Terrain, and HeightMap classes need some tidying

@@ -1,7 +1,6 @@
 (function(scope){
 	/**
-	 * Internal asynchronous script loader resource;
-	 * features progress/error/completion handlers
+	 * Script loader resource
 	 */
 	function IncludeManager(includes)
 	{
@@ -73,7 +72,7 @@
 	}
 
 	/**
-	 * Public script loader instance 'factory' function
+	 * Global script loader resource factory function
 	 */
 	function include(scripts)
 	{
