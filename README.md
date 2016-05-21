@@ -10,7 +10,6 @@ A game about space station maintenance!
 * Make sure hardware asset "light source" is adjusted based on the side of the module
 * Collisions/drone damage
 * Hardware/part maintenance interface
-* Text boxes/string printing
 * Components with update cycles/architecture for various hardware parts
 * Alerts screen with ability to select hardware maintenance jobs
 * Handler for drone running out of power/fuel

@@ -16,6 +16,7 @@ include(
 		'js/core/SceneManager.js',
 		'js/core/Controller.js',
 		'js/core/Tweenable.js',
+		'js/core/Text.js',
 		'js/core/Background.js',
 		'js/core/Station.js',
 		'js/core/LevelLoader.js',

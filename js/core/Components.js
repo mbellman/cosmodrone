@@ -179,6 +179,12 @@ function Sprite(_source)
 		return _;
 	}
 
+	this.setSource = function(_source)
+	{
+		source = _source;
+		return _;
+	}
+
 	this.setOrigin = function(x, y)
 	{
 		origin.x = x;
@@ -244,7 +250,7 @@ function FillSprite(color, width, height)
 	sprite.draw.rectangle(0, 0, width, height).fill(color);
 
 	/**
-	 * Treat [this] as an instance of Sprite
+	 * Inherit and become an instance of Sprite
 	 */
 	Sprite.call(this, sprite.element);
 }

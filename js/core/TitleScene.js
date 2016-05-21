@@ -54,7 +54,7 @@ function TitleScene(controller, assets)
 		}
 
 		// Set up a parent entity for the stars
-		props.starlogo = new Entity().add(new Sprite().setXY(95, 90));
+		props.starlogo = new Entity().add(new Sprite().setXY(90, 90));
 
 		// Lay out twinkling stars
 		for (var t = 0 ; t < stars.x.length ; t++)
@@ -65,7 +65,7 @@ function TitleScene(controller, assets)
 		}
 
 		// Set up a parent entity for the logo
-		props.logo = new Entity().add(new Sprite().setXY(95, 120));
+		props.logo = new Entity().add(new Sprite().setXY(90, 120));
 
 		// Add individual letters to the
 		// logo Entity and fade them in
@@ -80,7 +80,7 @@ function TitleScene(controller, assets)
 			);
 
 			entity.get(Sprite).alpha
-				.delay(0.5 + (c * 0.15))
+				.delay(0.75 + (c * 0.15))
 				.tweenTo(1, 1.5, Ease.quad.in);
 
 			props.logo.addChild(entity);
@@ -231,6 +231,16 @@ function TitleScene(controller, assets)
 		props.ground = new Entity().add(
 			new Sprite(assets.getImage('title/ground.png'))
 				.setXY(0, viewport.height - 208)
+		);
+
+		// Menu
+		props.string = new Entity().add(
+			new Sprite()
+				.setXY(200, 400)
+		)
+		.add(
+			new TextString('Monitor', assets.getImage('fonts/Monitor.png'))
+				.setString('Hello there! Testing this font...!')
 		);
 
 		// Add all props to [stage]
