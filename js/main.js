@@ -24,11 +24,10 @@ include(
 		'js/core/TitleScene.js',
 		'js/core/GameInstance.js'
 	]
-).then(main);
+).then( main );
 
 // Global variables
-var viewport =
-{
+var viewport = {
 	width: 1200,
 	height: 650
 };
@@ -40,7 +39,7 @@ var DEBUG;
  */
 function main()
 {
-	DEBUG = document.getElementById('debug');
+	DEBUG = document.getElementById( 'debug' );
 
 	createScreens();
 	centerGameStage();
@@ -59,10 +58,10 @@ function createScreens()
 	screen.clouds.element.style.zIndex = '3';
 
 	// Add background canvases to the document
-	$('#game #bg')
-		.append(screen.bg0.element)
-		.append(screen.bg1.element)
-		.append(screen.clouds.element);
+	$( '#game #bg' )
+		.append( screen.bg0.element )
+		.append( screen.bg1.element )
+		.append( screen.clouds.element );
 
 	// Primary game screen
 	screen.game = createScreen();
@@ -72,14 +71,14 @@ function createScreens()
 	screen.HUD = createScreen();
 	screen.HUD.element.style.zIndex = '3';
 
-	$('#game')
-		.append(screen.game.element)
-		.append(screen.HUD.element);
+	$( '#game' )
+		.append( screen.game.element )
+		.append( screen.HUD.element );
 
 	// Apply CSS to various screens
-	$('#game')
-		.find('canvas')
-		.addClass('fill');
+	$( '#game' )
+		.find( 'canvas' )
+		.addClass( 'fill' );
 }
 
 /**
@@ -87,11 +86,11 @@ function createScreens()
  */
 function centerGameStage()
 {
-	$('#game').css(
+	$( '#game' ).css(
 		{
 			'width': viewport.width + 'px',
 			'height': viewport.height + 'px',
-			'margin': -1 * viewport.height/2 + 'px 0 0 ' + -1 * viewport.width/2 + 'px'
+			'margin': ( -1 * viewport.height / 2 ) + 'px 0 0 ' + ( -1 * viewport.width / 2 ) + 'px'
 		}
 	);
 }
@@ -102,15 +101,13 @@ function centerGameStage()
 function loadGame()
 {
 	new AssetLoader()
-	.root('assets')
-	.load(AssetManifest)
-	.progress(function(percent)
-	{
-		console.log('Loading...' + percent + '%');
+	.root( 'assets' )
+	.load( AssetManifest )
+	.progress(function( percent ) {
+		console.log( 'Loading...' + percent + '%' );
 	})
-	.then(function(assets)
-	{
-		var controller = new Controller(assets);
+	.then(function( assets ) {
+		var controller = new Controller( assets );
 		controller.showTitle();
 	});
 }
@@ -120,5 +117,5 @@ function loadGame()
  */
 function createScreen()
 {
-	return new Canvas().setSize(viewport.width, viewport.height);
+	return new Canvas().setSize( viewport.width, viewport.height );
 }

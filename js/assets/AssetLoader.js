@@ -1,10 +1,10 @@
-(function(scope){
+(function( scope ) {
 	/**
 	 * Instance of an image or audio asset
 	 */
-	function Asset(type)
+	function Asset( type )
 	{
-		// Private:
+		// -- Private: --
 		var _ = this;
 		var loaded = false;
 		var onComplete = function(){};
@@ -14,7 +14,7 @@
 		 */
 		function create_media()
 		{
-			switch (type)
+			switch ( type )
 			{
 				case 'image':
 					return new Image();
@@ -26,14 +26,13 @@
 		}
 
 		/**
-		 * Check to see if the asset
-		 * has already failed to load
+		 * Check to see if the asset has already failed to load
 		 */
 		function check_fail_state()
 		{
 			return (
-				(_.type === 'image' && _.media.complete && _.media.naturalWidth === 0) ||
-				(_.type === 'audio' && _.media.error !== null)
+				( _.type === 'image' && _.media.complete && _.media.naturalWidth === 0 ) ||
+				( _.type === 'audio' && _.media.error !== null )
 			);
 		}
 
@@ -43,31 +42,37 @@
 		function load_complete()
 		{
 			loaded = true;
-			onComplete(_);
+			onComplete( _ );
 		}
 
-		// Public:
+		// -- Public: --
 		this.path;
 		this.type = type;
 		this.media = create_media();
 
-		this.from = function(_path)
+		/**
+		 * Set file [path]
+		 */
+		this.from = function( path )
 		{
-			if (!loaded)
+			if ( !loaded )
 			{
-				_.path = _path;
+				_.path = path;
 			}
 
 			return _;
 		}
 
-		this.load = function(callback)
+		/**
+		 * Set file load handler
+		 */
+		this.loaded = function( callback )
 		{
-			if (!loaded)
+			if ( !loaded )
 			{
 				onComplete = callback;
 
-				var loadEvent = (_.type === 'image' ? 'onload' : 'oncanplay');
+				var loadEvent = ( _.type === 'image' ? 'onload' : 'oncanplay' );
 				_.media[loadEvent] = load_complete;
 				_.media.src = _.path;
 			}
@@ -75,17 +80,20 @@
 			return _;
 		}
 
-		this.fail = function(callback)
+		/**
+		 * Set file load failure handler
+		 */
+		this.fail = function( callback )
 		{
-			if (check_fail_state())
+			if ( check_fail_state() )
 			{
-				callback(_.path);
+				callback( _.path );
 				return _;
 			}
 
 			_.media.onerror = function()
 			{
-				callback(_.path);
+				callback( _.path );
 			}
 
 			return _;
@@ -96,19 +104,17 @@
 	 * Instance of a loaded asset library,
 	 * used to retrieve assets during game
 	 */
-	function AssetManager(_root)
+	function AssetManager( _root )
 	{
-		// Private:
+		// -- Private: --
 		var _ = this;
 		var locked = false;
-		var root =
-		{
+		var root = {
 			base: _root,
 			images: '',
 			audio: ''
 		};
-		var data =
-		{
+		var data = {
 			image: {},
 			audio: {}
 		};
@@ -116,16 +122,19 @@
 		/**
 		 * Warns of an unavailable asset listing
 		 */
-		function asset_error(path, file)
+		function asset_error( path, file )
 		{
-			console.warn('Asset error: ' + (root.base + path + file));
+			console.warn( 'Asset error: ' + ( root.base + path + file ) );
 			return null;
 		}
 
-		// Public:
-		this.path = function(type, folder)
+		// -- Public: --
+		/**
+		 * Set media [type] directory to [folder]
+		 */
+		this.path = function( type, folder )
 		{
-			if (!locked && typeof root.hasOwnProperty(type))
+			if ( !locked && typeof root.hasOwnProperty( type ) )
 			{
 				root[type] = folder + '/';
 			}
@@ -133,9 +142,12 @@
 			return _;
 		}
 
-		this.store = function(asset)
+		/**
+		 * Save Asset [asset] to [data] bank
+		 */
+		this.store = function( asset )
 		{
-			if (!locked)
+			if ( !locked )
 			{
 				data[asset.type][asset.path] = asset;
 			}
@@ -143,30 +155,39 @@
 			return _;
 		}
 
-		this.getImage = function(file)
+		/**
+		 * Retrieve an image Asset by [file] name
+		 */
+		this.getImage = function( file )
 		{
 			try
 			{
 				return data.image[root.base + root.images + file].media;
 			}
-			catch(e)
+			catch( e )
 			{
-				return asset_error(root.images, file);
+				return asset_error( root.images, file );
 			}
 		}
 
-		this.getAudio = function(file)
+		/**
+		 * Retrieve an audio Asset by [file] name
+		 */
+		this.getAudio = function( file )
 		{
 			try
 			{
 				return data.audio[root.base + root.audio + file].media;
 			}
-			catch(e)
+			catch( e )
 			{
-				return asset_error(root.audio, file);
+				return asset_error( root.audio, file );
 			}
 		}
 
+		/**
+		 * Lock [data] bank from further writing
+		 */
 		this.lock = function()
 		{
 			locked = true;
@@ -181,7 +202,7 @@
 	 */
 	function AssetLoader()
 	{
-		// Private:
+		// -- Private: --
 		var _ = this;
 		var root = '';
 		var assets;
@@ -198,66 +219,89 @@
 			var images = assets.images.files || [];
 			var audio = assets.audio.files || [];
 			var _root = './' + root + '/';
-			var asset_manager = new AssetManager(_root).path('images', assets.images.folder).path('audio', assets.audio.folder);
 			var asset_count = images.length + audio.length;
 			var loaded = 0;
+
+			var asset_manager = new AssetManager( _root )
+				.path( 'images', assets.images.folder )
+				.path( 'audio', assets.audio.folder );
 
 			/**
 			 * Temporary asset load handler callback
 			 */
-			function INTERNAL_load_progress(asset)
+			function INTERNAL_load_progress( asset )
 			{
-				asset_manager.store(asset);
-				onProgress(Math.round(100 * (++loaded / asset_count)));
+				asset_manager.store( asset );
+				onProgress( Math.round( 100 * ( ++loaded / asset_count ) ) );
 
 				if (loaded >= asset_count)
 				{
 					asset_manager.lock();
-					onComplete(asset_manager);
+					onComplete( asset_manager );
 				}
 			}
 
-			images.forEach(function(file)
-			{
-				var asset = new Asset('image').from(_root + assets.images.folder + '/' + file).load(INTERNAL_load_progress).fail(onError);
+			images.forEach(function( file ) {
+				new Asset( 'image' )
+					.from( _root + assets.images.folder + '/' + file )
+					.loaded( INTERNAL_load_progress )
+					.fail( onError );
 			});
 
-			audio.forEach(function(file)
-			{
-				var asset = new Asset('audio').from(_root + assets.audio.folder + '/' + file).load(INTERNAL_load_progress).fail(onError);
+			audio.forEach(function( file ) {
+				new Asset( 'audio' )
+					.from( _root + assets.audio.folder + '/' + file )
+					.loaded( INTERNAL_load_progress )
+					.fail( onError );
 			});
 		}
 
-		// Public:
-		this.root = function(_root)
+		// -- Public: --
+		/**
+		 * Set [root] assets directory
+		 */
+		this.root = function( _root )
 		{
 			root = _root;
 			return _;
 		}
 
-		this.load = function(_assets)
+		/**
+		 * Save an Asset Manifest list to [assets]
+		 */
+		this.load = function( _assets )
 		{
 			assets = _assets;
 			return _;
 		}
 
-		this.progress = function(callback)
+		/**
+		 * Set the asset load progress handler
+		 */
+		this.progress = function( callback )
 		{
 			onProgress = callback || onProgress;
 			return _;
 		}
 
-		this.catch = function(callback)
+		/**
+		 * Set the asset load failure handler
+		 */
+		this.catch = function( callback )
 		{
 			onError = callback || onError;
 			return _;
 		}
 
-		this.then = function(callback) {
+		/**
+		 * Set the asset list load completion
+		 * handler, and trigger the asset loader
+		 */
+		this.then = function( callback ) {
 			onComplete = callback || onComplete;
 			load_assets();
 		}
 	}
 
 	scope.AssetLoader = AssetLoader;
-})(window);
+})( window );

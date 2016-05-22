@@ -1,13 +1,12 @@
 /**
  * Active Game object
  */
-function GameInstance(controller, assets)
+function GameInstance( controller, assets )
 {
-	// Private:
+	// -- Private: --
 	var _ = this;
 
 	var owner = null;
-	var active = false;
 	var running = true;
 	var initialized = false;
 	var level = 1;
@@ -30,24 +29,23 @@ function GameInstance(controller, assets)
 	/**
 	 * Update stats every 3 frames
 	 */
-	function DEBUG_show_stats(dt)
+	function DEBUG_show_stats( dt )
 	{
-		if (++DEBUG_stats_cycle > 2)
+		if ( ++DEBUG_stats_cycle > 2 )
 		{
 			DEBUG_stats_cycle = 0;
 
-			var dt_ratio = (1/60) / dt;
-			var fps = Math.round(60 * dt_ratio);
-			var player = drone.get(Point).getPosition(true);
+			var dt_ratio = ( 1/60 ) / dt;
+			var fps = Math.round( 60 * dt_ratio );
+			var player = drone.get( Point ).getPosition( true );
 
-			var data =
-			[
+			var data = [
 				viewport.width + ' x ' + viewport.height,
 				fps + 'fps, ' + dt,
 				'X: ' + player.x + ', Y:' + player.y
 			];
 
-			DEBUG.innerHTML = data.join('<br />');
+			DEBUG.innerHTML = data.join( '<br />' );
 		}
 	}
 
@@ -56,7 +54,7 @@ function GameInstance(controller, assets)
 	 */
 	function DEBUG_update()
 	{
-		drone.get(Drone).restoreEnergy();
+		drone.get( Drone ).restoreEnergy();
 	}
 
 	// ------------------------------------------ //
@@ -71,50 +69,51 @@ function GameInstance(controller, assets)
 		var t = Date.now();
 
 		// Halt loop during generation/prerendering
-		_.stop();
+		_.pause();
 		// Safeguard for re-generating a new
 		// background if an older one exists
 		destroy_background();
 
 		// Generate the new background
-		background = new Entity().add(new Background(assets)
-			.configure(
-				{
-					iterations: 11,
-					elevation: 250,
-					concentration: 35,
-					smoothness: 8,
-					repeat: true,
-					cities: 200,
-					maxCitySize: 30,
-					tileSize: 2,
-					lightAngle: 220,
-					hours: [12, 19, 20, 0, 4, 6],
-					cycleSpeed: 60000,
-					scrollSpeed:
+		background = new Entity().add(
+			new Background( assets )
+				.configure(
 					{
-						x: -10,
-						y: -2
-					},
-					pixelSnapping: false
-				}
-			)
-			.build(
-				{
-					progress: function(rendered, total)
-					{
-						console.log('Rendering...' + rendered + '/' + total + '...');
-					},
-					complete: function()
-					{
-						console.log('Total init time: ' + (Date.now() - t) + 'ms');
-						init_complete();
+						iterations: 11,
+						elevation: 250,
+						concentration: 35,
+						smoothness: 8,
+						repeat: true,
+						cities: 200,
+						maxCitySize: 30,
+						tileSize: 2,
+						lightAngle: 220,
+						hours: [12, 19, 20, 0, 4, 6],
+						cycleSpeed: 60000,
+						scrollSpeed:
+						{
+							x: -10,
+							y: -2
+						},
+						pixelSnapping: false
 					}
-				}
-			)
+				)
+				.build(
+					{
+						progress: function( rendered, total )
+						{
+							console.log('Rendering...' + rendered + '/' + total + '...');
+						},
+						complete: function()
+						{
+							console.log('Total init time: ' + ( Date.now() - t ) + 'ms');
+							init_complete();
+						}
+					}
+				)
 		);
 
-		stage.addChild(background);
+		stage.addChild( background );
 	}
 
 	/**
@@ -123,9 +122,9 @@ function GameInstance(controller, assets)
 	 */
 	function destroy_background()
 	{
-		if (background !== null && typeof background !== 'undefined')
+		if ( background !== null && typeof background !== 'undefined' )
 		{
-			background.get(Background).unload();
+			background.get( Background ).stop();
 			background = null;
 		}
 	}
@@ -136,18 +135,20 @@ function GameInstance(controller, assets)
 	function load_level()
 	{
 		// Construct level layout
-		var entities = new LevelLoader(assets)
-			.buildLevel(level)
+		var entities = new LevelLoader( assets )
+			.buildLevel( level )
 			.getEntities();
 
 		// Add level entities (station modules) to [stage]
-		for (var e = 0 ; e < entities.length ; e++)
+		for ( var e = 0 ; e < entities.length ; e++ )
 		{
 			var module = entities[e];
-			module.get(Sprite)
-				.setOffset(viewport.width/2, viewport.height/2)
-				.setPivot(camera.get(Point));
-			stage.addChild(module);
+
+			module.get( Sprite )
+				.setOffset( viewport.width / 2, viewport.height / 2 )
+				.setPivot( camera.get( Point ) );
+
+			stage.addChild( module );
 		}
 	}
 
@@ -164,29 +165,29 @@ function GameInstance(controller, assets)
 		bind_input_handlers();
 
 		// Instantiate camera
-		camera = new Entity().add(new Point());
+		camera = new Entity().add( new Point() );
 		// Instantiate player drone
 		drone = new Entity()
-			.add(new Drone())
-			.add(new Point())
+			.add( new Drone() )
+			.add( new Point() )
 			.add(
-				new Sprite(assets.getImage('game/drone/drone.png'))
-					.setOffset(viewport.width/2, viewport.height/2)
-					.setPivot(camera.get(Point))
+				new Sprite( assets.getImage( 'game/drone/drone.png' ) )
+					.setOffset( viewport.width / 2, viewport.height / 2 )
+					.setPivot( camera.get( Point ) )
 					.centerOrigin()
 			);
 		// Store drone speed value
-		speed = drone.get(Drone).getMaxSpeed();
+		speed = drone.get( Drone ).getMaxSpeed();
 
 		// Build level structure
 		load_level();
 
 		// Add camera + player entities last
-		stage.addChild(camera);
-		stage.addChild(drone);
+		stage.addChild( camera );
+		stage.addChild( drone );
 
 		// Set up HUD
-		hud = new HUD(assets);
+		hud = new HUD( assets );
 
 		// Set initial camera position and start game loop
 		update_camera();
@@ -203,34 +204,33 @@ function GameInstance(controller, assets)
 	 */
 	function enter_docking_mode()
 	{
-		var player = drone.get(Point).getPosition();
+		var player = drone.get( Point ).getPosition();
 		var minimum_distance = Number.POSITIVE_INFINITY;
 		var position, distance, entity;
 
 		// Get center point of player
-		player.x += drone.get(Sprite).getWidth()/2;
-		player.y += drone.get(Sprite).getHeight()/2;
+		player.x += drone.get( Sprite ).getWidth() / 2;
+		player.y += drone.get( Sprite ).getHeight() / 2;
 
-		stage.forAllComponentsOfType(HardwarePart, function(part)
-		{
+		stage.forAllComponentsOfType( HardwarePart, function( part ) {
 			// Get center point of part
 			position = part.getPosition();
-			position.x += part.getSpecs().width/2;
-			position.y += part.getSpecs().height/2;
+			position.x += part.getSpecs().width / 2;
+			position.y += part.getSpecs().height / 2;
 
 			// Get and compare distances
-			distance = Vec2.distance(player.x, player.y, position.x, position.y);
+			distance = Vec2.distance( player.x, player.y, position.x, position.y );
 
-			if (distance < minimum_distance)
+			if ( distance < minimum_distance )
 			{
 				entity = part.getOwner();
 				minimum_distance = distance;
 			}
 		});
 
-		if (minimum_distance < 150 && drone.get(Point).getAbsoluteVelocity() < 50)
+		if ( minimum_distance < 150 && drone.get( Point ).getAbsoluteVelocity() < 50 )
 		{
-			drone.get(Drone).dockWith(entity);
+			drone.get( Drone ).dockWith( entity );
 		}
 	}
 
@@ -241,23 +241,23 @@ function GameInstance(controller, assets)
 	/**
 	 * Continually listen for held keys
 	 */
-	function poll_input(dt)
+	function poll_input( dt )
 	{
-		if (drone.get(Drone).isControllable())
+		if ( drone.get( Drone ).isControllable() )
 		{
-			if (keys.holding('UP'))
+			if ( keys.holding( 'UP' ) )
 			{
-				drone.get(Drone).consumeFuel(3*dt).addVelocity(speed);
+				drone.get( Drone ).consumeFuel( 3 * dt ).addVelocity( speed );
 			}
 
-			if (keys.holding('LEFT'))
+			if ( keys.holding( 'LEFT' ) )
 			{
-				drone.get(Drone).consumeFuel(2*dt).addSpin(-speed);
+				drone.get( Drone ).consumeFuel( 2 * dt ).addSpin( -speed );
 			}
 
-			if (keys.holding('RIGHT'))
+			if ( keys.holding( 'RIGHT' ) )
 			{
-				drone.get(Drone).consumeFuel(2*dt).addSpin(speed);
+				drone.get( Drone ).consumeFuel( 2 * dt ).addSpin( speed );
 			}
 		}
 	}
@@ -268,21 +268,19 @@ function GameInstance(controller, assets)
 	function bind_input_handlers()
 	{
 		// Spin stabilization
-		input.on('S', function()
-		{
-			drone.get(Drone).stabilize();
+		input.on( 'S', function() {
+			drone.get( Drone ).stabilize();
 		});
 
 		// Docking mode
-		input.on('D', function()
-		{
-			if (!drone.get(Drone).isDocking())
+		input.on( 'D', function() {
+			if ( !drone.get( Drone ).isDocking() )
 			{
 				enter_docking_mode();
 			}
 			else
 			{
-				drone.get(Drone).abortDocking();
+				drone.get( Drone ).abortDocking();
 			}
 		});
 	}
@@ -296,12 +294,12 @@ function GameInstance(controller, assets)
 	 */
 	function update_camera()
 	{
-		var view = camera.get(Point).getPosition();
-		var player = drone.get(Point).getPosition();
+		var view = camera.get( Point ).getPosition();
+		var player = drone.get( Point ).getPosition();
 
-		camera.get(Point).setPosition(
-			lerp(view.x, player.x, 0.075),
-			lerp(view.y, player.y, 0.075)
+		camera.get( Point ).setPosition(
+			lerp( view.x, player.x, 0.075 ),
+			lerp( view.y, player.y, 0.075 )
 		);
 	}
 
@@ -314,60 +312,67 @@ function GameInstance(controller, assets)
 		hud.clear();
 
 		// Update the drone system stats HUD
-		hud.updateDroneStats(drone.get(Drone));
+		hud.updateDroneStats( drone.get( Drone ) );
 	}
 
 	// Public:
-	this.update = function(dt)
+	this.update = function( dt )
 	{
-		if (active)
+		if ( initialized && running )
 		{
-			if (running && initialized)
-			{
-				poll_input(dt);
-				update_camera();
-				update_HUD();
+			poll_input( dt );
+			update_camera();
+			update_HUD();
 
-				if (DEBUG_MODE)
-				{
-					DEBUG_show_stats(dt);
-					DEBUG_update();
-				}
+			if ( DEBUG_MODE )
+			{
+				DEBUG_show_stats( dt );
+				DEBUG_update();
 			}
 		}
 	}
 
-	this.onAdded = function(entity)
+	this.onAdded = function( entity )
 	{
 		owner = entity;
-		owner.addChild(stage);
+		owner.addChild( stage );
 	}
 
-	this.setLevel = function(_level)
+	/**
+	 * Configure the game level
+	 */
+	this.setLevel = function( _level )
 	{
 		level = _level;
 		return _;
 	}
 
+	/**
+	 * Load game instance
+	 */
 	this.init = function()
 	{
 		// Stop requestAnimationFrame() in the
 		// SceneManager loop from causing script
 		// hangs in tandem with level generation
 		controller.scenes.pause();
+
 		// Safeguard for calling init()
 		// again on a loaded instance
 		_.unload();
+
 		add_background();
 		return _;
 	}
 
+	/**
+	 * Start/resume game
+	 */
 	this.start = function()
 	{
-		if (initialized)
+		if ( initialized )
 		{
-			if (!active) active = true;
-			if (!running) running = true;
+			if ( !running ) running = true;
 
 			// Restart SceneManager loop
 			controller.scenes.resume();
@@ -376,24 +381,23 @@ function GameInstance(controller, assets)
 		return _;
 	}
 
+	/**
+	 * Pause game
+	 */
 	this.pause = function()
 	{
 		running = false;
 		return _;
 	}
 
-	this.stop = function()
-	{
-		active = false;
-		return _;
-	}
-
+	/**
+	 * Stop game and dereference objects for garbage collection
+	 */
 	this.unload = function()
 	{
 		// Halt loop and destroy Background instance
 		initialized = false;
 		_.pause();
-		_.stop();
 		destroy_background();
 
 		// Reset game objects
@@ -406,14 +410,20 @@ function GameInstance(controller, assets)
 		return _;
 	}
 
+	/**
+	 * Check to see whether the game is loaded
+	 */
 	this.isLoaded = function()
 	{
 		return initialized;
 	}
 
-	this.debug = function(state)
+	/**
+	 * Set debug mode
+	 */
+	this.debug = function( bool )
 	{
-		DEBUG_MODE = state;
+		DEBUG_MODE = bool;
 		return _;
 	}
 }

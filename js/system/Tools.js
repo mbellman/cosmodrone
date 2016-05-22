@@ -4,9 +4,9 @@ Math.RAD_PI = 180 / Math.PI;
 /**
  * RNG between two limits
  */
-function random(low, high)
+function random( low, high )
 {
-	return low + Math.floor(Math.random() * (high - low + 1));
+	return low + Math.floor( Math.random() * ( high - low + 1 ) );
 }
 
 /**
@@ -14,7 +14,7 @@ function random(low, high)
  */
 function chance()
 {
-	return (Math.random() < 0.5);
+	return ( Math.random() < 0.5 );
 }
 
 /**
@@ -22,24 +22,24 @@ function chance()
  */
 function pick_random()
 {
-	var pick = random(0, arguments.length-1);
+	var pick = random( 0, arguments.length - 1 );
 	return arguments[pick];
 }
 
 /**
  * Negative-friendly modulus operation
  */
-function mod(n, m)
+function mod( n, m )
 {
-	return ((n%m)+m)%m;
+	return ( ( n % m ) + m ) % m;
 }
 
 /**
  * Keep a value within a certain range
  */
-function clamp(value, min, max)
+function clamp( value, min, max )
 {
-	return (value > max ? max : (value < min ? min : value));
+	return ( value > max ? max : ( value < min ? min : value ) );
 }
 
 /**
@@ -50,9 +50,9 @@ function minimum()
 	var min = Number.POSITIVE_INFINITY;
 	var len = arguments.length;
 
-	for (var n = 0 ; n < len ; n++)
+	for ( var n = 0 ; n < len ; n++ )
 	{
-		if (arguments[n] < min)
+		if ( arguments[n] < min )
 		{
 			min = arguments[n];
 		}
@@ -64,23 +64,23 @@ function minimum()
 /**
  * Linear interpolation between two values
  */
-function lerp(value1, value2, factor)
+function lerp( value1, value2, factor )
 {
-	return value1 + (value2 - value1) * factor;
+	return value1 + ( value2 - value1 ) * factor;
 }
 
 /**
  * Determines whether a number is in between two others
  */
-function is_in_between(value, low, high)
+function is_in_between( value, low, high )
 {
-	return (value > low && value < high);
+	return ( value > low && value < high );
 }
 
 /**
  * Returns 0 if 1 and vice versa
  */
-function bit_flip(bit)
+function bit_flip( bit )
 {
 	return !bit ? 1 : 0;
 }
@@ -88,31 +88,31 @@ function bit_flip(bit)
 /**
  * Cycles a smaller-than-zero value back to max
  */
-function cycle_forward(value, max)
+function cycle_forward( value, max )
 {
-	return (value < 0 ? max : value);
+	return ( value < 0 ? max : value );
 }
 
 /**
  * Cycles a larger-than-max value back to 0
  */
-function cycle_back(value, max)
+function cycle_back( value, max )
 {
-	return (value > max ? 0 : value);
+	return ( value > max ? 0 : value );
 }
 
 /**
  * Return formatted RGB string from three color parts
  */
-function rgb(r, g, b)
+function rgb( r, g, b )
 {
-	return 'rgb('+r+','+g+','+b+')';
+	return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
 
 /**
  * Shorthand for element creation + manipulation
  */
-function Element(type)
+function Element( type )
 {
-	return document.createElement(type);
+	return document.createElement( type );
 }

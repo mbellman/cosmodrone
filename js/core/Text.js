@@ -1,11 +1,9 @@
-(function( scope ){
+(function( scope ) {
 	/**
 	 * Bitmap font clipping/placement coordinates
 	 */
-	var Fonts =
-	{
-		Monitor:
-		{
+	var Fonts = {
+		Monitor: {
 			// Capital letters
 			'A': {x: 0, y: 0, width: 16, height: 22, top: 0},
 			'B': {x: 20, y: 0, width: 16, height: 22, top: 0},
@@ -102,20 +100,21 @@
 	{
 		var clip = Fonts[font][character];
 
-		if ( typeof clip === 'undefined' ) {
+		if ( typeof clip === 'undefined' )
+		{
 			return null;
 		}
 
-		return Fonts[font][character];
+		return clip;
 	}
 
 	/**
 	 * Component which updates the owner's Sprite with
-	 * a printed string of characters as a Canvas element
+	 * a printed string of characters on a Canvas element
 	 */
 	function TextString( _font, _source )
 	{
-		// Private:
+		// -- Private: --
 		var _ = this;
 		var owner = null;
 		var source = _source;
@@ -138,7 +137,8 @@
 		 */
 		function process_instruction( instruction )
 		{
-			switch ( instruction ) {
+			switch ( instruction )
+			{
 				// Space
 				case ' ':
 					offset.x += space_size;
@@ -161,17 +161,19 @@
 			var char_height = offset.y + clip.height + clip.top;
 			offset.x += ( clip.width + letter_spacing );
 
-			if (offset.x > size.width) {
+			if (offset.x > size.width)
+			{
 				size.width = offset.x;
 			}
 
-			if (char_height > size.height) {
+			if (char_height > size.height)
+			{
 				size.height = char_height;
 			}
 		}
 
 		/**
-		 * Print clipped character to [render] Canvas
+		 * Print clipped character to [render] Canvas at [offset]
 		 */
 		function print_character( clip )
 		{
@@ -191,10 +193,12 @@
 		{
 			// Check for any special print
 			// instructions at this character
-			for ( var i = 0 ; i < instructions.length ; i++ ) {
+			for ( var i = 0 ; i < instructions.length ; i++ )
+			{
 				var instruction = instructions[i];
 
-				if ( string.substr( buffer, instruction.length ) === instruction ) {
+				if ( string.substr( buffer, instruction.length ) === instruction )
+				{
 					process_instruction( instruction );
 					return;
 				}
@@ -203,15 +207,19 @@
 			// Normal character
 			var clip = get_character_clipping( font, string.charAt( buffer++ ) );
 
-			if ( clip === null ) {
+			if ( clip === null )
+			{
 				// Invalid character
 				return;
 			}
 
-			if ( !is_printing ) {
+			if ( !is_printing )
+			{
 				// Only determine the new Canvas area
 				update_canvas_size( clip );
-			} else {
+			}
+			else
+			{
 				print_character( clip );
 			}
 		}
@@ -227,7 +235,8 @@
 			offset.y = 0;
 			buffer = 0;
 
-			while ( buffer < string.length ) {
+			while ( buffer < string.length )
+			{
 				feed_character( is_printing );
 			}
 		}
@@ -252,23 +261,28 @@
 		{
 			feed_string( true );
 
-			if ( owner !== null && owner.has( Sprite ) ) {
+			if ( owner !== null && owner.has( Sprite ) )
+			{
 				owner.get( Sprite ).setSource( render.element );
 			}
 		}
 
-		// Public:
+		// -- Public: --
 		this.update = function( dt ){}
 
 		this.onAdded = function( entity )
 		{
 			owner = entity;
 
-			if ( owner.has( Sprite ) ) {
+			if ( owner.has( Sprite ) )
+			{
 				owner.get( Sprite ).setSource( render.element );
 			}
 		}
 
+		/**
+		 * Change the [font] name and [source] asset
+		 */
 		this.setFont = function( _font, _source )
 		{
 			font = _font;
@@ -277,6 +291,9 @@
 			return _;
 		}
 
+		/**
+		 * Update the text [string]
+		 */
 		this.setString = function( _string )
 		{
 			string = _string;
@@ -285,6 +302,9 @@
 			return _;
 		}
 
+		/**
+		 * Change text style [properties]
+		 */
 		this.set = function( properties )
 		{
 			line_height = properties.lineHeight || 30;

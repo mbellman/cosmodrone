@@ -3,15 +3,15 @@
  */
 function RNG()
 {
-	// Private:
+	// -- Private: --
 	var _ = this;
-	var seed = hash_code(Date.now());
+	var seed = hash_code( Date.now() );
 
 	/**
 	 * Converts any string or number into a pseudo-random
 	 * value from the interval [0, 9007199254740991)
 	 */
-	function hash_code(value)
+	function hash_code( value )
 	{
 		value = value.toString();
 
@@ -22,11 +22,11 @@ function RNG()
 
 		// Build a list of the input's character codes
 		// and sum up the values with a minimum of 1
-		for (var c = 0 ; c < len; c++)
+		for ( var c = 0 ; c < len; c++ )
 		{
-			var v = value.charCodeAt(c);
+			var v = value.charCodeAt( c );
 			code[c] = v;
-			sum += (v+1);
+			sum += ( v + 1 );
 		}
 
 		// Square the character code sum for obfuscation
@@ -34,10 +34,10 @@ function RNG()
 		
 		// Crunch numbers on the sum a little bit and
 		// append the value, as a string, to [output]
-		for (var c = 0 ; c < len ; c++)
+		for ( var c = 0 ; c < len ; c++ )
 		{
 			var v = code[c];
-			output += ((sum % v) ^ v) % v;
+			output += ( ( sum % v ) ^ v ) % v;
 		}
 
 		return output % Number.MAX_SAFE_INTEGER;
@@ -53,9 +53,9 @@ function RNG()
 	 * and chaotic enough that it can be used to facilitate
 	 * a convincing range of outcomes and variations.
 	 */
-	function rehash_number(value)
+	function rehash_number( value )
 	{
-		return (value * 9999) % Number.MAX_SAFE_INTEGER;
+		return ( value * 9999 ) % Number.MAX_SAFE_INTEGER;
 	}
 
 	/**
@@ -64,24 +64,30 @@ function RNG()
 	 */
 	function prng()
 	{
-		seed = rehash_number(seed);
+		seed = rehash_number( seed );
 		return seed / Number.MAX_SAFE_INTEGER;
 	}
 
-	// Public:
-	this.seed = function(_seed)
+	// -- Public: --
+	/**
+	 * Set the PRNG seed
+	 */
+	this.seed = function( _seed )
 	{
-		seed = hash_code(_seed);
+		seed = hash_code( _seed );
 		return _;
 	}
 
-	this.random = function(low, high)
+	/**
+	 * Obtain a random value from the PRNG
+	 */
+	this.random = function( low, high )
 	{
-		if (arguments.length < 2)
+		if ( arguments.length < 2 )
 		{
 			return prng();
 		}
 
-		return low + Math.floor(prng() * (high - low + 1));
+		return low + Math.floor( prng() * ( high - low + 1 ) );
 	}
 }

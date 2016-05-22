@@ -1,4 +1,4 @@
-(function(scope){
+(function( scope ) {
 	// ------------------------------------------ //
 	// ------------- CHAINING TOOLS ------------- //
 	// ------------------------------------------ //
@@ -11,7 +11,7 @@
 	 * Provides chainable methods for
 	 * Canvas shape drawing operations
 	 */
-	function Shape(ctx)
+	function Shape( ctx )
 	{
 		this.ctx = ctx;
 	}
@@ -19,9 +19,9 @@
 	/**
 	 * Set Canvas context fill color and perform fill
 	 */
-	Shape.prototype.fill = function(color)
+	Shape.prototype.fill = function( color )
 	{
-		if (color !== null)
+		if ( color !== null )
 		{
 			this.ctx.fillStyle = color;
 		}
@@ -34,14 +34,14 @@
 	 * Set Canvas context stroke color/
 	 * line thickness and perform stroke
 	 */
-	Shape.prototype.stroke = function(color, thickness)
+	Shape.prototype.stroke = function( color, thickness )
 	{
-		if (color !== null)
+		if ( color !== null )
 		{
 			this.ctx.strokeStyle = color;
 		}
 
-		if (!isNaN(thickness))
+		if ( !isNaN( thickness ) )
 		{
 			this.ctx.lineWidth = thickness;
 		}
@@ -58,7 +58,7 @@
 	 * Instance which provides a subcategory
 	 * of specific shape/image draw operations
 	 */
-	function DrawOperation(ctx)
+	function DrawOperation( ctx )
 	{
 		this.ctx = ctx;
 	}
@@ -66,45 +66,45 @@
 	/**
 	 * Draw a circle
 	 */
-	DrawOperation.prototype.circle = function(x, y, radius)
+	DrawOperation.prototype.circle = function( x, y, radius )
 	{
 		this.ctx.beginPath();
-		this.ctx.arc(x, y, radius, 0, 2 * Math.PI);
-		return new Shape(this.ctx);
+		this.ctx.arc( x, y, radius, 0, 2 * Math.PI );
+		return new Shape( this.ctx );
 	}
 
 	/**
 	 * Draw a rectangle
 	 */
-	DrawOperation.prototype.rectangle = function(x, y, width, height)
+	DrawOperation.prototype.rectangle = function( x, y, width, height )
 	{
 		this.ctx.beginPath();
-		this.ctx.rect(x, y, width, height);
-		return new Shape(this.ctx);
+		this.ctx.rect( x, y, width, height );
+		return new Shape( this.ctx );
 	}
 
 	/**
 	 * Draw an image to the Canvas
 	 */
-	DrawOperation.prototype.image = function(source, x1, y1, width1, height1, x2, y2, width2, height2)
+	DrawOperation.prototype.image = function( source, x1, y1, width1, height1, x2, y2, width2, height2 )
 	{
-		if (typeof x1 === 'undefined')
+		if ( typeof x1 === 'undefined' )
 		{
 			// Draw the source at the top left of the Canvas
-			this.ctx.drawImage(source, 0, 0);
+			this.ctx.drawImage( source, 0, 0 );
 		}
 		else
-		if (typeof width1 === 'undefined')
+		if ( typeof width1 === 'undefined' )
 		{
 			// Draw the source at a specific [x, y] coordinate
-			this.ctx.drawImage(source, x1, y1);
+			this.ctx.drawImage( source, x1, y1 );
 		}
 		else
-		if (typeof x2 === 'undefined')
+		if ( typeof x2 === 'undefined' )
 		{
 			// Draw the source at a specific [x,y] coordinate
 			// scaled to custom dimensions per [width1] & [height1]
-			this.ctx.drawImage(source, x1, y1, width1, height1);
+			this.ctx.drawImage( source, x1, y1, width1, height1 );
 		}
 		else
 		{
@@ -118,7 +118,7 @@
 			// [y2]: draw Y
 			// [width2]: draw width
 			// [height2]: draw height
-			this.ctx.drawImage(source, x1, y1, width1, height1, x2, y2, width2, height2);
+			this.ctx.drawImage( source, x1, y1, width1, height1, x2, y2, width2, height2 );
 		}
 	}
 
@@ -130,7 +130,7 @@
 	 * Instance which provides a subcategory
 	 * of pixel data manipulation operations
 	 */
-	function PixelDataOperation(ctx, element)
+	function PixelDataOperation( ctx, element )
 	{
 		this.ctx = ctx;
 		this.element = element;
@@ -139,33 +139,33 @@
 	/**
 	 * Create an empty pixel buffer from [ctx]
 	 */
-	PixelDataOperation.prototype.create = function(width, height)
+	PixelDataOperation.prototype.create = function( width, height )
 	{
 		width = width || this.element.width;
 		height = height || this.element.height;
-		return this.ctx.createImageData(width, height);
+		return this.ctx.createImageData( width, height );
 	}
 
 	/**
 	 * Return the pixel buffer for this [ctx]
 	 */
-	PixelDataOperation.prototype.get = function(x, y, width, height)
+	PixelDataOperation.prototype.get = function( x, y, width, height )
 	{
 		x = x || 0;
 		y = y || 0;
 		width = width || this.element.width;
 		height = height || this.element.height;
-		return this.ctx.getImageData(x, y, width, height);
+		return this.ctx.getImageData( x, y, width, height );
 	}
 
 	/**
 	 * Place data back into the pixel buffer
 	 */
-	PixelDataOperation.prototype.put = function(data, x, y)
+	PixelDataOperation.prototype.put = function( data, x, y )
 	{
 		x = x || 0;
 		y = y || 0;
-		this.ctx.putImageData(data, x, y);
+		this.ctx.putImageData( data, x, y );
 	}
 
 	// ----------------------------------------------------- //
@@ -176,50 +176,42 @@
 	 * A simple vector/raster graphics toolset for HTML5
 	 * Canvas. Preexisting DOM canvas argument optional.
 	 */
-	function Canvas(element)
+	function Canvas( element )
 	{
-		// Private:
+		// -- Private: --
 		var _ = this;
 
-		// Public:
-		this.element = element || document.createElement('canvas');
-		this.ctx = this.element.getContext('2d');
+		// -- Public: --
+		this.element = element || document.createElement( 'canvas' );
+		this.ctx = this.element.getContext( '2d' );
 
 		/**
 		 * Draw shapes/images/etc.
 		 */
-		this.draw =
-		{
-			circle: function(x, y, radius)
-			{
-				return new DrawOperation(_.ctx).circle(x, y, radius);
+		this.draw = {
+			circle: function( x, y, radius ) {
+				return new DrawOperation( _.ctx ).circle( x, y, radius );
 			},
-			rectangle: function(x, y, width, height)
-			{
-				return new DrawOperation(_.ctx).rectangle(x, y, width, height);
+			rectangle: function( x, y, width, height ) {
+				return new DrawOperation( _.ctx ).rectangle( x, y, width, height );
 			},
-			image: function(source, x1, y1, width1, height1, x2, y2, width2, height2)
-			{
-				return new DrawOperation(_.ctx).image(source, x1, y1, width1, height1, x2, y2, width2, height2);
+			image: function( source, x1, y1, width1, height1, x2, y2, width2, height2 ) {
+				return new DrawOperation( _.ctx ).image( source, x1, y1, width1, height1, x2, y2, width2, height2 );
 			}
 		};
 
 		/**
 		 * Pixel data manipulation handlers
 		 */
-		this.data =
-		{
-			create: function(width, height)
-			{
-				return new PixelDataOperation(_.ctx, _.element).create(width, height);
+		this.data = {
+			create: function( width, height ) {
+				return new PixelDataOperation( _.ctx, _.element ).create( width, height );
 			},
-			get: function(x, y, width, height)
-			{
-				return new PixelDataOperation(_.ctx, _.element).get(x, y, width, height);
+			get: function( x, y, width, height ) {
+				return new PixelDataOperation( _.ctx, _.element ).get( x, y, width, height );
 			},
-			put: function(data, x, y)
-			{
-				return new PixelDataOperation(_.ctx, _.element).put(data, x, y);
+			put: function( data, x, y ) {
+				return new PixelDataOperation( _.ctx, _.element ).put( data, x, y );
 			}
 		};
 	}
@@ -227,14 +219,14 @@
 	/**
 	 * Pixel region clearing
 	 */
-	Canvas.prototype.clear = function(x, y, width, height)
+	Canvas.prototype.clear = function( x, y, width, height )
 	{
 		x = x || 0;
 		y = y || 0;
 		width = width || this.element.width;
 		height = height || this.element.height;
 
-		this.ctx.clearRect(x, y, width, height);
+		this.ctx.clearRect( x, y, width, height );
 
 		return this;
 	}
@@ -242,12 +234,12 @@
 	/**
 	 * Scale up Canvas image data without interpolation
 	 */
-	Canvas.prototype.scale = function(scalar)
+	Canvas.prototype.scale = function( scalar )
 	{
 		// Only scale by whole number values
-		scalar = Math.round(scalar);
+		scalar = Math.round( scalar );
 
-		if (scalar < 2)
+		if ( scalar < 2 )
 		{
 			// Return self if not scaling at all
 			return this;
@@ -257,51 +249,50 @@
 		// version back into pixel buffer
 		var width = this.element.width;
 		var height = this.element.height;
-		var clone = new Canvas().setSize(width, height);
-		clone.draw.image(this.element);
-		var copy = clone.data.get();
+		var clone = new Canvas().setSize( width, height );
 
-		// Prepare data for rewriting
-		this.setSize(scalar * width, scalar * height);
+		clone.draw.image( this.element );
+		this.setSize( scalar * width, scalar * height );
+
+		var copy = clone.data.get();
 		var self = this.data.get();
 
 		// Iterate over original image data
-		for (var y = 0 ; y < height ; y++)
+		for ( var y = 0 ; y < height ; y++ )
 		{
-			for (var x = 0 ; x < width ; x++)
+			for ( var x = 0 ; x < width ; x++ )
 			{
 				// Source pixel for this coordinate
-				var pixel = 4 * (y*width + x);
+				var pixel = 4 * ( y * width + x );
 				
-				var color =
-				{
+				var color = {
 					red: copy.data[pixel],
-					green: copy.data[pixel+1],
-					blue: copy.data[pixel+2],
-					alpha: copy.data[pixel+3]
+					green: copy.data[pixel + 1],
+					blue: copy.data[pixel + 2],
+					alpha: copy.data[pixel + 3]
 				};
 
 				// Offset for equivalent scaled canvas pixel
-				var scaled_pixel = 4 * (y*scalar*scalar*width + x*scalar);
+				var scaled_pixel = 4 * ( y * scalar * scalar * width + x * scalar );
 
-				for (var py = 0 ; py < scalar ; py++)
+				for ( var py = 0 ; py < scalar ; py++ )
 				{
-					for (var px = 0 ; px < scalar ; px++)
+					for ( var px = 0 ; px < scalar ; px++ )
 					{
 						// Target pixel in scaled data array
-						var _pixel = scaled_pixel + 4*px + 4*py*scalar*width;
-						// Write color data
+						var _pixel = scaled_pixel + 4 * px + 4 * ( py * scalar * width );
+
 						self.data[_pixel] = color.red;
-						self.data[_pixel+1] = color.green;
-						self.data[_pixel+2] = color.blue;
-						self.data[_pixel+3] = color.alpha;
+						self.data[_pixel + 1] = color.green;
+						self.data[_pixel + 2] = color.blue;
+						self.data[_pixel + 3] = color.alpha;
 					}
 				}
 			}
 		}
 
 		// Write scaled data back into self
-		this.data.put(self);
+		this.data.put( self );
 
 		return this;
 	}
@@ -320,7 +311,7 @@
 	/**
 	 * Change Canvas dimensions
 	 */
-	Canvas.prototype.setSize = function(width, height)
+	Canvas.prototype.setSize = function( width, height )
 	{
 		this.element.width = width;
 		this.element.height = height;
@@ -330,7 +321,7 @@
 	/**
 	 * Set global Canvas compositing mode
 	 */
-	Canvas.prototype.setCompositing = function(type)
+	Canvas.prototype.setCompositing = function( type )
 	{
 		this.ctx.globalCompositeOperation = type;
 		return this;
@@ -339,7 +330,7 @@
 	/**
 	 * Set global Canvas rendering alpha
 	 */
-	Canvas.prototype.setAlpha = function(alpha)
+	Canvas.prototype.setAlpha = function( alpha )
 	{
 		this.ctx.globalAlpha = alpha;
 		return this;
@@ -348,18 +339,18 @@
 	/**
 	 * Translate Canvas origin to [x, y]
 	 */
-	Canvas.prototype.translate = function(x, y)
+	Canvas.prototype.translate = function( x, y )
 	{
-		this.ctx.translate(x, y);
+		this.ctx.translate( x, y );
 		return this;
 	}
 
 	/**
 	 * Set Canvas rendering rotation angle in [radians]
 	 */
-	Canvas.prototype.rotate = function(radians)
+	Canvas.prototype.rotate = function( radians )
 	{
-		this.ctx.rotate(radians);
+		this.ctx.rotate( radians );
 		return this;
 	}
 
@@ -383,4 +374,4 @@
 	}
 
 	scope.Canvas = Canvas;
-})(window);
+})( window );

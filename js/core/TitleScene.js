@@ -55,9 +55,10 @@ function TitleScene( controller, assets )
 		props.starlogo = new Entity().add( new Sprite().setXY( 90, 90 ) );
 
 		// Lay out twinkling stars
-		for ( var t = 0 ; t < stars.x.length ; t++ ) {
+		for ( var t = 0 ; t < stars.x.length ; t++ )
+		{
 			props.starlogo.addChild(
-				create_star(stars.type[t], stars.x[t], stars.y[t])
+				create_star( stars.type[t], stars.x[t], stars.y[t] )
 			);
 		}
 
@@ -65,7 +66,8 @@ function TitleScene( controller, assets )
 		props.logo = new Entity().add( new Sprite().setXY( 90, 120 ) );
 
 		// Add individual letters to the logo Entity and fade them in
-		for (var c = 0 ; c < logo.characters.length ; c++) {
+		for ( var c = 0 ; c < logo.characters.length ; c++ )
+		{
 			var character = logo.characters[c];
 			var entity = new Entity().add(
 				new Sprite( assets.getImage( 'title/letters/' + character + '.png' ) )
@@ -139,7 +141,8 @@ function TitleScene( controller, assets )
 
 	function input_UP()
 	{
-		switch ( menu ) {
+		switch ( menu )
+		{
 			// Main title scene
 			case 1:
 				view_level_select();
@@ -155,7 +158,8 @@ function TitleScene( controller, assets )
 
 	function input_DOWN()
 	{
-		switch ( menu ) {
+		switch ( menu )
+		{
 			// Main title scene
 			case 1:
 				break;
@@ -236,8 +240,10 @@ function TitleScene( controller, assets )
 		);
 
 		// Add all props to [stage]
-		for ( var p in props ) {
-			if ( props.hasOwnProperty(p) ) {
+		for ( var p in props )
+		{
+			if ( props.hasOwnProperty(p) )
+			{
 				stage.addChild( props[p] );
 			}
 		}

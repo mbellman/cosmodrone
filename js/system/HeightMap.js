@@ -3,7 +3,7 @@
  */
 function HeightMap()
 {
-	// Private:
+	// -- Private: --
 	var _ = this;
 	var Generator = new RNG();                  // Deterministic PRNG
 	var settings = default_settings();          // Store default settings
@@ -37,11 +37,11 @@ function HeightMap()
 	 */
 	function normalize_settings()
 	{
-		settings.iterations = clamp(settings.iterations, 1, 12);
-		settings.concentration = clamp(settings.concentration, 0, 100);
-		settings.smoothness = clamp(settings.smoothness, 1, 20);
-		settings.erosion = clamp(settings.erosion, 0, 10);
-		settings.repeat = (typeof settings.repeat === 'boolean' ? settings.repeat : false);
+		settings.iterations = clamp( settings.iterations, 1, 12 );
+		settings.concentration = clamp( settings.concentration, 0, 100 );
+		settings.smoothness = clamp( settings.smoothness, 1, 20 );
+		settings.erosion = clamp( settings.erosion, 0, 10 );
+		settings.repeat = ( typeof settings.repeat === 'boolean' ? settings.repeat : false );
 	}
 
 	/**
@@ -58,12 +58,12 @@ function HeightMap()
 	/**
 	 * Grab a point at coordinate [y, x]; wraps out-of-bounds coordinates
 	 */
-	function get_point(y, x)
+	function get_point( y, x )
 	{
-		if (y < 0) y = 0;
-		if (y > map.length-1) y = map.length-1;
-		if (x < 0) x = 0;
-		if (x > map.length-1) x = map.length-1;
+		if ( y < 0 ) y = 0;
+		if ( y > map.length - 1 ) y = map.length - 1;
+		if ( x < 0 ) x = 0;
+		if ( x > map.length - 1 ) x = map.length - 1;
 
 		return map[y][x];
 	}
@@ -73,46 +73,46 @@ function HeightMap()
 	 * for null-only values is specified as not to overwrite
 	 * the initially generated random edges for tileable maps.
 	 */
-	function set_point(y, x, value)
+	function set_point( y, x, value )
 	{
-		if (map[y][x] === null)
+		if ( map[y][x] === null )
 		{
-			map[y][x] = clamp(value, 0, settings.elevation);
+			map[y][x] = clamp( value, 0, settings.elevation );
 		}
 	}
 
 	/**
 	 * Retrieve elevation values for four adjacent tiles to a point
 	 */
-	function get_adjacents(y, x)
+	function get_adjacents( y, x )
 	{
 		return {
-			top: get_point(y-1, x),
-			right: get_point(y, x+1),
-			bottom: get_point(y+1, x),
-			left: get_point(y, x-1)
+			top: get_point( y - 1, x ),
+			right: get_point( y, x + 1 ),
+			bottom: get_point( y + 1, x ),
+			left: get_point( y, x - 1 )
 		};
 	}
 
 	/**
 	 * Returns the average of an array of numbers
 	 */
-	function average(set)
+	function average( set )
 	{
 		var sum = 0, i = 0;
 
-		while (typeof set[i] !== 'undefined')
+		while ( typeof set[i] !== 'undefined' )
 		{
-			if (set[i] === null)
+			if ( set[i] === null )
 			{
-				set.splice(i, 1);
+				set.splice( i, 1 );
 				continue;
 			}
 
 			sum += set[i++];
 		}
 
-		return Math.round(sum / set.length);
+		return Math.round( sum / set.length );
 	}
 
 	/**
@@ -120,14 +120,14 @@ function HeightMap()
 	 * from a central point [point] where each corner
 	 * is [unit] tiles away along the x and y axes
 	 */
-	function corners(point, unit)
+	function corners( point, unit )
 	{
 		return average(
 			[
-				get_point(point.y - unit, point.x - unit),
-				get_point(point.y - unit, point.x + unit),
-				get_point(point.y + unit, point.x - unit),
-				get_point(point.y + unit, point.x + unit)
+				get_point( point.y - unit, point.x - unit ),
+				get_point( point.y - unit, point.x + unit ),
+				get_point( point.y + unit, point.x - unit ),
+				get_point( point.y + unit, point.x + unit )
 			]
 		);
 	}
@@ -136,14 +136,14 @@ function HeightMap()
 	 * Returns the average elevation of four adjacents
 	 * next to a central point [unit] tiles away
 	 */
-	function adjacents(point, unit)
+	function adjacents( point, unit )
 	{
 		return average(
 			[
-				get_point(point.y, point.x - unit),
-				get_point(point.y, point.x + unit),
-				get_point(point.y - unit, point.x),
-				get_point(point.y + unit, point.x)
+				get_point( point.y, point.x - unit ),
+				get_point( point.y, point.x + unit ),
+				get_point( point.y - unit, point.x ),
+				get_point( point.y + unit, point.x )
 			]
 		);
 	}
@@ -155,8 +155,15 @@ function HeightMap()
 	 */
 	function sample()
 	{
-		var value = mean + Math.round((Generator.random(0,1) === 1 ? -r3()*height_skew : r3()*height_skew));
-		return clamp(value, 0, settings.elevation);
+		var term = Math.round(
+			( Generator.random( 0, 1 ) === 1 ) ?
+				-1 * r3() * height_skew
+			:
+				r3() * height_skew
+		);
+		var value = mean + term;
+
+		return clamp( value, 0, settings.elevation );
 	}
 
 	/**
@@ -164,22 +171,22 @@ function HeightMap()
 	 * taking the 'smoothness' parameter and magnitude, which
 	 * tapers off with fractal iterations, into account
 	 */
-	function offset(magnitude)
+	function offset( magnitude )
 	{
-		magnitude = (magnitude < 1 ? 1 : magnitude);
-		return Math.round(Generator.random(-8, 8) * settings.smoothness / magnitude);
+		magnitude = ( magnitude < 1 ? 1 : magnitude );
+		return Math.round( Generator.random( -8, 8 ) * settings.smoothness / magnitude );
 	}
 
 	/**
 	 * Returns a blank map array
 	 */
-	function empty_map(size)
+	function empty_map( size )
 	{
-		var set = new Array(size);
-		for (var i = 0 ; i < size ; i++)
+		var set = new Array( size );
+		for ( var i = 0 ; i < size ; i++ )
 		{
-			set[i] = new Array(size);
-			for (var j = 0 ; j < size ; j++)
+			set[i] = new Array( size );
+			for ( var j = 0 ; j < size ; j++ )
 			{
 				set[i][j] = null;
 			}
@@ -191,25 +198,25 @@ function HeightMap()
 	/**
 	 * Returns a randomly generated 2D elevation line
 	 */
-	function random_line(start_height)
+	function random_line( start_height )
 	{
-		var line = new Array(Math.pow(2, settings.iterations) + 1);
+		var line = new Array( Math.pow( 2, settings.iterations ) + 1 );
 		line[0] = start_height;
 		line[line.length - 1] = start_height;
 
-		for (var step = 1 ; step <= settings.iterations ; step++)
+		for ( var step = 1 ; step <= settings.iterations ; step++ )
 		{
-			var unit = Math.pow(2, (settings.iterations-step));
+			var unit = Math.pow( 2, ( settings.iterations - step ) );
 			var unit2 = unit * 2;
-			var points = Math.pow(2, (step-1));
+			var points = Math.pow( 2, ( step - 1 ) );
 
-			for (var p = 0 ; p < points ; p++)
+			for ( var p = 0 ; p < points ; p++ )
 			{
 				var point = unit + unit2*p;
 				var left = line[point - unit];
 				var right = line[point + unit];
 
-				line[point] = average([left, right]) + offset(step);
+				line[point] = average( [left, right] ) + offset( step );
 			}
 		}
 
@@ -221,29 +228,29 @@ function HeightMap()
 	 * sides of the map and 'stitches' them to the
 	 * opposite ends with slight height adjustments
 	 */
-	function wrap_edges(corner_height)
+	function wrap_edges( corner_height )
 	{
-		var top_line = random_line(corner_height);
-		var left_line = random_line(corner_height);
+		var top_line = random_line( corner_height );
+		var left_line = random_line( corner_height );
 		var size = map.length;
 
-		for (var p = 0 ; p < top_line.length ; p++)
+		for ( var p = 0 ; p < top_line.length ; p++ )
 		{
-			set_point(0, p, top_line[p]);
-			set_point(size-1, p, top_line[p] + offset(settings.iterations-1));
+			set_point( 0, p, top_line[p] );
+			set_point( size-1, p, top_line[p] + offset( settings.iterations - 1 ) );
 		}
 
-		for (var p = 0 ; p < left_line.length ; p++)
+		for ( var p = 0 ; p < left_line.length ; p++ )
 		{
-			set_point(p, 0, left_line[p]);
-			set_point(p, size-1, left_line[p] + offset(settings.iterations-1));
+			set_point( p, 0, left_line[p] );
+			set_point( p, size - 1, left_line[p] + offset( settings.iterations - 1 ) );
 		}
 	}
 
 	/**
 	 * Instance of a single tile's data, with chainable methods
 	 */
-	function Tile(y, x, value)
+	function Tile( y, x, value )
 	{
 		// Private:
 		var _ = this;
@@ -253,36 +260,42 @@ function HeightMap()
 		this.y = y;
 		this.value = value;
 
-		this.justAbove = function(limit)
+		this.justAbove = function( limit )
 		{
-			var neighbor = get_adjacents(_.y, _.x);
-			return (_.value > limit && (neighbor.top <= limit || neighbor.right <= limit || neighbor.bottom <= limit || neighbor.left <= limit));
+			var neighbor = get_adjacents( _.y, _.x );
+			return (
+				_.value > limit &&
+				( neighbor.top <= limit || neighbor.right <= limit || neighbor.bottom <= limit || neighbor.left <= limit )
+			);
 		}
 
-		this.justBelow = function(limit)
+		this.justBelow = function( limit )
 		{
-			var neighbor = get_adjacents(_.y, _.x);
-			return (_.value < limit && (neighbor.top >= limit || neighbor.right >= limit || neighbor.bottom >= limit || neighbor.left >= limit));
+			var neighbor = get_adjacents( _.y, _.x );
+			return (
+				_.value < limit &&
+				( neighbor.top >= limit || neighbor.right >= limit || neighbor.bottom >= limit || neighbor.left >= limit )
+			);
 		}
 	}
 
-	// Public:
-	this.seed = function(_seed)
+	// -- Public: --
+	this.seed = function( _seed )
 	{
-		Generator.seed(_seed);
+		Generator.seed( _seed );
 		return _;
 	}
 
-	this.generate = function(_settings)
+	this.generate = function( _settings )
 	{
 		// Determine/bound new parameters
 		_settings = _settings || {};
 
-		for (var key in _settings)
+		for ( var key in _settings )
 		{
-			if (_settings.hasOwnProperty(key) && key !== 'repeat')
+			if ( _settings.hasOwnProperty( key ) && key !== 'repeat' )
 			{
-				settings[key] = isNaN(_settings[key]) ? settings[key] : _settings[key];
+				settings[key] = ( isNaN( _settings[key] ) ? settings[key] : _settings[key] );
 			}
 		}
 
@@ -290,66 +303,66 @@ function HeightMap()
 		normalize_settings();
 
 		// Start heightmap generation
-		var size = Math.pow(2, settings.iterations) + 1;
+		var size = Math.pow( 2, settings.iterations ) + 1;
 
-		mean = Math.round(settings.elevation * (settings.concentration / 100));
-		height_skew = Math.max(mean, settings.elevation - mean);
-		map = empty_map(size);
+		mean = Math.round( settings.elevation * ( settings.concentration / 100 ) );
+		height_skew = Math.max( mean, settings.elevation - mean );
+		map = empty_map( size );
 
-		if (settings.repeat)
+		if ( settings.repeat )
 		{
-			wrap_edges(sample());
+			wrap_edges( sample() );
 		}
 		else
 		{
-			set_point(0, 0, sample());
-			set_point(0, size-1, sample());
-			set_point(size-1, 0, sample());
-			set_point(size-1, size-1, sample());
+			set_point( 0, 0, sample() );
+			set_point( 0, size - 1, sample() );
+			set_point( size - 1, 0, sample() );
+			set_point( size - 1, size - 1, sample() );
 		}
 
-		for (var step = 1 ; step <= settings.iterations ; step++)
+		for ( var step = 1 ; step <= settings.iterations ; step++ )
 		{
 			// Get subdivided tile size for this iteration
-			var unit = Math.pow(2, (settings.iterations-step));
-			var unit2 = 2*unit;
-			var tiles = Math.pow(2, (step-1));
+			var unit = Math.pow( 2, ( settings.iterations - step ) );
+			var unit2 = 2 * unit;
+			var tiles = Math.pow( 2, ( step - 1 ) );
 
 			// Diamond (center elevation)
-			for (var y = 0 ; y < tiles ; y++)
+			for ( var y = 0 ; y < tiles ; y++ )
 			{
-				for (var x = 0 ; x < tiles ; x++)
+				for ( var x = 0 ; x < tiles ; x++ )
 				{
-					var center = {y: unit + unit2*y, x: unit + unit2*x};
-					var centerheight = corners(center, unit) + (step === settings.iterations ? 0 : offset(step));
+					var center = {y: unit + unit2 * y, x: unit + unit2 * x};
+					var center_height = corners( center, unit ) + ( step === settings.iterations ? 0 : offset( step ) );
 
-					if (Generator.random() < 0.75 && step < Math.max(settings.iterations-5, 4))
+					if ( Generator.random() < 0.75 && step < Math.max( settings.iterations - 5, 4 ) )
 					{
 						// Try and force certain tiles toward the mean
-						centerheight = sample();
+						center_height = sample();
 					}
 
-					set_point(center.y, center.x, centerheight);
+					set_point( center.y, center.x, center_height );
 				}
 			}
 
 			// Square (sides' elevation)
-			for (var y = 0 ; y < tiles ; y++)
+			for ( var y = 0 ; y < tiles ; y++ )
 			{
-				for (var x = 0 ; x < tiles ; x++)
+				for ( var x = 0 ; x < tiles ; x++ )
 				{
-					var center = {y: unit + unit2*y, x: unit + unit2*x};
+					var center = {y: unit + unit2 * y, x: unit + unit2 * x};
 					var top = {y: center.y - unit, x: center.x};
 					var right = {y: center.y, x: center.x + unit};
 					var bottom = {y: center.y + unit, x: center.x};
 					var left = {y: center.y, x: center.x - unit};
 
-					var _offset = (step === settings.iterations ? 0 : offset(step));
+					var _offset = ( step === settings.iterations ? 0 : offset( step ) );
 
-					set_point(top.y, top.x, adjacents(top, unit) + _offset);
-					set_point(right.y, right.x, adjacents(right, unit) + _offset);
-					set_point(bottom.y, bottom.x, adjacents(bottom, unit) + _offset);
-					set_point(left.y, left.x, adjacents(left, unit) + _offset);
+					set_point( top.y, top.x, adjacents( top, unit ) + _offset );
+					set_point( right.y, right.x, adjacents( right, unit ) + _offset );
+					set_point( bottom.y, bottom.x, adjacents( bottom, unit ) + _offset );
+					set_point( left.y, left.x, adjacents( left, unit ) + _offset );
 				}
 			}
 		}
@@ -357,24 +370,24 @@ function HeightMap()
 		return _;
 	}
 
-	this.scan = function(handler, yrange, xrange)
+	this.scan = function( handler, yrange, xrange )
 	{
 		var size = map.length;
 		xrange = xrange || {start: 0, end: size};
 		yrange = yrange || {start: 0, end: size};
 
-		for (var y = yrange.start ; y < yrange.end ; y++)
+		for ( var y = yrange.start ; y < yrange.end ; y++ )
 		{
-			for (var x = xrange.start ; x < xrange.end ; x++)
+			for ( var x = xrange.start ; x < xrange.end ; x++ )
 			{
-				handler(y, x, get_point(y, x));
+				handler( y, x, get_point( y, x ) );
 			}
 		}
 
 		return _;
 	}
 
-	this.changeTile = function(y, x, height)
+	this.changeTile = function( y, x, height )
 	{
 		map[y][x] = height;
 	}
@@ -384,9 +397,9 @@ function HeightMap()
 		return map;
 	}
 
-	this.tile = function(y, x)
+	this.tile = function( y, x )
 	{
-		return new Tile(y, x, get_point(y,x));
+		return new Tile( y, x, get_point( y, x ) );
 	}
 
 	this.getSize = function()

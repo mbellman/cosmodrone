@@ -1,9 +1,9 @@
 /**
  * A sprite to be rendered onto [screen.game]
  */
-function Sprite(_source)
+function Sprite( _source )
 {
-	// Private:
+	// -- Private: --
 	var _ = this;
 	var owner = null;
 	var source = _source || null;
@@ -17,13 +17,13 @@ function Sprite(_source)
 	/**
 	 * Update all Tweenable instances
 	 */
-	function update_tweens(dt)
+	function update_tweens( dt )
 	{
-		_.x.update(dt);
-		_.y.update(dt);
-		_.scale.update(dt);
-		_.rotation.update(dt);
-		_.alpha.update(dt);
+		_.x.update( dt );
+		_.y.update( dt );
+		_.scale.update( dt );
+		_.rotation.update( dt );
+		_.alpha.update( dt );
 	}
 
 	/**
@@ -32,19 +32,19 @@ function Sprite(_source)
 	function update_screen_coordinates()
 	{
 		// Update info on owner's parent entity Sprite offset
-		if (owner.parent !== null && owner.parent.has(Sprite))
+		if ( owner.parent !== null && owner.parent.has( Sprite ) )
 		{
-			parent_offset = owner.parent.get(Sprite).getScreenCoordinates();
+			parent_offset = owner.parent.get( Sprite ).getScreenCoordinates();
 		}
 
 		// Update screen coordinates
-		render.x = _.x._ - (!!pivot ? pivot.getPosition().x : 0) + parent_offset.x + offset.x - origin.x;
-		render.y = _.y._ - (!!pivot ? pivot.getPosition().y : 0) + parent_offset.y + offset.y - origin.y;
+		render.x = _.x._ - ( !!pivot ? pivot.getPosition().x : 0 ) + parent_offset.x + offset.x - origin.x;
+		render.y = _.y._ - ( !!pivot ? pivot.getPosition().y : 0 ) + parent_offset.y + offset.y - origin.y;
 
-		if (_.snap)
+		if ( _.snap )
 		{
-			render.x = Math.floor(render.x);
-			render.y = Math.floor(render.y);
+			render.x = Math.floor( render.x );
+			render.y = Math.floor( render.y );
 		}
 	}
 
@@ -54,9 +54,9 @@ function Sprite(_source)
 	 */
 	function update_proper_alpha()
 	{
-		if (owner.parent !== null && owner.parent.has(Sprite))
+		if ( owner.parent !== null && owner.parent.has( Sprite ) )
 		{
-			alpha = _.alpha._ * owner.parent.get(Sprite).getProperAlpha();
+			alpha = _.alpha._ * owner.parent.get( Sprite ).getProperAlpha();
 			return;
 		}
 
@@ -68,9 +68,9 @@ function Sprite(_source)
 	 */
 	function apply_alpha()
 	{
-		if (alpha < 1)
+		if ( alpha < 1 )
 		{
-			screen.game.setAlpha(alpha);
+			screen.game.setAlpha( alpha );
 		}
 	}
 
@@ -79,13 +79,13 @@ function Sprite(_source)
 	 */
 	function apply_rotation()
 	{
-		_.rotation._ = mod(_.rotation._, 360);
+		_.rotation._ = mod( _.rotation._, 360 );
 
-		if (_.rotation._ > 0)
+		if ( _.rotation._ > 0 )
 		{
 			screen.game
-				.translate(render.x + origin.x, render.y + origin.y)
-				.rotate(_.rotation._ * Math.PI_RAD);
+				.translate( render.x + origin.x, render.y + origin.y )
+				.rotate( _.rotation._ * Math.PI_RAD );
 		}
 	}
 
@@ -94,22 +94,20 @@ function Sprite(_source)
 	 */
 	function has_effects()
 	{
-		return (alpha < 1 || _.rotation._ != 0);
+		return ( alpha < 1 || _.rotation._ != 0 );
 	}
 
-	// Public:
-	this.x = new Tweenable(0);
-	this.y = new Tweenable(0);
-	this.scale = new Tweenable(1);
-	this.rotation = new Tweenable(0);
-	this.alpha = new Tweenable(1);
+	// -- Public: --
+	this.x = new Tweenable( 0 );
+	this.y = new Tweenable( 0 );
+	this.scale = new Tweenable( 1 );
+	this.rotation = new Tweenable( 0 );
+	this.alpha = new Tweenable( 1 );
 	this.snap = false;
 
-	this.update = function(dt)
+	this.update = function( dt )
 	{
-		// Handle property tweens and
-		// recalculate [x, y] & [alpha]
-		update_tweens(dt);
+		update_tweens( dt );
 		update_screen_coordinates();
 		update_proper_alpha();
 
@@ -119,36 +117,43 @@ function Sprite(_source)
 			return;
 		}
 
-		// Avoid drawing offscreen objects
-		if (render.x > viewport.width || render.x + source.width < 0) return;
-		if (render.y > viewport.height || render.y + source.height < 0) return;
+		// Don't draw offscreen objects
+		if ( render.x > viewport.width || render.x + source.width < 0 ) return;
+		if ( render.y > viewport.height || render.y + source.height < 0 ) return;
 
-		if (has_effects()) screen.game.save();
+		if ( has_effects() ) screen.game.save();
 
 		apply_alpha();
 		apply_rotation();
 
 		screen.game.draw.image(
 			source,
-			(_.rotation._ > 0 ? -origin.x : render.x),
-			(_.rotation._ > 0 ? -origin.y : render.y),
+			( _.rotation._ > 0 ? -origin.x : render.x ),
+			( _.rotation._ > 0 ? -origin.y : render.y ),
 			source.width * _.scale._,
 			source.height * _.scale._
 		);
 
-		if (has_effects()) screen.game.restore();
+		if ( has_effects() ) screen.game.restore();
 	}
 
-	this.onAdded = function(entity)
+	this.onAdded = function( entity )
 	{
 		owner = entity;
 
-		if (source !== null && !(source instanceof Image) && !(source instanceof HTMLCanvasElement))
+		if (
+			source !== null &&
+			!( source instanceof Image ) &&
+			!( source instanceof HTMLCanvasElement )
+		)
 		{
-			console.warn('Sprite: ' + source + ' is not an Image or HTMLCanvasElement object!');
+			console.warn( 'Sprite: ' + source + ' is not an Image or HTMLCanvasElement object!' );
 		}
 	}
 
+	/**
+	 * Returns the rendered coordinates of the Sprite
+	 */
 	this.getScreenCoordinates = function()
 	{
 		return {
@@ -157,72 +162,109 @@ function Sprite(_source)
 		};
 	}
 
+	/**
+	 * Returns the adjusted parent-influenced [alpha] of the Sprite
+	 */
 	this.getProperAlpha = function()
 	{
 		return alpha;
 	}
 
+	/**
+	 * Returns the width of the Sprite
+	 */
 	this.getWidth = function()
 	{
 		return source.width;
 	}
 
+	/**
+	 * Returns the height of the Sprite
+	 */
 	this.getHeight = function()
 	{
 		return source.height;
 	}
 
-	this.setXY = function(x, y)
+	/**
+	 * Sets the Sprite's [x, y] coordinates
+	 */
+	this.setXY = function( x, y )
 	{
 		_.x._ = x;
 		_.y._ = y;
 		return _;
 	}
 
-	this.setSource = function(_source)
+	/**
+	 * Set the Sprite's [source] asset/texture
+	 */
+	this.setSource = function( _source )
 	{
 		source = _source;
 		return _;
 	}
 
-	this.setOrigin = function(x, y)
+	/**
+	 * Set the Sprite's origin
+	 */
+	this.setOrigin = function( x, y )
 	{
 		origin.x = x;
 		origin.y = y;
 		return _;
 	}
 
-	this.setAlpha = function(alpha)
+	/**
+	 * Set the Sprite's alpha value
+	 */
+	this.setAlpha = function( _alpha )
 	{
-		_.alpha._ = alpha;
+		_.alpha._ = _alpha;
 		return _;
 	}
 
-	this.setRotation = function(rotation)
+	/**
+	 * Set the Sprite's [rotation] angle
+	 */
+	this.setRotation = function( rotation )
 	{
-		_.rotation._ = mod(rotation, 360);
+		_.rotation._ = mod( rotation, 360 );
 		return _;
 	}
 
-	this.setPivot = function(_pivot)
+	/**
+	 * Define a (moving) Point for the Sprite
+	 * to move in the opposite direction of
+	 */
+	this.setPivot = function( _pivot )
 	{
 		pivot = _pivot;
 		return _;
 	}
 
-	this.setOffset = function(x, y)
+	/**
+	 * Set a constant rendering offset for the Sprite
+	 */
+	this.setOffset = function( x, y )
 	{
 		offset.x = x;
 		offset.y = y;
 		return _;
 	}
 
+	/**
+	 * Automatically set the Sprite's origin to its center
+	 */
 	this.centerOrigin = function()
 	{
-		_.setOrigin(source.width/2, source.height/2);
+		_.setOrigin( source.width / 2, source.height / 2 );
 		return _;
 	}
 
+	/**
+	 * Halt any Sprite property tweens
+	 */
 	this.stopTweens = function()
 	{
 		_.x.stop();
@@ -238,21 +280,21 @@ function Sprite(_source)
  * A solid-color Sprite variant which
  * inherits Sprite's functionality
  */
-function FillSprite(color, width, height)
+function FillSprite( color, width, height )
 {
-	// Private:
-	var sprite = new Canvas().setSize(width, height);
+	// -- Private: --
+	var sprite = new Canvas().setSize( width, height );
 
 	/**
 	 * Create a [width] x [height] Canvas
 	 * and fill it with a solid [color]
 	 */
-	sprite.draw.rectangle(0, 0, width, height).fill(color);
+	sprite.draw.rectangle( 0, 0, width, height ).fill( color );
 
 	/**
 	 * Inherit and become an instance of Sprite
 	 */
-	Sprite.call(this, sprite.element);
+	Sprite.call( this, sprite.element );
 }
 
 /**
@@ -260,44 +302,49 @@ function FillSprite(color, width, height)
  */
 function Flicker()
 {
-	// Private:
+	// -- Private: --
 	var _ = this;
 	var owner = null;
 	var sprite;
-	var range =
-	{
+	var range = {
 		alpha: {low: 0, high: 1},
 		time: {low: 0.5, high: 1.0}
 	};
 
 	// Public:
-	this.update = function(dt)
+	this.update = function( dt )
 	{
-		if (!sprite.alpha.isTweening())
+		if ( !sprite.alpha.isTweening() )
 		{
 			// Start new flicker tween
 			sprite.alpha.tweenTo(
-				random(range.alpha.low, range.alpha.high),
-				random(range.time.low, range.time.high),
+				random( range.alpha.low, range.alpha.high ),
+				random( range.time.low, range.time.high ),
 				Ease.quad.inOut
 			);
 		}
 	}
 
-	this.onAdded = function(entity)
+	this.onAdded = function( entity )
 	{
 		owner = entity;
-		sprite = owner.get(Sprite);
+		sprite = owner.get( Sprite );
 	}
 
-	this.setAlphaRange = function(low, high)
+	/**
+	 * Define the [low] and [high] of the flicker alpha range
+	 */
+	this.setAlphaRange = function( low, high )
 	{
 		range.alpha.low = low;
 		range.alpha.high = high;
 		return _;
 	}
 
-	this.setTimeRange = function(low, high)
+	/**
+	 * Define the [low] and [high] of the flicker time range
+	 */
+	this.setTimeRange = function( low, high )
 	{
 		range.time.low = low;
 		range.time.high = high;
@@ -310,7 +357,7 @@ function Flicker()
  */
 function Point()
 {
-	// Private:
+	// -- Private: --
 	var _ = this;
 	var owner = null;
 	var position = new Vec2();
@@ -322,35 +369,38 @@ function Point()
 	 */
 	function update_sprite()
 	{
-		if (owner !== null)
+		if ( owner !== null && owner.has( Sprite ) )
 		{
-			if (owner.has(Sprite))
-			{
-				owner.get(Sprite).setXY(position.x, position.y);
-			}
+			owner.get( Sprite ).setXY( position.x, position.y );
 		}
 	}
 
-	// Public:
-	this.update = function(dt)
+	// -- Public: --
+	this.update = function( dt )
 	{
-		position.add(velocity, dt);
+		position.add( velocity, dt );
 		update_sprite();
 	}
 
-	this.onAdded = function(entity)
+	this.onAdded = function( entity )
 	{
 		owner = entity;
 	}
 
-	this.getPosition = function(round)
+	/**
+	 * Get the position of the Point, optionally rounded
+	 */
+	this.getPosition = function( is_rounded )
 	{
 		return {
-			x: (!!round ? Math.floor(position.x) : position.x),
-			y: (!!round ? Math.floor(position.y) : position.y)
+			x: ( !!is_rounded ? Math.floor( position.x ) : position.x ),
+			y: ( !!is_rounded ? Math.floor( position.y ) : position.y )
 		};
 	}
 
+	/**
+	 * Get the velocity of a moving Point
+	 */
 	this.getVelocity = function()
 	{
 		return {
@@ -359,25 +409,36 @@ function Point()
 		};
 	}
 
+	/**
+	 * Get the velocity's magnitude for a moving Point
+	 */
 	this.getAbsoluteVelocity = function()
 	{
 		return velocity.magnitude();
 	}
 
-	this.setPosition = function(x, y, is_modifier)
+	/**
+	 * Update the position of the Point, optionally
+	 * just offsetting from its current position
+	 */
+	this.setPosition = function( x, y, is_offset )
 	{
-		position.x = (is_modifier ? position.x + x : x);
-		position.y = (is_modifier ? position.y + y : y);
+		position.x = ( is_offset ? position.x + x : x );
+		position.y = ( is_offset ? position.y + y : y );
 
 		update_sprite();
 
 		return _;
 	}
 
-	this.setVelocity = function(x, y, is_modifier)
+	/**
+	 * Update the velocity vector of a moving Point,
+	 * optionally offsetting from its current position
+	 */
+	this.setVelocity = function( x, y, is_offset )
 	{
-		velocity.x = (is_modifier ? velocity.x + x : x);
-		velocity.y = (is_modifier ? velocity.y + y : y);
+		velocity.x = ( is_offset ? velocity.x + x : x );
+		velocity.y = ( is_offset ? velocity.y + y : y );
 		return _;
 	}
 }
@@ -387,7 +448,7 @@ function Point()
  */
 function HardwarePart()
 {
-	// Private:
+	// -- Private: --
 	var _ = this;
 	var owner = null;
 	var x = 0;
@@ -396,22 +457,22 @@ function HardwarePart()
 	var moving = false;
 
 	/**
-	 * Updates the internal x and y position values
+	 * Updates the internal [x] and [y] position values
 	 * for this hardware part to maintain them within
 	 * the coordinate system of the player Drone
 	 */
 	function update_coordinates()
 	{
-		if (owner !== null && owner.parent !== null)
+		if ( owner !== null && owner.parent !== null )
 		{
-			if (owner.parent.has(Point) && owner.has(Sprite))
+			if ( owner.parent.has(Point) && owner.has( Sprite ) )
 			{
 				// Get position of the parent station module
-				var position = owner.parent.get(Point).getPosition();
+				var position = owner.parent.get( Point ).getPosition();
 
 				// Get base [x, y] coordinates of the
 				// owner Sprite in local (module) space
-				var sprite = owner.get(Sprite);
+				var sprite = owner.get( Sprite );
 
 				// Set the part coordinates as a sum of the two
 				x = sprite.x._ + position.x;
@@ -420,13 +481,16 @@ function HardwarePart()
 		}
 	}
 
-	// Public:
-	this.update = function(dt)
+	// -- Public: --
+	this.update = function( dt )
 	{
-		if (moving) update_coordinates();
+		if ( moving )
+		{
+			update_coordinates();
+		}
 	}
 
-	this.onAdded = function(entity)
+	this.onAdded = function( entity )
 	{
 		owner = entity;
 	}
@@ -436,11 +500,18 @@ function HardwarePart()
 		update_coordinates();
 	}
 
+	/**
+	 * Return owner for Point component reference
+	 * (see: GameInstance.js, enter_docking_mode())
+	 */
 	this.getOwner = function()
 	{
 		return owner;
 	}
 
+	/**
+	 * Return hardware part position
+	 */
 	this.getPosition = function()
 	{
 		return {
@@ -449,18 +520,30 @@ function HardwarePart()
 		};
 	}
 
+	/**
+	 * Return specifications for this hardware part
+	 */
 	this.getSpecs = function()
 	{
 		return specs;
 	}
 
-	this.setSpecs = function(_specs)
+	/**
+	 * Set hardware part specifications
+	 */
+	this.setSpecs = function( _specs )
 	{
 		specs = _specs;
 		return _;
 	}
 
-	this.moving = function(boolean)
+	/**
+	 * Set whether or not this hardware
+	 * part is constantly moving, and
+	 * therefore requires continual
+	 * re-evaluation for positioning
+	 */
+	this.setMoving = function( boolean )
 	{
 		moving = boolean;
 		return _;
@@ -472,7 +555,7 @@ function HardwarePart()
  */
 function Drone()
 {
-	// Private:
+	// -- Private: --
 	var _ = this;
 	var owner = null;
 
@@ -493,8 +576,7 @@ function Drone()
 	var retrograde_angle = 180;
 
 	// Values/flags for automatic docking
-	var docking =
-	{
+	var docking = {
 		// Docking state boolean
 		on: false,
 		// Docking target hardware part
@@ -529,9 +611,9 @@ function Drone()
 	 * Returns one of 4 angles depending
 	 * on top/right/bottom/left orientation
 	 */
-	function get_docking_angle(orientation)
+	function get_docking_angle( orientation )
 	{
-		switch (orientation)
+		switch ( orientation )
 		{
 			case 'top':
 				return 180;
@@ -554,11 +636,11 @@ function Drone()
 	{
 		var direction = get_docking_alignment_direction();
 
-		var dx = (direction.x < 0 ? 270 : 90);
-		var dy = (direction.y < 0 ? 0 : 180);
+		var dx = ( direction.x < 0 ? 270 : 90 );
+		var dy = ( direction.y < 0 ? 0 : 180 );
 
-		if (docking.angle === 0 || docking.angle === 180) return dx;
-		if (docking.angle === 90 || docking.angle === 270) return dy;
+		if ( docking.angle === 0 || docking.angle === 180 ) return dx;
+		if ( docking.angle === 90 || docking.angle === 270 ) return dy;
 	}
 
 	/**
@@ -566,42 +648,42 @@ function Drone()
 	 */
 	function get_retrograde_angle()
 	{
-		var velocity = owner.get(Point).getVelocity();
-		return mod(Math.RAD_PI * -1 * Math.atan2(velocity.x, velocity.y), 360);
+		var velocity = owner.get( Point ).getVelocity();
+		return mod( Math.RAD_PI * -1 * Math.atan2( velocity.x, velocity.y ), 360 );
 	}
 
 	/**
 	 * Returns the distance in degrees between two angles
 	 */
-	function get_rotation_distance(angle1, angle2)
+	function get_rotation_distance( angle1, angle2 )
 	{
-		var high = Math.max(angle1, angle2);
-		var low = Math.min(angle1, angle2);
+		var high = Math.max( angle1, angle2 );
+		var low = Math.min( angle1, angle2 );
 
 		var d1 = high - low;
-		var d2 = (360 - high) + low;
+		var d2 = ( 360 - high ) + low;
 
-		return Math.min(d1, d2);
+		return Math.min( d1, d2 );
 	}
 
 	/**
 	 * Returns +/- depending on the shortest rotation to [angle]
 	 */
-	function get_rotation_direction(angle)
+	function get_rotation_direction( angle )
 	{
-		var rotation = owner.get(Sprite).rotation._;
+		var rotation = owner.get( Sprite ).rotation._;
 
-		var high = Math.max(rotation, angle);
-		var low = Math.min(rotation, angle);
+		var high = Math.max( rotation, angle );
+		var low = Math.min( rotation, angle );
 
-		var forward = (360 - high) + low;
+		var forward = ( 360 - high ) + low;
 		var back = high - low;
 
 		return (
 			forward > back ?
-				(rotation > angle ? -1 : 1)
+				( rotation > angle ? -1 : 1 )
 			:
-				(rotation > angle ? 1 : -1)
+				( rotation > angle ? 1 : -1 )
 		);
 	}
 
@@ -612,21 +694,20 @@ function Drone()
 	 */
 	function get_docking_alignment_direction()
 	{
-		var direction =
-		{
+		var direction = {
 			x: 0,
 			y: 0
 		};
 
-		if (docking.angle === 0 || docking.angle === 180)
+		if ( docking.angle === 0 || docking.angle === 180 )
 		{
 			// Align along the x-axis
-			direction.x = (docking.distance.x > 0 ? -1 : 1);
+			direction.x = ( docking.distance.x > 0 ? -1 : 1 );
 		}
 		else
 		{
 			// Align along the y-axis
-			direction.y = (docking.distance.y > 0 ? -1 : 1);
+			direction.y = ( docking.distance.y > 0 ? -1 : 1 );
 		}
 
 		return direction;
@@ -638,18 +719,18 @@ function Drone()
 	 */
 	function track_target_distance()
 	{
-		var player = owner.get(Point).getPosition();
-		var target = docking.target.get(HardwarePart).getPosition();
-		var specs = docking.target.get(HardwarePart).getSpecs();
+		var player = owner.get( Point ).getPosition();
+		var target = docking.target.get( HardwarePart ).getPosition();
+		var specs = docking.target.get( HardwarePart ).getSpecs();
 
 		// Pinpoint the hardware part's docking terminal.
 		// (For the top and left terminals we want to
 		// negatively offset the stopping point so the
 		// drone halts at the proper coordinates)
-		var top = (specs.orientation === 'top');
-		var left = (specs.orientation === 'left');
-		target.x += (specs.x + (left ? -1 : 1) * owner.get(Sprite).getWidth()/2);
-		target.y += (specs.y + (top ? -1 : 1) * owner.get(Sprite).getHeight()/2);
+		var top = ( specs.orientation === 'top' );
+		var left = ( specs.orientation === 'left' );
+		target.x += ( specs.x + ( left ? -1 : 1 ) * owner.get( Sprite ).getWidth() / 2 );
+		target.y += ( specs.y + ( top ? -1 : 1 ) * owner.get( Sprite ).getHeight() / 2 );
 
 		docking.distance.x = player.x - target.x;
 		docking.distance.y = player.y - target.y;
@@ -672,7 +753,7 @@ function Drone()
 		stabilizing = true;
 		spin *= 0.9;
 
-		if (Math.abs(spin) < 1)
+		if ( Math.abs( spin ) < 1 )
 		{
 			spin = 0;
 			stabilizing = false;
@@ -691,35 +772,35 @@ function Drone()
 	/**
 	 * Gradually and fluidly spins the drone to [angle]
 	 */
-	function spin_to_angle(angle, dt)
+	function spin_to_angle( angle, dt )
 	{
-		consume_fuel(dt);
+		consume_fuel( dt );
 
-		if (angle_stop)
+		if ( angle_stop )
 		{
 			// Slow down spin to arrive at [angle]
 			stabilize_spin();
 
-			if (spin === 0 || get_rotation_distance(owner.get(Sprite).rotation._, angle) < 1)
+			if ( spin === 0 || get_rotation_distance( owner.get( Sprite ).rotation._, angle ) < 1 )
 			{
 				// Done spinning!
 				spin = 0;
 				stabilizing = false;
-				owner.get(Sprite).rotation._ = angle;
+				owner.get( Sprite ).rotation._ = angle;
 			}
 
 			return;
 		}
 
 		// Get rotational "distance" from [angle]
-		var distance = get_rotation_distance(owner.get(Sprite).rotation._, angle);
+		var distance = get_rotation_distance( owner.get( Sprite ).rotation._, angle );
 		// Determine spin direction of the shortest rotation to [angle]
-		var direction = get_rotation_direction(angle);
+		var direction = get_rotation_direction( angle );
 
-		if (angle_approach && spin < 200)
+		if ( angle_approach && spin < 200 )
 		{
 			// Rotate drone toward [angle] up to a speed limit
-			_.addSpin(MAX_SPEED * direction);
+			_.addSpin( MAX_SPEED * direction );
 		}
 
 		// Start spin stabilization if the drone's
@@ -728,22 +809,22 @@ function Drone()
 		// 10 is an arbitrary constant that happens
 		// to yield an optimally smooth deceleration
 		// when dt reflects a ~60fps refresh rate.
-		if (distance < (10 * Math.abs(spin) * dt))
+		if ( distance < ( 10 * Math.abs( spin ) * dt ) )
 		{
 			angle_stop = true;
 			return;
 		}
 
 		// For slower angular velocities...
-		if (spin < 75)
+		if ( spin < 75 )
 		{
-			if ((direction < 0 && spin > 0) || (direction > 0 && spin < 0))
+			if ( ( direction < 0 && spin > 0 ) || ( direction > 0 && spin < 0 ) )
 			{
 				// If we're spinning "away" from [angle],
 				// slow down and prepare to spin the other way
 				stabilize_spin();
 
-				if (spin === 0)
+				if ( spin === 0 )
 				{
 					// Slowed to 0, so start spinning the other way
 					angle_approach = true;
@@ -761,14 +842,14 @@ function Drone()
 	/**
 	 * Triggers docking cycle
 	 */
-	function launch_docking_procedure(target)
+	function launch_docking_procedure( target )
 	{
 		stabilizing = false;
 
 		// Reset docking parameters
 		docking.on = true;
 		docking.target = target;
-		docking.angle = get_docking_angle(docking.target.get(HardwarePart).getSpecs().orientation);
+		docking.angle = get_docking_angle( docking.target.get( HardwarePart ).getSpecs().orientation );
 		docking.phase = 1;
 
 		// Update [retrograde_angle] for docking phase 1
@@ -779,13 +860,13 @@ function Drone()
 	/**
 	 * Handle docking cycle as it progresses
 	 */
-	function control_docking_procedure(dt)
+	function control_docking_procedure( dt )
 	{
-		switch (docking.phase)
+		switch ( docking.phase )
 		{
 			// 1. Spin to [retrograde_angle]
 			case 1:
-				if (owner.get(Point).getAbsoluteVelocity() === 0)
+				if ( owner.get( Point ).getAbsoluteVelocity() === 0 )
 				{
 					// Unnecessary to spin retrograde
 					// or slow down if already stopped;
@@ -795,29 +876,26 @@ function Drone()
 					return;
 				}
 
-				// Spin retrograde in preparation for slowdown
-				spin_to_angle(retrograde_angle, dt);
+				spin_to_angle( retrograde_angle, dt );
 
-				if (owner.get(Sprite).rotation._ === retrograde_angle)
+				if ( owner.get( Sprite ).rotation._ === retrograde_angle )
 				{
-					// [retrograde_angle] reached; advance docking phase
 					docking.phase = 2;
 				}
 
 				break;
 			// 2. Slow drone to 0 velocity
 			case 2:
-				if (owner.get(Point).getAbsoluteVelocity() > MAX_SPEED)
+				if ( owner.get( Point ).getAbsoluteVelocity() > MAX_SPEED )
 				{
-					_.addVelocity(MAX_SPEED);
-					consume_fuel(dt);
+					// Fire thrusters retrograde
+					_.addVelocity( MAX_SPEED );
+					consume_fuel( dt );
 					return;
 				}
 
-				// Lock drone at 0 velocity
-				owner.get(Point).setVelocity(0, 0);
+				owner.get( Point ).setVelocity( 0, 0 );
 				reset_spin_procedure();
-				// Advance docking phase
 				docking.phase = 3;
 				break;
 			// 3. Spin parallel to docking terminal for alignment approach
@@ -827,28 +905,26 @@ function Drone()
 				track_target_distance();
 				var angle = get_docking_alignment_angle();
 
-				spin_to_angle(angle, dt);
+				spin_to_angle( angle, dt );
 
-				if (owner.get(Sprite).rotation._ === angle)
+				if ( owner.get( Sprite ).rotation._ === angle )
 				{
 					// Alignment approach angle reached; give a small forward pulse
-					_.addVelocity(4*MAX_SPEED);
-					consume_fuel(4*dt);
+					_.addVelocity( 4 * MAX_SPEED );
+					consume_fuel( 4 * dt );
 					// Update [retrograde_angle] for next phase
 					retrograde_angle = get_retrograde_angle();
 					reset_spin_procedure();
-					// Advance docking phase
 					docking.phase = 4;
 				}
 
 				break;
 			// 4. After thrusting toward docking alignment position, spin retrograde again
 			case 4:
-				spin_to_angle(retrograde_angle, dt);
+				spin_to_angle( retrograde_angle, dt );
 
-				if (owner.get(Sprite).rotation._ === retrograde_angle)
+				if ( owner.get( Sprite ).rotation._ === retrograde_angle )
 				{
-					// [retrograde_angle] reached; advance docking phase
 					docking.phase = 5;
 				}
 
@@ -857,27 +933,25 @@ function Drone()
 			case 5:
 				// Determine distance to alignment position
 				track_target_distance();
-				var distance = (docking.angle === 0 || docking.angle === 180) ? docking.distance.x : docking.distance.y;
+				var distance = ( docking.angle === 0 || docking.angle === 180 ) ? docking.distance.x : docking.distance.y;
 
-				if (Math.abs(distance) < 1)
+				if ( Math.abs(distance) < 1 )
 				{
-					if (owner.get(Point).getAbsoluteVelocity() > MAX_SPEED)
+					if ( owner.get( Point ).getAbsoluteVelocity() > MAX_SPEED )
 					{
-						// Slow down approach to alignment position
-						_.addVelocity(MAX_SPEED);
-						consume_fuel(dt);
+						// Fire retrograde to slow approach to alignment position
+						_.addVelocity( MAX_SPEED );
+						consume_fuel( dt );
 						return;
 					}
 
-					// Stop at alignment position
-					owner.get(Point).setVelocity(0, 0);
+					owner.get( Point ).setVelocity( 0, 0 );
 					reset_spin_procedure();
-					// Advance docking phase
 					docking.phase = 6;
 				}
 				else
 				{
-					if (owner.get(Sprite).rotation._ === get_docking_alignment_angle() && Math.abs(distance) > 30)
+					if ( owner.get(Sprite).rotation._ === get_docking_alignment_angle() && Math.abs(distance) > 30 )
 					{
 						// Overshot target; reset to phase 2
 						docking.phase = 2;
@@ -887,13 +961,13 @@ function Drone()
 				break;
 			// 6. Spin to [docking.angle]
 			case 6:
-				spin_to_angle(docking.angle, dt);
+				spin_to_angle( docking.angle, dt );
 
-				if (owner.get(Sprite).rotation._ === docking.angle)
+				if ( owner.get( Sprite ).rotation._ === docking.angle )
 				{
 					// Give a small forward pulse
-					_.addVelocity(4*MAX_SPEED);
-					consume_fuel(4*dt);
+					_.addVelocity( 4 * MAX_SPEED );
+					consume_fuel( 4 * dt );
 					docking.phase = 7;
 				}
 
@@ -905,13 +979,13 @@ function Drone()
 				// Continually check approach distance
 				if (
 					// For top/bottom terminals, check y-axis distance
-					((docking.angle === 0 || docking.angle === 180) && Math.abs(docking.distance.y) < 1) ||
+					( ( docking.angle === 0 || docking.angle === 180 ) && Math.abs( docking.distance.y ) < 1 ) ||
 					// For left/right terminals, check x-axis distance
-					((docking.angle === 90 || docking.angle === 270) && Math.abs(docking.distance.x) < 1)
+					( ( docking.angle === 90 || docking.angle === 270 ) && Math.abs( docking.distance.x ) < 1 )
 				)
 				{
 					// Docked!
-					owner.get(Point).setVelocity(0, 0);
+					owner.get( Point ).setVelocity( 0, 0 );
 					docking.on = false;
 				}
 
@@ -922,19 +996,19 @@ function Drone()
 	/**
 	 * Internal power consumption cycle
 	 */
-	function consume_power(dt)
+	function consume_power( dt )
 	{
-		if (out_of_power) return;
+		if ( out_of_power ) return;
 
 		// Idle power consumption
 		power -= dt;
 
 		// Consume more power during stabilization
-		if (stabilizing) power -= dt;
+		if ( stabilizing ) power -= dt;
 		// Consume additional power during docking
-		if (docking.on) power -= 3*dt;
+		if ( docking.on ) power -= 3 * dt;
 
-		if (power < 0)
+		if ( power < 0 )
 		{
 			power = 0;
 			out_of_power = true;
@@ -948,16 +1022,16 @@ function Drone()
 	/**
 	 * Fuel consumption (occurs only when maneuvering)
 	 */
-	function consume_fuel(dt)
+	function consume_fuel( dt )
 	{
-		if (out_of_fuel) return;
+		if ( out_of_fuel ) return;
 
 		fuel -= dt;
 
 		// Consume fuel during stabilization
-		if (stabilizing) fuel -= 2*dt;
+		if ( stabilizing ) fuel -= 2 * dt;
 
-		if (fuel < 0)
+		if ( fuel < 0 )
 		{
 			fuel = 0;
 			out_of_fuel = true;
@@ -968,46 +1042,52 @@ function Drone()
 		}
 	}
 
-	// Public:
-	this.update = function(dt)
+	// -- Public: --
+	this.update = function( dt )
 	{
 		// Docking procedure
-		if (docking.on && !out_of_power && !out_of_fuel)
+		if ( docking.on && !out_of_power && !out_of_fuel )
 		{
-			control_docking_procedure(dt);
+			control_docking_procedure( dt );
 		}
 
 		// Regular spin stabilization
-		if (stabilizing && !docking.on && !out_of_power && !out_of_fuel)
+		if ( stabilizing && !docking.on && !out_of_power && !out_of_fuel )
 		{
 			stabilize_spin();
 		}
 
 		// Update drone Sprite rotation with new [spin] value
-		owner.get(Sprite).rotation._ += (spin * dt);
+		owner.get( Sprite ).rotation._ += ( spin * dt );
 		// Gradually reduce drone energy
-		consume_power(dt);
+		consume_power( dt );
 		// Gradually reduce fuel during stabilization
-		if (stabilizing)
+		if ( stabilizing )
 		{
-			consume_fuel(dt);
+			consume_fuel( dt );
 		}
 	}
 
-	this.onAdded = function(entity)
+	this.onAdded = function( entity )
 	{
 		owner = entity;
 	}
 
+	/**
+	 * Return the drone's maximum instantaneous thrust speed
+	 */
 	this.getMaxSpeed = function()
 	{
 		return MAX_SPEED;
 	}
 
+	/**
+	 * Get a report on the drone's standing
+	 */
 	this.getSystem = function()
 	{
 		return {
-			velocity: owner.get(Point).getAbsoluteVelocity(),
+			velocity: owner.get( Point ).getAbsoluteVelocity(),
 			stabilizing: stabilizing,
 			docking: docking.on,
 			power: power,
@@ -1021,25 +1101,34 @@ function Drone()
 		};
 	}
 
-	this.consumeFuel = function(dt)
+	/**
+	 * Reduce fuel amount
+	 */
+	this.consumeFuel = function( dt )
 	{
-		consume_fuel(dt);
+		consume_fuel( dt );
 		return _;
 	}
 
+	/**
+	 * Restore power and fuel back to full capacity
+	 */
 	this.restoreEnergy = function()
 	{
 		power = MAX_POWER;
 		fuel = MAX_FUEL;
 	}
 
-	this.addVelocity = function(amount)
+	/**
+	 * Thrust forward by [amount]
+	 */
+	this.addVelocity = function( amount )
 	{
-		var rotation = owner.get(Sprite).rotation._;
-		var x = Math.sin(rotation * Math.PI_RAD);
-		var y = Math.cos(rotation * Math.PI_RAD) * -1;
+		var rotation = owner.get( Sprite ).rotation._;
+		var x = Math.sin( rotation * Math.PI_RAD );
+		var y = Math.cos( rotation * Math.PI_RAD ) * -1;
 
-		owner.get(Point).setVelocity(
+		owner.get( Point ).setVelocity(
 			x * amount,
 			y * amount,
 			true
@@ -1048,18 +1137,22 @@ function Drone()
 		return _;
 	}
 
-	this.addSpin = function(amount)
+	/**
+	 * Angular thrust by [amount]
+	 */
+	this.addSpin = function( amount )
 	{
-		// Update spin
 		spin += amount;
-		// Automatically turn off stabilization
 		stabilizing = false;
 		return _;
 	}
 
+	/**
+	 * Turn on spin stabilization
+	 */
 	this.stabilize = function()
 	{
-		if (!out_of_power && !out_of_fuel)
+		if ( !out_of_power && !out_of_fuel )
 		{
 			stabilizing = true;
 		}
@@ -1067,23 +1160,35 @@ function Drone()
 		return _;
 	}
 
-	this.dockWith = function(target)
+	/**
+	 * Begin docking to [target]
+	 */
+	this.dockWith = function( target )
 	{
-		launch_docking_procedure(target);
+		launch_docking_procedure( target );
 		return _;
 	}
 
+	/**
+	 * Stop docking procedure
+	 */
 	this.abortDocking = function()
 	{
 		docking.on = false;
 		return _;
 	}
 
+	/**
+	 * Check to see whether Drone can be controlled
+	 */
 	this.isControllable = function()
 	{
-		return (!out_of_power && !out_of_fuel && !docking.on);
+		return ( !out_of_power && !out_of_fuel && !docking.on );
 	}
 
+	/**
+	 * Check to see if Drone is docking
+	 */
 	this.isDocking = function()
 	{
 		return docking.on;

@@ -4,7 +4,7 @@
  */
 function Entity()
 {
-	// Private:
+	// -- Private: --
 	var _ = this;
 	var components = [];
 	var children = [];
@@ -14,9 +14,9 @@ function Entity()
 	 * Depending on [action], either returns the component or
 	 * a boolean representing its availability from the entity
 	 */
-	function component_data(component, action)
+	function component_lookup( component, action )
 	{
-		if (action === 'get' && searched_component instanceof component)
+		if ( action === 'get' && searched_component instanceof component )
 		{
 			// If a component type specified by get()
 			// matches the saved reference, return
@@ -24,46 +24,51 @@ function Entity()
 			return searched_component;
 		}
 
-		for (var c = 0 ; c < components.length ; c++)
+		for ( var c = 0 ; c < components.length ; c++ )
 		{
-			if (components[c] instanceof component)
+			if ( components[c] instanceof component )
 			{
 				// Save the component reference to optimize
 				// consecutive same-component lookups
 				searched_component = components[c];
 
-				if (action === 'get') return components[c];
-				if (action === 'has') return true;
+				if ( action === 'get' ) return components[c];
+				if ( action === 'has' ) return true;
 			}
 		}
 
-		if (action === 'get') return null;
-		if (action === 'has') return false;
+		if ( action === 'get' ) return null;
+		if ( action === 'has' ) return false;
 	}
 
-	// Public:
+	// -- Public: --
 	this.parent = null;
 
-	this.update = function(dt)
+	/**
+	 * Update cycle
+	 */
+	this.update = function( dt )
 	{
-		// Update all components first
-		for (var c = 0 ; c < components.length ; c++)
+		for ( var c = 0 ; c < components.length ; c++ )
 		{
 			components[c].update(dt);
 		}
 
-		// Then update all child entities
-		for (var c = 0 ; c < children.length ; c++)
+		for ( var c = 0 ; c < children.length ; c++ )
 		{
 			children[c].update(dt);
 		}
 	}
 
-	this.onAddedToParent = function(entity)
+	/**
+	 * Called when this Entity gets
+	 * added as a child to another Entity
+	 */
+	this.onAddedToParent = function( entity )
 	{
 		_.parent = entity;
 
-		for (var c = 0 ; c < components.length ; c++)
+		for ( var c = 0 ; c < components.length ; c++ )
 		{
 			var _component = components[c];
 
@@ -74,11 +79,14 @@ function Entity()
 		}
 	}
 
-	this.add = function(component)
+	/**
+	 * Add a Component to the Entity by instance
+	 */
+	this.add = function( component )
 	{
-		components.push(component);
+		components.push( component );
 
-		if (typeof component.onAdded === 'function')
+		if ( typeof component.onAdded === 'function' )
 		{
 			component.onAdded(_);
 		}
@@ -86,43 +94,58 @@ function Entity()
 		return _;
 	}
 
-	this.addChild = function(entity)
+	/**
+	 * Add a child Entity to the Entity
+	 */
+	this.addChild = function( entity )
 	{
-		entity.onAddedToParent(_);
-		children.push(entity);
+		entity.onAddedToParent( _ );
+		children.push( entity );
 		return _;
 	}
 
+	/**
+	 * Get rid of child entities
+	 */
 	this.disposeChildren = function()
 	{
 		children.length = 0;
 		return _;
 	}
 
-	this.get = function(component)
+	/**
+	 * Retrieve a Component by instance name
+	 */
+	this.get = function( component )
 	{
-		return component_data(component, 'get');
+		return component_lookup( component, 'get' );
 	}
 
-	this.has = function(component)
+	/**
+	 * Verify that this Entity has a Component by instance name
+	 */
+	this.has = function( component )
 	{
-		return component_data(component, 'has');
+		return component_lookup( component, 'has' );
 	}
 
-	this.remove = function(component)
+	/**
+	 * Remove a Component from this Entity by instance name
+	 */
+	this.remove = function( component )
 	{
-		for (var c = 0 ; c < components.length ; c++)
+		for ( var c = 0 ; c < components.length ; c++ )
 		{
 			var _component = components[c];
 
-			if (_component instanceof component)
+			if ( _component instanceof component )
 			{
-				if (typeof _component.onRemoved === 'function')
+				if ( typeof _component.onRemoved === 'function' )
 				{
 					_component.onRemoved();
 				}
 
-				components.splice(c, 1);
+				components.splice( c, 1 );
 				break;
 			}
 		}
@@ -130,16 +153,22 @@ function Entity()
 		return _;
 	}
 
-	this.forAllComponentsOfType = function(component, handler)
+	/**
+	 * Recursively look for all instances of a Component
+	 * in the entity and its children, and perform a handler
+	 * operation for all of them. [handler] automatically
+	 * receives the Component instance as an argument.
+	 */
+	this.forAllComponentsOfType = function( component, handler )
 	{
-		if (_.has(component))
+		if ( _.has( component ) )
 		{
-			handler(_.get(component));
+			handler( _.get( component ) );
 		}
 
-		for (var c = 0 ; c < children.length ; c++)
+		for ( var c = 0 ; c < children.length ; c++ )
 		{
-			children[c].forAllComponentsOfType(component, handler);
+			children[c].forAllComponentsOfType( component, handler );
 		}
 	}
 }

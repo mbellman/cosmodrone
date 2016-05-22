@@ -1,9 +1,8 @@
-(function(scope){
+(function( scope ) {
 	/**
 	 * Key code -> Key name map
 	 */
-	var KeyCodes =
-	{
+	var KeyCodes = {
 		37: 'LEFT',
 		38: 'UP',
 		39: 'RIGHT',
@@ -19,7 +18,7 @@
 	 */
 	function InputHandler()
 	{
-		// Private:
+		// -- Private: --
 		var _ = this;
 		var bound = false;
 		var events = {};
@@ -27,72 +26,87 @@
 		/**
 		 * Check key input and dispatch appropriate events
 		 */
-		function handle_input(event)
+		function handle_input( event )
 		{
 			var key = KeyCodes[event.keyCode];
 			var handlers = events[key];
 
-			if (!!handlers)
+			if ( !!handlers )
 			{
-				for (var h = 0 ; h < handlers.length ; h++)
+				for ( var h = 0 ; h < handlers.length ; h++ )
 				{
-					handlers[h](key);
+					handlers[h]( key );
 				}
 			}
 		}
 
-		// Public:
+		// -- Public: --
+		/**
+		 * Start listening for inputs
+		 */
 		this.listen = function()
 		{
-			if (!bound)
+			if ( !bound )
 			{
-				$(document).on('keydown.InputHandler', handle_input);
+				$( document ).on( 'keydown.InputHandler', handle_input );
 				bound = true;
 			}
 
 			return _;
 		};
 
+		/**
+		 * Stop listening for inputs
+		 */
 		this.unlisten = function()
 		{
-			if (bound)
+			if ( bound )
 			{
-				$(document).off('keydown.InputHandler');
+				$( document ).off( 'keydown.InputHandler' );
 				bound = false;
 			}
 
 			return _;
 		}
 
-		this.on = function(key, handler)
+		/**
+		 * Bind a key input handler
+		 */
+		this.on = function( key, handler )
 		{
-			if (!bound)
+			if ( !bound )
 			{
 				listen();
 			}
 
-			if (typeof events[key] === 'undefined')
+			if ( typeof events[key] === 'undefined' )
 			{
 				events[key] = [];
 			}
 
-			events[key].push(handler);
+			events[key].push( handler );
 			return _;
 		}
 
-		this.unbindKey = function(key)
+		/**
+		 * Remove a key input handler
+		 */
+		this.unbindKey = function( key )
 		{
-			if (events.hasOwnProperty(key))
+			if ( events.hasOwnProperty( key ) )
 			{
 				delete events[key];
 			}
 		}
 
+		/**
+		 * Remove all key input handlers
+		 */
 		this.unbindEvents = function()
 		{
-			for (var key in events)
+			for ( var key in events )
 			{
-				if (events.hasOwnProperty(key))
+				if ( events.hasOwnProperty( key ) )
 				{
 					delete events[key];
 				}
@@ -108,12 +122,11 @@
 	 */
 	function Keys()
 	{
-		// Private:
+		// -- Private: --
 		var _ = this;
 		var bound = false;
 		var listener = new InputHandler();
-		var state =
-		{
+		var state = {
 			UP: false,
 			RIGHT: false,
 			DOWN: false,
@@ -127,57 +140,69 @@
 		/**
 		 * Toggle the key state depending on the event type
 		 */
-		function set_state(event)
+		function set_state( event )
 		{
 			var key_name = KeyCodes[event.keyCode] || 'null';
 
-			if (typeof state[key_name] !== 'undefined')
+			if ( typeof state[key_name] !== 'undefined' )
 			{
-				if (event.type === 'keydown')
+				if ( event.type === 'keydown' )
 				{
 					state[key_name] = true;
 				}
 
-				if (event.type === 'keyup')
+				if ( event.type === 'keyup' )
 				{
 					state[key_name] = false;
 				}
 			}
 		}
 
-		// Public:
+		// -- Public: --
+		/**
+		 * Start listening for inputs
+		 */
 		this.listen = function()
 		{
-			if (!bound)
+			if ( !bound )
 			{
-				$(document).on('keydown.Keys keyup.Keys', set_state);
+				$( document ).on( 'keydown.Keys keyup.Keys', set_state );
 				bound = true;
 			}
 
 			return _;
 		}
 
+		/**
+		 * Stop listening for inputs
+		 */
 		this.unlisten = function()
 		{
-			if (bound)
+			if ( bound )
 			{
-				$(document).off('keydown.Keys keyup.Keys');
+				$( document ).off( 'keydown.Keys keyup.Keys' );
 				bound = false;
 			}
 
 			return _;
 		}
 
-		this.holding = function(key)
+		/**
+		 * Check to see if [key] is being held
+		 */
+		this.holding = function( key )
 		{
 			return !!state[key];
 		}
 
+		/**
+		 * Set all key held states to false
+		 */
 		this.reset = function()
 		{
-			for (var key in state)
+			for ( var key in state )
 			{
-				if (state.hasOwnProperty(key))
+				if ( state.hasOwnProperty( key ) )
 				{
 					state[key] = false;
 				}
@@ -189,4 +214,4 @@
 
 	scope.InputHandler = InputHandler;
 	scope.Keys = Keys;
-})(window);
+})( window );
