@@ -18,8 +18,7 @@ function Controller( assets )
 
 	this.showGame = function()
 	{
-		if ( _.scenes.hasScene( 'game' ) )
-		{
+		if ( _.scenes.hasScene( 'game' ) ) {
 			// Halt active game process (if
 			// any) and dereference all data
 			_.scenes.getScene( 'game' ).get( GameInstance ).unload();

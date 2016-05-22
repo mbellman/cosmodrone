@@ -1,5 +1,47 @@
+/**
+ * -------------------
+ * DEPENDENCIES:
+ *
+ * audio/WebAudio.js
+ * -------------------
+ */
+
 (function( scope ) {
 	/**
+	 * ------------------
+	 * Class: AudioBuffer
+	 * ------------------
+	 *
+	 * Special WebAudio buffer asset for audio playback
+	 */
+	function AudioBuffer( buffer )
+	{
+		// -- Private: --
+		var _ = this;
+		var node = null;
+
+		// -- Public: --
+		this.play = function()
+		{
+			node = WebAudio.play( buffer );
+			return _;
+		}
+
+		this.stop = function()
+		{
+			if ( node !== null) {
+				WebAudio.stop( node );
+			}
+
+			return _;
+		}
+	}
+
+	/**
+	 * ------------
+	 * Class: Asset
+	 * ------------
+	 *
 	 * Instance of an image or audio asset
 	 */
 	function Asset( type )
@@ -8,21 +50,23 @@
 		var _ = this;
 		var loaded = false;
 		var onComplete = function(){};
+		var onError = function(){};
 
 		/**
-		 * Create a media object for the asset
+		 * Create a WebAudio buffer for sounds
 		 */
-		function create_media()
+		function create_audio()
 		{
-			switch ( type )
-			{
-				case 'image':
-					return new Image();
-				case 'audio':
-					return new Audio();
-				default:
-					return null;
-			}
+			WebAudio.load( _.path.substring(2), {
+				load: function( buffer ) {
+					_.media = new AudioBuffer( buffer );
+					load_complete();
+				},
+				fail: function() {
+					_.media = -1;
+					onError( _.path );
+				}
+			});
 		}
 
 		/**
@@ -32,12 +76,12 @@
 		{
 			return (
 				( _.type === 'image' && _.media.complete && _.media.naturalWidth === 0 ) ||
-				( _.type === 'audio' && _.media.error !== null )
+				( _.type === 'audio' && _.media === -1 )
 			);
 		}
 
 		/**
-		 * Called once asset successfully loads
+		 * Called once Asset successfully loads
 		 */
 		function load_complete()
 		{
@@ -48,52 +92,57 @@
 		// -- Public: --
 		this.path;
 		this.type = type;
-		this.media = create_media();
+		this.media = ( type === 'image' ? new Image() : null );
 
 		/**
-		 * Set file [path]
+		 * Set asset file [path]
 		 */
 		this.from = function( path )
 		{
-			if ( !loaded )
-			{
+			if ( !loaded ) {
 				_.path = path;
+
+				if ( _.type === 'audio' ) {
+					create_audio();
+				}
 			}
 
 			return _;
 		}
 
 		/**
-		 * Set file load handler
+		 * Set asset load handler
 		 */
 		this.loaded = function( callback )
 		{
-			if ( !loaded )
-			{
+			if ( !loaded ) {
 				onComplete = callback;
 
-				var loadEvent = ( _.type === 'image' ? 'onload' : 'oncanplay' );
-				_.media[loadEvent] = load_complete;
-				_.media.src = _.path;
+				if ( _.type === 'image' ) {
+					_.media.onload = load_complete;
+					_.media.src = _.path;
+				}
 			}
 
 			return _;
 		}
 
 		/**
-		 * Set file load failure handler
+		 * Set asset load failure handler
 		 */
 		this.fail = function( callback )
 		{
-			if ( check_fail_state() )
-			{
-				callback( _.path );
+			onError = callback;
+
+			if ( check_fail_state() ) {
+				onError( _.path );
 				return _;
 			}
 
-			_.media.onerror = function()
-			{
-				callback( _.path );
+			if ( _.type === 'image') {
+				_.media.onerror = function() {
+					onError( _.path );
+				}
 			}
 
 			return _;
@@ -101,6 +150,10 @@
 	}
 
 	/**
+	 * -------------------
+	 * Class: AssetManager
+	 * -------------------
+	 *
 	 * Instance of a loaded asset library,
 	 * used to retrieve assets during game
 	 */
@@ -134,8 +187,7 @@
 		 */
 		this.path = function( type, folder )
 		{
-			if ( !locked && typeof root.hasOwnProperty( type ) )
-			{
+			if ( !locked && typeof root.hasOwnProperty( type ) ) {
 				root[type] = folder + '/';
 			}
 
@@ -147,8 +199,7 @@
 		 */
 		this.store = function( asset )
 		{
-			if ( !locked )
-			{
+			if ( !locked ) {
 				data[asset.type][asset.path] = asset;
 			}
 
@@ -160,12 +211,9 @@
 		 */
 		this.getImage = function( file )
 		{
-			try
-			{
+			try {
 				return data.image[root.base + root.images + file].media;
-			}
-			catch( e )
-			{
+			} catch( e ) {
 				return asset_error( root.images, file );
 			}
 		}
@@ -175,12 +223,9 @@
 		 */
 		this.getAudio = function( file )
 		{
-			try
-			{
+			try {
 				return data.audio[root.base + root.audio + file].media;
-			}
-			catch( e )
-			{
+			} catch( e ) {
 				return asset_error( root.audio, file );
 			}
 		}
@@ -195,9 +240,13 @@
 	}
 
 	/**
+	 * ------------------
+	 * Class: AssetLoader
+	 * ------------------
+	 *
 	 * Instance of the asset loader resource,
 	 * which can be used to load a list of
-	 * assets into memory and then handle them
+	 * assets into memory and handle them
 	 * through the returned asset manager
 	 */
 	function AssetLoader()
@@ -222,6 +271,8 @@
 			var asset_count = images.length + audio.length;
 			var loaded = 0;
 
+			// Instance which will be returned through
+			// onComplete() once all assets are loaded
 			var asset_manager = new AssetManager( _root )
 				.path( 'images', assets.images.folder )
 				.path( 'audio', assets.audio.folder );
@@ -234,8 +285,7 @@
 				asset_manager.store( asset );
 				onProgress( Math.round( 100 * ( ++loaded / asset_count ) ) );
 
-				if (loaded >= asset_count)
-				{
+				if (loaded >= asset_count) {
 					asset_manager.lock();
 					onComplete( asset_manager );
 				}
@@ -297,7 +347,8 @@
 		 * Set the asset list load completion
 		 * handler, and trigger the asset loader
 		 */
-		this.then = function( callback ) {
+		this.then = function( callback )
+		{
 			onComplete = callback || onComplete;
 			load_assets();
 		}

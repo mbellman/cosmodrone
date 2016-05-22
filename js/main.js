@@ -5,6 +5,7 @@ include(
 		'js/assets/AssetLoader.js',
 		'js/assets/AssetManifest.js',
 		'js/graphics/Canvas.js',
+		'js/audio/WebAudio.js',
 		'js/system/Tools.js',
 		'js/system/Vector.js',
 		'js/system/Input.js',

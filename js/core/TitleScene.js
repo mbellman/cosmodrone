@@ -235,8 +235,10 @@ function TitleScene( controller, assets )
 				.setXY( 200, 300 )
 		)
 		.add(
-			new TextString( 'Monitor', assets.getImage( 'fonts/Monitor.png' ) )
-				.setString( 'Line break test![br]Line![br]Break![br]Test!' )
+			new TextPrinter( 'Monitor', assets.getImage( 'fonts/Monitor.png' ) )
+				.print( 'Line break test![br]Line![br]Break![br]Test!' )
+				.setDelay( 25 )
+				.setSound( assets.getAudio('text/blip2.wav') )
 		);
 
 		// Add all props to [stage]

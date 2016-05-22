@@ -31,5 +31,8 @@ A game about space station maintenance!
 ##### CODE
 * Handy routine for checking on-screen condition
 * Handy routine for converting to/from Canvas pixel data index and [x, y] pixel coordinate
+* List script dependencies in comments at the top of each file where applicable
+* Change curly brace line break convention across files (only inside functions)
+* Add Class/Object/Constructor/Etc. labels to major items
 * Base "Component" class inherited by all components
 * Background, Terrain, and HeightMap classes need some tidying

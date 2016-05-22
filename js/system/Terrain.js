@@ -22,10 +22,7 @@ function Terrain()
 	var arid_line = 48;                       // Temperature at which trees no longer grow above [sea_line+5]
 	var desert_line = 55;                     // In between this temperature and +4 the landscape receives a redder tint
 	var shore_line = 42;                      // Below [sea_line+5], trees will grow if the temperature is between this value and value+4
-
 	var init = false;                         // Whether or not the terrain has been generated yet via build()
-	var init_timeout;                         // If render() is called before [init] is true, this interval will poll
-	                                          // the variable several times until generation completes before advancing
 
 	// Tile color formulas based on elevation, temperature, and time of day
 	var color = {
@@ -526,9 +523,7 @@ function Terrain()
 					b: color.presets.city.b - color_reduction
 				};
 
-				city_canvas
-					.draw.rectangle( tile.x, tile.y, 1, 1 )
-					.fill( rgb( hue.r, hue.g, hue.b ) );
+				city_canvas.draw.rectangle( tile.x, tile.y, 1, 1 ).fill( rgb( hue.r, hue.g, hue.b ) );
 			}
 
 			// Increase distance proportionally to remoteness
@@ -670,9 +665,7 @@ function Terrain()
 					b: color.presets.city.b - light_reduction
 				};
 
-				city_canvas
-					.draw.rectangle( x, y, 1, 1 )
-					.fill( rgb( road_hue.r, road_hue.g, road_hue.b ) );
+				city_canvas.draw.rectangle( x, y, 1, 1 ).fill( rgb( road_hue.r, road_hue.g, road_hue.b ) );
 			}
 
 			var pixel = 4 * ( y * height.size + x );
@@ -898,7 +891,6 @@ function Terrain()
 	{
 		if ( !init )
 		{
-			init_timeout = setTimeout( _.render, 500 );
 			return;
 		}
 

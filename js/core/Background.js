@@ -586,6 +586,7 @@
 			var is_cirrus = ( type === 'cirrus' );
 			var cloud_image = cloud_renders[index].element;
 			var shadow_image = ( is_cirrus ? null : shadow_renders[index].element );
+			
 			var velocity = {
 				x: configuration.scrollSpeed.x,
 				y: configuration.scrollSpeed.y

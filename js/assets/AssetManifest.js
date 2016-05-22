@@ -81,7 +81,8 @@ var AssetManifest =
 		folder: 'audio',
 		files:
 		[
-			'coin.mp3',
+			'text/blip1.wav',
+			'text/blip2.wav',
 		],
 	}
 };

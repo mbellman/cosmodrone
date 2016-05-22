@@ -100,8 +100,7 @@
 	{
 		var clip = Fonts[font][character];
 
-		if ( typeof clip === 'undefined' )
-		{
+		if ( typeof clip === 'undefined' ) {
 			return null;
 		}
 
@@ -109,8 +108,11 @@
 	}
 
 	/**
-	 * Component which updates the owner's Sprite with
-	 * a printed string of characters on a Canvas element
+	 * -----------------
+	 * Class: TextString
+	 * -----------------
+	 *
+	 * A printed string of bitmap font characters
 	 */
 	function TextString( _font, _source )
 	{
@@ -125,11 +127,9 @@
 		var line_height = 30;
 		var letter_spacing = 2;
 		var space_size = 16;
-
 		var buffer = 0;
 		var offset = {x: 0, y: 0};
 		var size = {width: 0, height: 0};
-
 		var instructions = [' ', '[br]'];
 
 		/**
@@ -137,8 +137,7 @@
 		 */
 		function process_instruction( instruction )
 		{
-			switch ( instruction )
-			{
+			switch ( instruction ) {
 				// Space
 				case ' ':
 					offset.x += space_size;
@@ -161,13 +160,11 @@
 			var char_height = offset.y + clip.height + clip.top;
 			offset.x += ( clip.width + letter_spacing );
 
-			if (offset.x > size.width)
-			{
+			if (offset.x > size.width) {
 				size.width = offset.x;
 			}
 
-			if (char_height > size.height)
-			{
+			if (char_height > size.height) {
 				size.height = char_height;
 			}
 		}
@@ -191,35 +188,26 @@
 		 */
 		function feed_character( is_printing )
 		{
-			// Check for any special print
-			// instructions at this character
-			for ( var i = 0 ; i < instructions.length ; i++ )
-			{
+			// Special print instruction check
+			for ( var i = 0 ; i < instructions.length ; i++ ) {
 				var instruction = instructions[i];
 
-				if ( string.substr( buffer, instruction.length ) === instruction )
-				{
+				if ( string.substr( buffer, instruction.length ) === instruction ) {
 					process_instruction( instruction );
 					return;
 				}
 			}
 
-			// Normal character
 			var clip = get_character_clipping( font, string.charAt( buffer++ ) );
 
-			if ( clip === null )
-			{
+			if ( clip === null ) {
 				// Invalid character
 				return;
 			}
 
-			if ( !is_printing )
-			{
-				// Only determine the new Canvas area
+			if ( !is_printing ) {
 				update_canvas_size( clip );
-			}
-			else
-			{
+			} else {
 				print_character( clip );
 			}
 		}
@@ -235,8 +223,7 @@
 			offset.y = 0;
 			buffer = 0;
 
-			while ( buffer < string.length )
-			{
+			while ( buffer < string.length ) {
 				feed_character( is_printing );
 			}
 		}
@@ -261,22 +248,20 @@
 		{
 			feed_string( true );
 
-			if ( owner !== null && owner.has( Sprite ) )
-			{
-				owner.get( Sprite ).setSource( render.element );
+			if ( owner !== null && owner.has( Sprite ) ) {
+				owner.get(Sprite).setSource( render.element );
 			}
 		}
 
 		// -- Public: --
-		this.update = function( dt ){}
+		this.update = function( dt ) {}
 
 		this.onAdded = function( entity )
 		{
 			owner = entity;
 
-			if ( owner.has( Sprite ) )
-			{
-				owner.get( Sprite ).setSource( render.element );
+			if ( owner.has(Sprite) ) {
+				owner.get(Sprite).setSource( render.element );
 			}
 		}
 
@@ -314,5 +299,148 @@
 		}
 	}
 
+	/**
+	 * ------------------
+	 * Class: TextPrinter
+	 * ------------------
+	 *
+	 * Displays a string with letter-by-letter output
+	 */
+	function TextPrinter( _font, _source )
+	{
+		// -- Private: --
+		var _ = this;
+		var owner = null;
+		var text = new TextString( _font, _source );
+		var string = '';
+		var output = '';
+		var buffer = 0;
+		var finished = false;
+		var sounds = [];
+		var sound_queued = false;
+		var instructions = [' ', '[br]'];
+		var delay = {
+			time: 50,
+			counter: 0
+		};
+
+		/**
+		 * Restarts text printing cycle
+		 */
+		function reset_output_buffer()
+		{
+			output = '';
+			buffer = 0;
+			delay.counter = 0;
+			finished = false;
+		}
+
+		/**
+		 * Plays a random 'text printing' sound
+		 */
+		function play_sound()
+		{
+			if ( sounds.length > 0 ) {
+				var sound = random( 0, sounds.length - 1 );
+				sounds[sound].play();
+			}
+
+			sound_queued = false;
+		}
+
+		function print_next_character()
+		{
+			// Print special 'instruction' blocks silently
+			for ( var i = 0 ; i < instructions.length ; i++ ) {
+				var instruction = instructions[i];
+
+				if ( string.substr( buffer, instruction.length ) === instruction ) {
+					output += instruction;
+					buffer += instruction.length;
+					break;
+				}
+			}
+
+			// Print next character to [output] buffer
+			output += string.charAt( buffer++ );
+			text.setString( output );
+
+			// Queue sound to play on next
+			// update cycle, once Sprite
+			// has updated with new character
+			sound_queued = true;
+		}
+
+		// -- Public: --
+		this.update = function( dt )
+		{
+			if ( sound_queued ) {
+				play_sound();
+			}
+
+			if ( !finished ) {
+				if ( delay.counter < delay.time ) {
+					delay.counter += ( dt * 1000 );
+					return;
+				}
+
+				delay.counter = 0;
+				print_next_character();
+
+				if ( buffer >= string.length ) {
+					finished = true;
+				}
+			}
+		}
+
+		this.onAdded = function( entity )
+		{
+			owner = entity;
+			owner.add( text );
+		}
+
+		/**
+		 * Configure the component to play one or
+		 * one of multiple sound effects each time
+		 * a new letter is printed to the screen
+		 */
+		this.setSound = function( _sounds )
+		{
+			sounds.length = 0;
+
+			if ( !_sounds.length ) {
+				sounds.push( _sounds );
+				return _;
+			}
+
+			for ( var s = 0 ; s < _sounds.length ; s++ ) {
+				sounds.push( _sounds[s] );
+			}
+
+			return _;
+		}
+
+		/**
+		 * Set the delay between printed
+		 * characters in milliseconds
+		 */
+		this.setDelay = function( ms )
+		{
+			delay.time = ms;
+			return _;
+		}
+
+		/**
+		 * Print a new [string]
+		 */
+		this.print = function( _string )
+		{
+			string = _string;
+			reset_output_buffer();
+			return _;
+		}
+	}
+
 	scope.TextString = TextString;
+	scope.TextPrinter = TextPrinter;
 })( window );

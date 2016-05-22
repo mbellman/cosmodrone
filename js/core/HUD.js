@@ -50,7 +50,7 @@ function HUD( assets )
 	};
 
 	/**
-	 * Clears [screen.HUD] where the HUD displayed
+	 * Clears [screen.HUD] where the HUD is displayed
 	 */
 	function clear_HUD()
 	{
@@ -98,13 +98,8 @@ function HUD( assets )
 			draw_meter( meter, UI.droneHUD.x, UI.droneHUD.y, width );
 		}
 
-		// Draw the static UI over the meters
-		screen.HUD.draw
-			.image(
-				graphics.droneHUD,
-				UI.droneHUD.x,
-				UI.droneHUD.y
-			);
+		// Draw the static frame over the meters
+		screen.HUD.draw.image( graphics.droneHUD, UI.droneHUD.x, UI.droneHUD.y );
 
 		// Draw system indicators
 		var indicators = ['stabilizing', 'docking'];
@@ -116,12 +111,11 @@ function HUD( assets )
 			// Get correct indicator graphic for on/off state
 			var file = 'game/ui/indicators/' + indicator + '-' + (system[indicator] ? 'on.png' : 'off.png');
 
-			screen.HUD
-				.draw.image(
-					assets.getImage( file ),
-					UI.droneHUD.x + UI.indicators[indicator].x,
-					UI.droneHUD.y + UI.indicators[indicator].y
-				);
+			screen.HUD.draw.image(
+				assets.getImage( file ),
+				UI.droneHUD.x + UI.indicators[indicator].x,
+				UI.droneHUD.y + UI.indicators[indicator].y
+			);
 		}
 	}
 
