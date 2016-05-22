@@ -1,5 +1,9 @@
 /**
- * Sets up the game's title scene
+ * -----------------
+ * Class: TitleScene
+ * -----------------
+ *
+ * Component which sets up the game's title scene
  */
 function TitleScene( controller, assets )
 {
@@ -11,6 +15,8 @@ function TitleScene( controller, assets )
 	var stage = new Entity();
 	var props = {};
 	var slide = 1.5;
+
+	var caret_position = 1;
 
 	// --------------------------------------- //
 	// ------------- SCENE SETUP ------------- //
@@ -55,8 +61,7 @@ function TitleScene( controller, assets )
 		props.starlogo = new Entity().add( new Sprite().setXY( 90, 90 ) );
 
 		// Lay out twinkling stars
-		for ( var t = 0 ; t < stars.x.length ; t++ )
-		{
+		for ( var t = 0 ; t < stars.x.length ; t++ ) {
 			props.starlogo.addChild(
 				create_star( stars.type[t], stars.x[t], stars.y[t] )
 			);
@@ -66,8 +71,7 @@ function TitleScene( controller, assets )
 		props.logo = new Entity().add( new Sprite().setXY( 90, 120 ) );
 
 		// Add individual letters to the logo Entity and fade them in
-		for ( var c = 0 ; c < logo.characters.length ; c++ )
-		{
+		for ( var c = 0 ; c < logo.characters.length ; c++ ) {
 			var character = logo.characters[c];
 			var entity = new Entity().add(
 				new Sprite( assets.getImage( 'title/letters/' + character + '.png' ) )
@@ -81,6 +85,37 @@ function TitleScene( controller, assets )
 
 			props.logo.addChild( entity );
 		}
+	}
+
+	/**
+	 * Show the initial options on the title screen
+	 */
+	function create_title_menu()
+	{
+		var options = {
+			text: ['NEW GAME', 'STATION BUILDER'],
+			position: [{x: 522, y: 375}, {x: 474, y: 420}]
+		};
+
+		for ( var o = 0 ; o < options.text.length ; o++ ) {
+			var text = options.text[o];
+			var position = options.position[o];
+
+			props[text] = new Entity().add(
+				new Sprite().setXY( position.x, position.y ).setAlpha( 0 )
+			)
+			.add(
+				new TextString( 'Monitor', BitmapFont.Monitor )
+					.setString( text )
+			);
+
+			props[text].get( Sprite ).alpha.delay( 2.0 ).tweenTo( 1, 1.0, Ease.quad.in );
+		}
+
+		props.caret = new Entity().add(
+			new Sprite( assets.getImage( 'ui/menu-caret.png' ) )
+				.setXY( 490, 377 )
+		);
 	}
 
 	// -------------------------------------------- //
@@ -135,17 +170,57 @@ function TitleScene( controller, assets )
 		menu = 3;
 	}
 
+	/**
+	 * Leave the title scene
+	 */
+	function exit_scene()
+	{
+		input.unlisten();
+	}
+
 	// ------------------------------------------ //
 	// ------------- INPUT HANDLING ------------- //
 	// ------------------------------------------ //
 
+	function cycle_caret( shift )
+	{
+		switch ( menu ) {
+			// Title screen
+			case 1:
+				var caret_coords = {
+					1: {x: 490, y: 377},
+					2: {x: 442, y: 422}
+				};
+
+				caret_position += shift;
+
+				if ( caret_position > 2 ) {
+					caret_position = 1;
+				} else if ( caret_position < 1 ) {
+					caret_position = 2;
+				}
+
+				props.caret.get( Sprite ).setXY(
+					caret_coords[caret_position].x,
+					caret_coords[caret_position].y
+				);
+
+				assets.getAudio( 'text/blip2.wav' ).play();
+
+				break;
+			case 2:
+				break;
+			case 3:
+				break;
+		}
+	}
+
 	function input_UP()
 	{
-		switch ( menu )
-		{
+		switch ( menu ) {
 			// Main title scene
 			case 1:
-				view_level_select();
+				cycle_caret( -1 );
 				break;
 			// Level select scene
 			case 2:
@@ -158,14 +233,13 @@ function TitleScene( controller, assets )
 
 	function input_DOWN()
 	{
-		switch ( menu )
-		{
+		switch ( menu ) {
 			// Main title scene
 			case 1:
+				cycle_caret( 1 );
 				break;
 			// Level select scene
 			case 2:
-				view_title_select();
 				break;
 			// Station creator menu scene
 			case 3:
@@ -175,7 +249,9 @@ function TitleScene( controller, assets )
 
 	function input_ENTER()
 	{
-
+		if ( menu === 1 && caret_position === 1 ) {
+			view_level_select();
+		}
 	}
 
 	/**
@@ -189,13 +265,12 @@ function TitleScene( controller, assets )
 	}
 
 	// Public:
-	this.update = function( dt ){}
+	this.update = function( dt ) {}
 
 	this.onAdded = function( entity )
 	{
 		owner = entity;
 
-		// Listen for menu navigation key commands
 		input.listen();
 		bind_input_handlers();
 
@@ -204,20 +279,16 @@ function TitleScene( controller, assets )
 
 		// Background layers
 		props.nova = new Entity().add(
-			new Sprite( assets.getImage( 'title/nova1.png' ) )
-				.setXY( 0, -50 )
+			new Sprite( assets.getImage( 'title/nova1.png' ) ).setXY( 0, -50 )
 		);
 		props.nova2 = new Entity().add(
-			new Sprite( assets.getImage( 'title/nova2.png' ) )
-				.setXY( 0, -50 )
+			new Sprite( assets.getImage( 'title/nova2.png' ) ).setXY( 0, -50 )
 		);
 		props.sky = new Entity().add(
-			new Sprite( assets.getImage( 'title/sky.png' ) )
-				.setXY( 0, -1200 + viewport.height )
+			new Sprite( assets.getImage( 'title/sky.png' ) ).setXY( 0, -1200 + viewport.height )
 		);
 		props.stars = new Entity().add(
-			new Sprite( assets.getImage( 'title/starfield.png' ) )
-				.setAlpha( 0.2 )
+			new Sprite( assets.getImage( 'title/starfield.png' ) ).setAlpha( 0.2 )
 		);
 
 		// Set up title introduction animation
@@ -225,33 +296,19 @@ function TitleScene( controller, assets )
 
 		// Foreground layer
 		props.ground = new Entity().add(
-			new Sprite( assets.getImage( 'title/ground.png' ) )
-				.setXY( 0, viewport.height - 208 )
+			new Sprite( assets.getImage( 'title/ground.png' ) ).setXY( 0, viewport.height - 208 )
 		);
 
-		// Menu
-		props.string = new Entity().add(
-			new Sprite()
-				.setXY( 200, 300 )
-		)
-		.add(
-			new TextPrinter( 'Monitor', assets.getImage( 'fonts/Monitor.png' ) )
-				.print( 'Line break test![br]Line![br]Break![br]Test!' )
-				.setDelay( 25 )
-				.setSound( assets.getAudio('text/blip2.wav') )
-		);
+		// Title menu
+		create_title_menu();
 
 		// Add all props to [stage]
-		for ( var p in props )
-		{
-			if ( props.hasOwnProperty(p) )
-			{
+		for ( var p in props ) {
+			if ( props.hasOwnProperty(p) ) {
 				stage.addChild( props[p] );
 			}
 		}
 
-		// Add [stage] to the owner so all Sprites
-		// exist within the primary entity hierarchy
 		owner.addChild( stage );
 	}
 }

@@ -304,7 +304,7 @@
 	 * Class: TextPrinter
 	 * ------------------
 	 *
-	 * Displays a string with letter-by-letter output
+	 * Displays a string with updating letter-by-letter output
 	 */
 	function TextPrinter( _font, _source )
 	{
@@ -441,6 +441,7 @@
 		}
 	}
 
+	scope.BitmapFont = {};
 	scope.TextString = TextString;
 	scope.TextPrinter = TextPrinter;
 })( window );

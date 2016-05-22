@@ -74,6 +74,7 @@ var AssetManifest =
 			'title/star3.png',
 			'title/starfield.png',
 			'title/title.png',
+			'ui/menu-caret.png',
 		],
 	},
 	audio:

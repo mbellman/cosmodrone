@@ -3,7 +3,7 @@
  * Global Object: WebAudio
  * -----------------------
  *
- * Persistent WebAudio resource for the page
+ * Static WebAudio resource for the page
  */
 var WebAudio = {
 	ctx: new AudioContext()
@@ -19,7 +19,6 @@ WebAudio.load = function( file, handlers )
 	handlers.fail = handlers.fail || function(){};
 
 	var ajax = new XMLHttpRequest();
-
 	ajax.open( 'GET', file, true );
 	ajax.responseType = 'arraybuffer';
 

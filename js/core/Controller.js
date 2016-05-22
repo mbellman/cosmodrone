@@ -7,6 +7,12 @@ function Controller( assets )
 	var _ = this;
 	var level = 1;
 
+	/**
+	 * Save references to fonts for easy reuse.
+	 * (BitmapFont is an object created in Text.js)
+	 */
+	BitmapFont.Monitor = assets.getImage( 'fonts/Monitor.png' );
+
 	// -- Public: --
 	this.scenes = new SceneManager();
 

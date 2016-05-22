@@ -3,6 +3,7 @@
 	 * Key code -> Key name map
 	 */
 	var KeyCodes = {
+		13: 'ENTER',
 		37: 'LEFT',
 		38: 'UP',
 		39: 'RIGHT',
@@ -127,6 +128,7 @@
 		var bound = false;
 		var listener = new InputHandler();
 		var state = {
+			ENTER: false,
 			UP: false,
 			RIGHT: false,
 			DOWN: false,
