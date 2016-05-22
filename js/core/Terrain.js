@@ -1,4 +1,17 @@
 /**
+ * ------------------
+ * DEPENDENCIES:
+ *
+ * system/HeightMap.js
+ * render/Canvas.js
+ * ------------------
+ */
+
+/**
+ * --------------
+ * Class: Terrain
+ * --------------
+ *
  * Generates and prerenders terrain for the game scene
  */
 function Terrain()
@@ -227,11 +240,10 @@ function Terrain()
 		var size = Math.ceil( map_size / chunk_size );
 		var chunks = new Array( size );
 
-		for ( var y = 0 ; y < size ; y++ )
-		{
+		for ( var y = 0 ; y < size ; y++ ) {
 			chunks[y] = new Array( size );
-			for ( var x = 0 ; x < size ; x++ )
-			{
+
+			for ( var x = 0 ; x < size ; x++ ) {
 				chunks[y][x] = [];
 			}
 		}
@@ -247,8 +259,7 @@ function Terrain()
 		var elevation = data[y][x];
 		var map_size = data.length;
 
-		for ( var i = 0 ; i < 3 ; i++ )
-		{
+		for ( var i = 0 ; i < 3 ; i++ ) {
 			var _y = Math.round( y - Math.sin( light_angle ) * ( i + 1 ) );
 			var _x = Math.round( x + Math.cos( light_angle ) * ( i + 1 ) );
 			var height = data[mod( _y, map_size )][mod( _x, map_size )];
@@ -332,18 +343,17 @@ function Terrain()
 		// (the density of a tile determines its
 		// luminosity during night renderings)
 		var layout = new Array( size );
-		for ( var y = 0 ; y < size ; y++ )
-		{
+
+		for ( var y = 0 ; y < size ; y++ ) {
 			layout[y] = new Array( size );
-			for ( var x = 0 ; x < size ; x++ )
-			{
+
+			for ( var x = 0 ; x < size ; x++ ) {
 				layout[y][x] = 5;
 			}
 		}
 
 		// Return 1x1 or 2x2 cities as-is
-		if ( size < 3 )
-		{
+		if ( size < 3 ) {
 			return layout;
 		}
 
@@ -351,10 +361,8 @@ function Terrain()
 		// reducing density from city center
 		var center = Math.round( size / 2 );
 
-		for ( var y = 0 ; y < size ; y++ )
-		{
-			for ( var x = 0 ; x < size ; x++ )
-			{
+		for ( var y = 0 ; y < size ; y++ ) {
+			for ( var x = 0 ; x < size ; x++ ) {
 				var dx = center - x;
 				var dy = center - y;
 				var center_distance = Math.sqrt( dx * dx + dy * dy );
@@ -378,8 +386,7 @@ function Terrain()
 
 		city_chunks = map_to_chunks( map_size, chunk_size );
 
-		while ( total++ <= city_count )
-		{
+		while ( total++ <= city_count ) {
 			// Pick a random spot for the city
 			var location = {
 				y: Generator.random( 0, map_size - 1 ),
@@ -394,8 +401,7 @@ function Terrain()
 			var max_size = ( is_last_quarter ? Math.min( max_city_size, 5 ) : max_city_size );
 
 			// Check to see if a city can exist here
-			if ( elevation < min_elevation || elevation > max_elevation )
-			{
+			if ( elevation < min_elevation || elevation > max_elevation ) {
 				continue;
 			}
 
@@ -414,10 +420,8 @@ function Terrain()
 			// Draw the layout directly onto terrain_canvas
 			city_size = city_layout.length;
 
-			for ( var y = 0 ; y < city_size ; y++ )
-			{
-				for ( var x = 0 ; x < city_size ; x++ )
-				{
+			for ( var y = 0 ; y < city_size ; y++ ) {
+				for ( var x = 0 ; x < city_size ; x++ ) {
 					var tile = {
 						y: mod( location.y + y, map_size ),
 						x: mod( location.x + x, map_size )
@@ -425,8 +429,7 @@ function Terrain()
 
 					// Regardless of the overall city layout,
 					// only draw on tiles above sea level
-					if ( height_data[tile.y][tile.x] >= sea_level )
-					{
+					if ( height_data[tile.y][tile.x] >= sea_level ) {
 						// Find density value for this tile, ranging from 0-5
 						var density = city_layout[y][x];
 						var color_reduction = 6 * ( 5 - density );
@@ -438,15 +441,13 @@ function Terrain()
 						};
 
 						// Only draw tiles above a certain density
-						if ( density > 0 )
-						{
+						if ( density > 0 ) {
 							// Flatten terrain beneath the city
 							height_data[tile.y][tile.x] = city_elevation;
 							// Draw city tile
 							city_canvas.draw.rectangle( tile.x, tile.y, 1, 1 ).fill( rgb( hue.r, hue.g, hue.b ) );
 
-							if ( hue.r > ( color.presets.city.r - color_reduction ) )
-							{
+							if ( hue.r > ( color.presets.city.r - color_reduction ) ) {
 								// Color in adjacent tiles with reduced hue for a nighttime glow effect
 								var glow_R = hue.r - 5;
 								var glow_G = hue.g - 5;
@@ -504,8 +505,7 @@ function Terrain()
 
 		var d = 0;
 
-		while( d < distance )
-		{
+		while( d < distance ) {
 			var ratio = d / distance;
 			var remoteness = Math.sin( Math.PI * ratio );
 			var tile = {
@@ -514,8 +514,7 @@ function Terrain()
 			};
 
 			// Only draw road tiles above sea level
-			if ( height_data[tile.y][tile.x] > sea_level )
-			{
+			if ( height_data[tile.y][tile.x] > sea_level ) {
 				var color_reduction = Math.round( 25 * remoteness );
 				var hue = {
 					r: color.presets.city.r - color_reduction,
@@ -545,28 +544,22 @@ function Terrain()
 		var height_data = height_map.data();
 		var chunks = city_chunks.length;
 
-		// Iterate over all chunk regions
-		for ( var y = 0 ; y < chunks ; y++ )
-		{
-			for ( var x = 0 ; x < chunks ; x++ )
-			{
+		for ( var y = 0 ; y < chunks ; y++ ) {
+			for ( var x = 0 ; x < chunks ; x++ ) {
 				var chunk = city_chunks[y][x];
 				var neighbor = neighbor_chunks( y, x, chunks );
 
 				// Iterate over cities in this chunk
-				for ( var c = 0 ; c < chunk.length ; c++ )
-				{
+				for ( var c = 0 ; c < chunk.length ; c++ ) {
 					var city1 = chunk[c];
 
 					// Iterate over neighboring city chunks
-					for ( var n = 0 ; n < neighbor.length ; n++ )
-					{
+					for ( var n = 0 ; n < neighbor.length ; n++ ) {
 						var neighbor_chunk = neighbor[n];
 						var neighbor_cities = city_chunks[neighbor_chunk.y][neighbor_chunk.x];
 
 						// Iterate over all cities from a neighbor chunk
-						for ( var c2 = 0 ; c2 < neighbor_cities.length ; c2++ )
-						{
+						for ( var c2 = 0 ; c2 < neighbor_cities.length ; c2++ ) {
 							var city2 = neighbor_cities[c2];
 							var city_distance = proper_distance( city1, city2 );
 
@@ -581,8 +574,7 @@ function Terrain()
 									// Or let the RNG take care of the job
 									Generator.random() < 0.2
 								)
-							)
-							{
+							) {
 								generate_road_between( city1, city2, city_distance, height_data, sea_level );
 							}
 						}
@@ -619,7 +611,7 @@ function Terrain()
 		generate_cities( sea_level, tree_level );
 		generate_roads( sea_level );
 
-		height_map.scan(function( y, x, elevation ) {
+		height_map.scan( function( y, x, elevation ) {
 			// Scale elevation to [0-100] for use by the tile coloration formulas
 			var _elevation = Math.round(elevation*ratio);
 
@@ -640,24 +632,18 @@ function Terrain()
 			};
 
 			// Special coloration for shoreline tiles
-			if ( _elevation > sea_line - 6 && _elevation < sea_line + 6 )
-			{
-				if ( tile_just_above( height.data, y, x, sea_level - 1 ) )
-				{
+			if ( _elevation > sea_line - 6 && _elevation < sea_line + 6 ) {
+				if ( tile_just_above( height.data, y, x, sea_level - 1 ) ) {
 					hue.r += 20;
 					hue.g += 20;
-				}
-				else
-				if ( tile_just_below( height.data, y, x, sea_level ) )
-				{
+				} else if ( tile_just_below( height.data, y, x, sea_level ) ) {
 					hue.g += 50;
 					hue.b += 40;
 				}
 			}
 
 			// Render coastal roads to [city_canvas]
-			if ( _elevation > sea_line + 2 && _elevation < sea_line + 6 && Generator.random() < 0.1 )
-			{
+			if ( _elevation > sea_line + 2 && _elevation < sea_line + 6 && Generator.random() < 0.1 ) {
 				var light_reduction = Generator.random( 0, 20 ) + ( _elevation !== sea_line + 4 ? 20 : 0 );
 				var road_hue = {
 					r: color.presets.city.r - light_reduction,
@@ -689,8 +675,7 @@ function Terrain()
 	 */
 	function composite_layers( hour )
 	{
-		if ( isNaN( hour ) )
-		{
+		if ( isNaN( hour ) ) {
 			hour = 12;
 		}
 
@@ -717,8 +702,7 @@ function Terrain()
 		};
 
 		// Iterate over terrain + city layer pixels
-		for ( var p = 0 ; p < height_image.length ; p += 4 )
-		{
+		for ( var p = 0 ; p < height_image.length ; p += 4 ) {
 			var terrain_color = get_color_data( height_image, p );
 			var city_color = get_color_data( city_image, p );
 			var is_city = ( city_color.red > 0 );
@@ -728,8 +712,7 @@ function Terrain()
 				blue: 0
 			};
 
-			if ( is_night && is_city )
-			{
+			if ( is_night && is_city ) {
 				// Calculate composited city lights color
 				var density_light_reduction = Math.pow( clamp( density_light_limit - city_color.red, 0, density_light_limit ), 2 );
 				var DLR_3q = Math.round( 0.75 * density_light_reduction );
@@ -737,9 +720,7 @@ function Terrain()
 				composite_color.red = color.presets.city2.r - city_light_reduction - density_light_reduction;
 				composite_color.green = color.presets.city2.g - city_light_reduction - density_light_reduction - Generator.random( 0, 60 );
 				composite_color.blue = color.presets.city2.b - CLR_3q - DLR_3q - Generator.random( 0, 75 );
-			}
-			else
-			{
+			} else {
 				// Calculate composited terrain color
 				var red = ( is_city ? city_color.red : terrain_color.red );
 				var green = ( is_city ? city_color.green : terrain_color.green );
@@ -765,10 +746,8 @@ function Terrain()
 			// [tile_size]-scaled pixel index
 			pixel = 4 * ( y * map_size * tile_size * tile_size + x * tile_size );
 
-			for ( var py = 0 ; py < tile_size ; py++ )
-			{
-				for ( var px = 0 ; px < tile_size ; px++ )
-				{
+			for ( var py = 0 ; py < tile_size ; py++ ) {
+				for ( var px = 0 ; px < tile_size ; px++ ) {
 					var _p = pixel + 4 * px + 4 * ( py * map_size * tile_size );
 
 					composite.data[_p] = composite_color.red;
@@ -889,8 +868,7 @@ function Terrain()
 	 */
 	this.render = function()
 	{
-		if ( !init )
-		{
+		if ( !init ) {
 			return;
 		}
 

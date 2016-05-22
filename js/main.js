@@ -2,28 +2,31 @@
 include(
 	[
 		'js/dependencies/jquery-2.2.3.js',
-		'js/assets/AssetLoader.js',
-		'js/assets/AssetManifest.js',
-		'js/graphics/Canvas.js',
-		'js/audio/WebAudio.js',
 		'js/system/Tools.js',
 		'js/system/Vector.js',
 		'js/system/Input.js',
 		'js/system/RNG.js',
 		'js/system/HeightMap.js',
-		'js/system/Terrain.js',
+		'js/assets/AssetLoader.js',
+		'js/assets/AssetManifest.js',
+		'js/render/Canvas.js',
+		'js/audio/WebAudio.js',
 		'js/core/Entity.js',
 		'js/core/Components.js',
 		'js/core/SceneManager.js',
 		'js/core/Controller.js',
 		'js/core/Tweenable.js',
-		'js/core/Text.js',
+		'js/core/Sprite.js',
+		'js/core/Terrain.js',
 		'js/core/Background.js',
-		'js/core/Station.js',
 		'js/core/LevelLoader.js',
-		'js/core/HUD.js',
-		'js/core/TitleScene.js',
-		'js/core/GameInstance.js'
+		'js/core/Drone.js',
+		'js/core/ui/Text.js',
+		'js/core/ui/Menu.js',
+		'js/core/ui/HUD.js',
+		'js/core/station/Objects.js',
+		'js/core/scenes/TitleScene.js',
+		'js/core/scenes/GameScene.js'
 	]
 ).then( main );
 

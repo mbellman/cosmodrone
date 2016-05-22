@@ -1,5 +1,9 @@
 (function( scope ) {
 	/**
+	 * ---------------------
+	 * Class: IncludeManager
+	 * ---------------------
+	 *
 	 * Script loader resource
 	 */
 	function IncludeManager( includes )
@@ -22,18 +26,15 @@
 			var script = document.createElement( 'script' );
 			script.src = file;
 
-			script.onload = function()
-			{
+			script.onload = function() {
 				events.progress( file );
 
-				if ( ++loaded >= scriptCount )
-				{
+				if ( ++loaded >= scriptCount ) {
 					events.complete();
 				}
 			};
 
-			script.onerror = function()
-			{
+			script.onerror = function() {
 				events.error( file );
 				document.body.removeChild( script );
 			}
@@ -46,8 +47,7 @@
 		 */
 		function load_scripts()
 		{
-			for ( var s = 0 ; s < scriptCount ; s++ )
-			{
+			for ( var s = 0 ; s < scriptCount ; s++ ) {
 				load_script( includes[s] );
 			}
 		}
@@ -58,8 +58,7 @@
 		 */
 		this.on = function( event, callback )
 		{
-			if ( typeof events[event] !== 'undefined' )
-			{
+			if ( typeof events[event] !== 'undefined' ) {
 				events[event] = callback;
 			}
 
@@ -77,7 +76,7 @@
 	}
 
 	/**
-	 * Global script loader resource factory function
+	 * IncludeManager factory function
 	 */
 	function include( scripts )
 	{

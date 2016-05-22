@@ -93,21 +93,6 @@
 	};
 
 	/**
-	 * Get the clipping region for a
-	 * character from a specific font
-	 */
-	function get_character_clipping( font, character )
-	{
-		var clip = Fonts[font][character];
-
-		if ( typeof clip === 'undefined' ) {
-			return null;
-		}
-
-		return clip;
-	}
-
-	/**
 	 * -----------------
 	 * Class: TextString
 	 * -----------------
@@ -131,6 +116,20 @@
 		var offset = {x: 0, y: 0};
 		var size = {width: 0, height: 0};
 		var instructions = [' ', '[br]'];
+
+		/**
+		 * Get the clipping region for a character
+		 */
+		function get_character_clipping( character )
+		{
+			var clip = Fonts[font][character];
+
+			if ( typeof clip === 'undefined' ) {
+				return null;
+			}
+
+			return clip;
+		}
 
 		/**
 		 * Executes special print instructions
@@ -198,7 +197,7 @@
 				}
 			}
 
-			var clip = get_character_clipping( font, string.charAt( buffer++ ) );
+			var clip = get_character_clipping( string.charAt( buffer++ ) );
 
 			if ( clip === null ) {
 				// Invalid character
@@ -290,7 +289,7 @@
 		/**
 		 * Change text style [properties]
 		 */
-		this.set = function( properties )
+		this.style = function( properties )
 		{
 			line_height = properties.lineHeight || 30;
 			letter_spacing = properties.letterSpacing || 2;
@@ -320,7 +319,7 @@
 		var sound_queued = false;
 		var instructions = [' ', '[br]'];
 		var delay = {
-			time: 50,
+			interval: 50,
 			counter: 0
 		};
 
@@ -379,7 +378,7 @@
 			}
 
 			if ( !finished ) {
-				if ( delay.counter < delay.time ) {
+				if ( delay.counter < delay.interval ) {
 					delay.counter += ( dt * 1000 );
 					return;
 				}
@@ -404,17 +403,14 @@
 		 * one of multiple sound effects each time
 		 * a new letter is printed to the screen
 		 */
-		this.setSound = function( _sounds )
+		this.setSound = function()
 		{
-			sounds.length = 0;
+			if ( arguments.length > 0 ) {
+				sounds.length = 0;
 
-			if ( !_sounds.length ) {
-				sounds.push( _sounds );
-				return _;
-			}
-
-			for ( var s = 0 ; s < _sounds.length ; s++ ) {
-				sounds.push( _sounds[s] );
+				for ( var s = 0 ; s < arguments.length ; s++ ) {
+					sounds.push( arguments[s] );
+				}
 			}
 
 			return _;
@@ -424,9 +420,9 @@
 		 * Set the delay between printed
 		 * characters in milliseconds
 		 */
-		this.setDelay = function( ms )
+		this.setInterval = function( ms )
 		{
-			delay.time = ms;
+			delay.interval = ms;
 			return _;
 		}
 

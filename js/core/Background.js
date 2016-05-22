@@ -1,5 +1,20 @@
+/**
+ * ------------------
+ * DEPENDENCIES:
+ *
+ * core/Entity.js
+ * core/Components.js
+ * core/Sprite.js
+ * core/Terrain.js
+ * ------------------
+ */
+
 (function( scope ) {
 	/**
+	 * -------------------
+	 * Class: TextureCache
+	 * -------------------
+	 *
 	 * A group of prerendered equal-sized contiguous
 	 * texture chunks comprising a larger texture
 	 */
@@ -18,8 +33,7 @@
 		{
 			chunks.length = 0;
 
-			for ( var y = 0 ; y < divisions ; y++ )
-			{
+			for ( var y = 0 ; y < divisions ; y++ ) {
 				chunks[y] = [];
 			}
 		}
@@ -42,10 +56,8 @@
 			var chunk_H = texture.height / divisions;
 			var clip, chunk;
 
-			for ( var y = 0 ; y < divisions ; y++ )
-			{
-				for ( var x = 0 ; x < divisions ; x++ )
-				{
+			for ( var y = 0 ; y < divisions ; y++ ) {
+				for ( var x = 0 ; x < divisions ; x++ ) {
 					clip = {
 						x: ( x * chunk_W ),
 						y: ( y * chunk_H ),
@@ -87,16 +99,22 @@
 				y: y
 			};
 
-			// Prepare variables for rendering loop.
-			// T_coord: coordinate in original texture space
 			var chunk_W = T_size.width / divisions;
 			var chunk_H = T_size.height / divisions;
 			var T_coord = {}, chunk = {}, draw = {}, clip = {}, loops = 0;
 
-			while ( pixel.x < region_W || pixel.y < region_H )
-			{
-				if ( ++loops > 5000 )
-				{
+			// Steps:
+			// -----
+			// 1. Get the [pixel] coordinate in original texture space
+			// 2. Get the chunk this coordinate falls within
+			// 3. Determine where to start clipping on the smaller chunk texture
+			// 4. Get drawing coordinate
+			// 5. Get partial clipping area width/height
+			// 6. Render the partial clipped texture
+			// 7. Advance pixel offset and continue
+			// -----
+			while ( pixel.x < region_W || pixel.y < region_H ) {
+				if ( ++loops > 5000 ) {
 					// Failsafe against infinite looping (only
 					// occurs in the case of unusual [divisions])
 					break;
@@ -109,11 +127,11 @@
 				chunk.y = Math.floor( T_coord.y / chunk_H );
 				chunk.texture = chunks[chunk.y][chunk.x];
 
-				draw.x = x + pixel.x,
-				draw.y = y + pixel.y;
-
 				clip.x = T_coord.x % chunk_W;
 				clip.y = T_coord.y % chunk_H;
+
+				draw.x = x + pixel.x,
+				draw.y = y + pixel.y;
 
 				// Clip width/height should stop either at the edge
 				// of the chunk or the edge of the draw region
@@ -126,13 +144,12 @@
 					draw.x, draw.y, clip.width, clip.height
 				);
 
-				// Advance the pixel offset
 				pixel.x += clip.width;
-				if ( pixel.x >= region_W )
-				{
+
+				if ( pixel.x >= region_W ) {
 					pixel.y += clip.height;
-					if ( pixel.y < region_H )
-					{
+
+					if ( pixel.y < region_H ) {
 						pixel.x = 0;
 					}
 				}
@@ -141,6 +158,10 @@
 	}
 
 	/**
+	 * ------------
+	 * Class: Cloud
+	 * ------------
+	 *
 	 * Clouds above the terrain layer
 	 */
 	function Cloud()
@@ -189,6 +210,10 @@
 	}
 
 	/**
+	 * -----------------
+	 * Class: Background
+	 * -----------------
+	 *
 	 * A drifting planetary background layer beneath the game scene
 	 */
 	function Background( assets )
@@ -374,14 +399,13 @@
 		 */
 		function set_granular_light_level( animation, progress )
 		{
-			if ( !time_transition )
-			{
+			if ( !time_transition ) {
 				granular_light_level = Math.abs( 12 - configuration.hours[0] );
 				return;
 			}
 
 			// Determine the progress between hours
-			var prev_hour = configuration.hours[cycle_forward( active_terrain-1, terrain_renders.length-1 )];
+			var prev_hour = configuration.hours[cycle_forward( active_terrain - 1, terrain_renders.length - 1 )];
 			var next_hour = configuration.hours[active_terrain];
 			var difference = (
 				next_hour >= prev_hour ?
@@ -389,7 +413,7 @@
 				:
 					( 24 - prev_hour + next_hour )
 			);
-			var granular_hour = clamp( prev_hour + progress*difference, 0, 24 );
+			var granular_hour = clamp( prev_hour + progress * difference, 0, 24 );
 
 			granular_light_level = Math.abs( 12 - granular_hour );
 		}
@@ -404,25 +428,21 @@
 			// Keep track of cycles
 			var cycle = 0;
 
-			while ( 1 )
-			{
-				if ( cycle > 5000 )
-				{
+			while ( 1 ) {
+				if ( cycle++ > 5000 ) {
 					// Halt the loop if we've cycled too many times
 					break;
 				}
 
 				var cloud_data = cloud_bank[c];
 
-				if ( Math.random() < 0.1 && cloud_data.type === type )
-				{
+				if ( Math.random() < 0.1 && cloud_data.type === type ) {
 					// Pick this cloud
 					break;
 				}
 
 				// Update c and revert to 0 if it goes over the limit
 				c = cycle_back( ++c, cloud_bank.length - 1 );
-				cycle++;
 			}
 
 			return c;
@@ -477,8 +497,7 @@
 			cloud_canvas.scale( configuration.tileSize );
 			cloud_renders.push( cloud_canvas );
 
-			if ( type !== 'cirrus' )
-			{
+			if ( type !== 'cirrus' ) {
 				// Store shadow for normal clouds
 				var shadow_asset = assets.getImage( 'game/shadows/' + name + '.png' );
 				var shadow_canvas = new Canvas()
@@ -486,9 +505,7 @@
 
 				shadow_canvas.draw.image( shadow_asset );
 				shadow_renders.push( shadow_canvas.scale( configuration.tileSize ) );
-			}
-			else
-			{
+			} else {
 				// Store a blank entry for cirrus cloud shadows
 				shadow_renders.push( null );
 			}
@@ -499,22 +516,17 @@
 		 */
 		function prerender_group( data, index, total, handler, progress, complete )
 		{
-			if ( index < total )
-			{
-				try
-				{
+			if ( index < total ) {
+				try {
 					var input = data[index];
-				}
-				catch( e )
-				{
+				} catch( e ) {
 					var input = index;
 				}
 
 				setTimeout( function() {
 					handler( input );
 
-					if ( ++index <= total )
-					{
+					if ( ++index <= total ) {
 						progress( ++build_steps_complete, build_steps );
 					}
 
@@ -630,12 +642,11 @@
 			// Set a starting offset angle
 			var angle = Math.random() * 2 * Math.PI;
 
-			var cloud_size, half_W, half_H, cloud_radius, magnitude, cloud_offset = {};
+			var type, cloud_size, half_W, half_H, cloud_radius, magnitude, cloud_offset = {};
 
 			// Draw surrounding clouds in two rings; loop around once for clouds
 			// near the storm, and again for more distant smaller clouds
-			for ( var i = 0 ; i < 2 ; i++ )
-			{
+			for ( var i = 0 ; i < 2 ; i++ ) {
 				var cloud_count = (
 					i === 0 ?
 						random( 7, 9 )
@@ -643,19 +654,16 @@
 						random( 13, 16 )
 				);
 
-				for ( var g = 0 ; g < cloud_count ; g++ )
-				{
-					var type;
-
-					if ( large_cyclone )
-					{
-						if ( i === 0 ) type = pick_random( 'cumulus', 'heavy_cumulus' );
-						else type = pick_random( 'cumulus', 'small_cumulus' );
-					}
-					else
-					{
-						if ( i === 0 ) type = 'cumulus';
-						else type = 'small_cumulus';
+				for ( var g = 0 ; g < cloud_count ; g++ ) {
+					if ( large_cyclone ) {
+						type = (
+							( i === 0 ) ?
+								pick_random( 'cumulus', 'heavy_cumulus' )
+							:
+								pick_random( 'cumulus', 'small_cumulus' )
+						);
+					} else {
+						type = ( i === 0 ? 'cumulus' : 'small_cumulus' );
 					}
 
 					index = random_cloud_index( type );
@@ -692,8 +700,7 @@
 			var tile_size = terrain.getTileSize();
 			var map_size = terrain.getSize();
 
-			for ( var c = 0 ; c < 30 ; c++ )
-			{
+			for ( var c = 0 ; c < 30 ; c++ ) {
 				var type = pick_random( 'cumulus', 'heavy_cumulus', 'small_cumulus', 'cirrus', 'cirrus' );
 				var index = random_cloud_index( type );
 
@@ -731,8 +738,7 @@
 				( bg_velocity.x === 0 && bg_velocity.y === 0 ) ||
 				// ...or the spawn cooldown is still active
 				cloud_cooldown > 0
-			)
-			{
+			) {
 				return;
 			}
 
@@ -747,9 +753,7 @@
 					x: 0,
 					y: 0
 				};
-			}
-			else
-			{
+			} else {
 				// 2% chance of generating a cyclone
 				index = pick_random( 'large', 'small' );
 
@@ -766,17 +770,14 @@
 				cloud_cooldown = 2000;
 			}
 
-			if ( Math.abs( bg_velocity.x ) > Math.abs( bg_velocity.y ) )
-			{
+			if ( Math.abs( bg_velocity.x ) > Math.abs( bg_velocity.y ) ) {
 				// Background scrolling faster horizontally than vertically
 				position.y = random( 0 - size.height, viewport.height );
 				// Scrolling right
 				if ( bg_velocity.x > 0 ) position.x = viewport.width + spawn_offset.x;
 				// Scrolling left
 				if ( bg_velocity.x < 0 ) position.x = 0 - size.width - spawn_offset.x;
-			}
-			else
-			{
+			} else {
 				// Background scrolling faster vertically than horizontally
 				position.x = random( 0 - size.width, viewport.width );
 				// Scrolling down
@@ -785,13 +786,10 @@
 				if ( bg_velocity.y < 0 ) position.y = 0 - size.height - spawn_offset.y;
 			}
 
-			if ( isNaN( index ) )
-			{
+			if ( isNaN( index ) ) {
 				// Cyclone
 				spawn_cyclone( index, position.x, position.y );
-			}
-			else
-			{
+			} else {
 				// Normal cloud
 				spawn_cloud( index, position.x, position.y );
 			}
@@ -809,29 +807,25 @@
 			var velocity = point.getVelocity();
 			var image = cloud.get( Cloud ).getImage();
 
-			if ( velocity.x < 0 && position.x + image.width < 0 )
-			{
+			if ( velocity.x < 0 && position.x + image.width < 0 ) {
 				// Cloud scrolling left and off left edge
 				clouds.splice( c, 1 );
 				return true;
 			}
 
-			if ( velocity.x > 0 && position.x > viewport.width )
-			{
+			if ( velocity.x > 0 && position.x > viewport.width ) {
 				// Cloud scrolling right and off right edge
 				clouds.splice( c, 1 );
 				return true;
 			}
 
-			if ( velocity.y < 0 && position.y + image.height < 0 )
-			{
+			if ( velocity.y < 0 && position.y + image.height < 0 ) {
 				// Cloud scrolling up and off top edge
 				clouds.splice( c, 1 );
 				return true;
 			}
 
-			if ( velocity.y > 0 && position.y > viewport.height )
-			{
+			if ( velocity.y > 0 && position.y > viewport.height ) {
 				// Cloud scrolling down and off bottom edge
 				clouds.splice( c, 1 );
 				return true;
@@ -852,8 +846,7 @@
 		 */
 		function advance_bg_cycle()
 		{
-			if ( !time_transition )
-			{
+			if ( !time_transition ) {
 				// Just set [granular_light_level] once for static time
 				set_granular_light_level();
 				return;
@@ -914,21 +907,22 @@
 
 			new_terrain.tileOnto( screen[new_bg], camera.getPosition().x, camera.getPosition().y );
 
-			if ( time_transition )
-			{
-				// Only draw to both screens if necessary
+			if ( time_transition ) {
+				// Only draw to both BG screens if fading between them
 				old_terrain.tileOnto( screen[old_bg], camera.getPosition().x, camera.getPosition().y );
 			}
 		}
 
 		/**
 		 * Render all clouds above the terrain scene
+		 * (shadows are rendered to the BG screens to
+		 * avoid being color-composited with the clouds)
 		 */
 		function render_clouds()
 		{
 			screen.clouds.clear();
 
-			// Light level rendering
+			// Light level color rendering
 			var color = get_time_color();
 			screen.clouds.setCompositing( 'source-over' ).setAlpha( 0.7 );
 			screen.clouds.draw
@@ -942,8 +936,7 @@
 			var normal_offset = ( 15 / viewport_H2 );
 			var cloud, position, instance, sprite, shadow, offset_factor, offset, draw;
 
-			for ( var c = 0 ; c < clouds.length ; c++ )
-			{
+			for ( var c = 0 ; c < clouds.length ; c++ ) {
 				cloud = clouds[c];
 				position = cloud.get( Point ).getPosition( configuration.pixelSnapping );
 				instance = cloud.get( Cloud );
@@ -951,33 +944,29 @@
 				shadow = instance.getShadow();
 				offset_factor = ( instance.getType() === 'cirrus' ? cirrus_offset : normal_offset );
 
-				if ( shadow !== null )
-				{
+				if ( shadow !== null ) {
 					draw = {
 						x: position.x + shadow_offset.x,
 						y: position.y + shadow_offset.y
 					};
 
+					// TAG: on-screen
 					if (
 						( draw.x < viewport.width && draw.x + shadow.width > 0 ) &&
 						( draw.y < viewport.height && draw.y + shadow.height > 0 )
-					)
-					{
-						// Target the background screens to avoid color
-						// errors in the [cloud_stage] compositing process
+					) {
 						screen.bg0.draw.image( shadow, draw.x, draw.y );
 
-						// Only draw the shadow twice if time transition is active
-						if ( time_transition )
-						{
+						if ( time_transition ) {
+							// Only draw the shadow to both BG screens if fading between them
 							screen.bg1.draw.image( shadow, draw.x, draw.y );
 						}
 					}
 				}
 
-				// Determine cloud position shift by taking its
-				// center offset relative to the center of the
-				// game screen and multiplying it by [offset_factor]
+				// Calculate new cloud position by taking its
+				// midpoint offset from the center of the game
+				// screen and multiplying it by [offset_factor]
 				offset = {
 					x: ( position.x + sprite.width / 2 - viewport_W2 ) * offset_factor,
 					y: ( position.y + sprite.height / 2 - viewport_H2 ) * offset_factor
@@ -988,12 +977,11 @@
 					y: position.y + offset.y
 				};
 
-				// Only draw clouds within the screen area
+				// TAG: on-screen
 				if (
 					( draw.x < viewport.width && draw.x + sprite.width > 0 ) &&
 					( draw.y < viewport.height && draw.y + sprite.height > 0 )
-				)
-				{
+				) {
 					cloud_stage.draw.image( sprite, draw.x, draw.y );
 				}
 			}
@@ -1019,16 +1007,13 @@
 		// -- Public: --
 		this.update = function( dt )
 		{
-			if ( loaded )
-			{
+			if ( loaded ) {
 				camera.update( dt );
 
 				var c = 0;
 
-				while ( c < clouds.length )
-				{
-					if ( !cloud_purged( c ) )
-					{
+				while ( c < clouds.length ) {
+					if ( !cloud_purged( c ) ) {
 						clouds[c].update( dt );
 						c++;
 					}
@@ -1051,10 +1036,8 @@
 			configuration = _configuration;
 			var defaults = default_configuration();
 
-			for ( var key in defaults )
-			{
-				if ( !configuration.hasOwnProperty( key ) )
-				{
+			for ( var key in defaults ) {
+				if ( !configuration.hasOwnProperty( key ) ) {
 					configuration[key] = defaults[key];
 				}
 			}
@@ -1065,7 +1048,7 @@
 		/**
 		 * Generate the Background with progress/completion [handlers]
 		 */
-		this.build = function(handlers)
+		this.build = function( handlers )
 		{
 			// Safeguard in case of re-building the
 			// instance after first initialization
@@ -1102,14 +1085,12 @@
 			prerender_cloud_variants(
 				{
 					progress: handlers.progress,
-					complete: function()
-					{
+					complete: function() {
 						// Prerender terrain at different times of day
 						prerender_terrain_variants(
 							{
 								progress: handlers.progress,
-								complete: function()
-								{
+								complete: function() {
 									start();
 									handlers.complete();
 								}

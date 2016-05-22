@@ -1,4 +1,15 @@
 /**
+ * ------------------
+ * DEPENDENCIES:
+ *
+ * core/Entity.js
+ * core/Sprite.js
+ * core/Components.js
+ * core/ui/Menu.js
+ * ------------------
+ */
+
+/**
  * -----------------
  * Class: TitleScene
  * -----------------
