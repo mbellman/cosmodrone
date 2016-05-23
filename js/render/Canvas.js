@@ -1,8 +1,4 @@
 (function( scope ) {
-	// ------------------------------------------ //
-	// ------------- CHAINING TOOLS ------------- //
-	// ------------------------------------------ //
-
 	/**
 	 * ------------
 	 * Class: Shape
@@ -21,8 +17,7 @@
 	 */
 	Shape.prototype.fill = function( color )
 	{
-		if ( color !== null )
-		{
+		if ( color !== null ) {
 			this.ctx.fillStyle = color;
 		}
 
@@ -36,13 +31,11 @@
 	 */
 	Shape.prototype.stroke = function( color, thickness )
 	{
-		if ( color !== null )
-		{
+		if ( color !== null ) {
 			this.ctx.strokeStyle = color;
 		}
 
-		if ( !isNaN( thickness ) )
-		{
+		if ( !isNaN( thickness ) ) {
 			this.ctx.lineWidth = thickness;
 		}
 
@@ -64,7 +57,7 @@
 	}
 
 	/**
-	 * Draw a circle
+	 * Draw a circle to [ctx]
 	 */
 	DrawOperation.prototype.circle = function( x, y, radius )
 	{
@@ -74,7 +67,7 @@
 	}
 
 	/**
-	 * Draw a rectangle
+	 * Draw a rectangle to [ctx]
 	 */
 	DrawOperation.prototype.rectangle = function( x, y, width, height )
 	{
@@ -84,30 +77,23 @@
 	}
 
 	/**
-	 * Draw an image to the Canvas
+	 * Draw an image to [ctx]
 	 */
 	DrawOperation.prototype.image = function( source, x1, y1, width1, height1, x2, y2, width2, height2 )
 	{
-		if ( typeof x1 === 'undefined' )
-		{
+		if ( typeof x1 === 'undefined' ) {
 			// Draw the source at the top left of the Canvas
 			this.ctx.drawImage( source, 0, 0 );
-		}
-		else
-		if ( typeof width1 === 'undefined' )
-		{
+		} else
+		if ( typeof width1 === 'undefined' ) {
 			// Draw the source at a specific [x, y] coordinate
 			this.ctx.drawImage( source, x1, y1 );
-		}
-		else
-		if ( typeof x2 === 'undefined' )
-		{
+		} else
+		if ( typeof x2 === 'undefined' ) {
 			// Draw the source at a specific [x,y] coordinate
 			// scaled to custom dimensions per [width1] & [height1]
 			this.ctx.drawImage( source, x1, y1, width1, height1 );
-		}
-		else
-		{
+		} else {
 			// Draw a clipping from the source:
 			//
 			// [x1]: clip X
@@ -168,11 +154,11 @@
 		this.ctx.putImageData( data, x, y );
 	}
 
-	// ----------------------------------------------------- //
-	// ------------- GLOBAL CANVAS CONSTRUCTOR ------------- //
-	// ----------------------------------------------------- //
-
 	/**
+	 * -------------
+	 * Class: Canvas
+	 * -------------
+	 *
 	 * A simple vector/raster graphics toolset for HTML5
 	 * Canvas. Preexisting DOM canvas argument optional.
 	 */
@@ -186,7 +172,7 @@
 		this.ctx = this.element.getContext( '2d' );
 
 		/**
-		 * Draw shapes/images/etc.
+		 * Draw shapes/images/etc. (see: DrawOperation())
 		 */
 		this.draw = {
 			circle: function( x, y, radius ) {
@@ -201,7 +187,7 @@
 		};
 
 		/**
-		 * Pixel data manipulation handlers
+		 * Pixel data manipulation handlers (see: PixelDataOperation())
 		 */
 		this.data = {
 			create: function( width, height ) {
@@ -236,56 +222,35 @@
 	 */
 	Canvas.prototype.scale = function( scalar )
 	{
-		// Only scale by whole number values
 		scalar = Math.round( scalar );
 
-		if ( scalar < 2 )
-		{
-			// Return self if not scaling at all
+		if ( scalar < 2 ) {
+			// No scaling to be done
 			return this;
 		}
 
-		// Clone self for copying a scaled
-		// version back into pixel buffer
 		var width = this.element.width;
 		var height = this.element.height;
 		var clone = new Canvas().setSize( width, height );
 
 		clone.draw.image( this.element );
-		this.setSize( scalar * width, scalar * height );
+		this.setSize( width * scalar, height * scalar );
 
 		var copy = clone.data.get();
 		var self = this.data.get();
 
-		// Iterate over original image data
-		for ( var y = 0 ; y < height ; y++ )
-		{
-			for ( var x = 0 ; x < width ; x++ )
-			{
-				// Source pixel for this coordinate
-				var pixel = 4 * ( y * width + x );
-				
-				var color = {
-					red: copy.data[pixel],
-					green: copy.data[pixel + 1],
-					blue: copy.data[pixel + 2],
-					alpha: copy.data[pixel + 3]
-				};
+		// Iterate over original copied image data
+		for ( var y = 0 ; y < height ; y++ ) {
+			for ( var x = 0 ; x < width ; x++ ) {
+				var C_pixel = copy.getPixelIndex( x, y );
+				var C_color = copy.read( C_pixel );
+				var S_pixel = self.getPixelIndex( x * scalar, y * scalar );
 
-				// Offset for equivalent scaled canvas pixel
-				var scaled_pixel = 4 * ( y * scalar * scalar * width + x * scalar );
-
-				for ( var py = 0 ; py < scalar ; py++ )
-				{
-					for ( var px = 0 ; px < scalar ; px++ )
-					{
-						// Target pixel in scaled data array
-						var _pixel = scaled_pixel + 4 * px + 4 * ( py * scalar * width );
-
-						self.data[_pixel] = color.red;
-						self.data[_pixel + 1] = color.green;
-						self.data[_pixel + 2] = color.blue;
-						self.data[_pixel + 3] = color.alpha;
+				// Update each 'scaled pixel' with the original color
+				for ( var sy = 0 ; sy < scalar ; sy++ ) {
+					for ( var sx = 0 ; sx < scalar ; sx++ ) {
+						var pixel = S_pixel + ( 4 * sx ) + ( 4 * sy * width * scalar );
+						self.write( pixel, C_color );
 					}
 				}
 			}
@@ -371,6 +336,59 @@
 	{
 		this.ctx.restore();
 		return this;
+	}
+
+	/**
+	 * ----------------
+	 * Class: ImageData
+	 * ----------------
+	 *
+	 * Extensions to the default ImageData class
+	 */
+
+	/**
+	 * Get the pixel data array index for an [x, y] coordinate
+	 */
+	ImageData.prototype.getPixelIndex = function( x, y )
+	{
+		return 4 * ( y * this.width + x );
+	}
+
+	/**
+	 * Get the [x, y] coordinate for a pixel data array index
+	 */
+	ImageData.prototype.getPixelXY = function( pixel )
+	{
+		pixel = Math.floor( pixel / 4 );
+
+		return {
+			x: pixel % this.width,
+			y: Math.floor( pixel / this.width )
+		};
+	}
+
+	/**
+	 * Get the RGBA at a specified [pixel] index
+	 */
+	ImageData.prototype.read = function( pixel )
+	{
+		return {
+			red: this.data[pixel],
+			green: this.data[pixel + 1],
+			blue: this.data[pixel + 2],
+			alpha: this.data[pixel + 3]
+		};
+	}
+
+	/**
+	 * Set the RGBA at a specified [pixel] index
+	 */
+	ImageData.prototype.write = function( pixel, color )
+	{
+		this.data[pixel] = color.red;
+		this.data[pixel + 1] = color.green;
+		this.data[pixel + 2] = color.blue;
+		this.data[pixel + 3] = color.alpha;
 	}
 
 	scope.Canvas = Canvas;
