@@ -90,7 +90,7 @@
 		}
 
 		/**
-		 * Positions the option strings according to the [style.align] type
+		 * Positions the menu options according to [style]
 		 */
 		function align_list()
 		{
