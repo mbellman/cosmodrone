@@ -31,7 +31,7 @@ include(
 ).then( main );
 
 // Global variables
-var viewport = {
+var Viewport = {
 	width: 1200,
 	height: 650
 };
@@ -92,9 +92,9 @@ function centerGameStage()
 {
 	$( '#game' ).css(
 		{
-			'width': viewport.width + 'px',
-			'height': viewport.height + 'px',
-			'margin': ( -1 * viewport.height / 2 ) + 'px 0 0 ' + ( -1 * viewport.width / 2 ) + 'px'
+			'width': Viewport.width + 'px',
+			'height': Viewport.height + 'px',
+			'margin': ( -1 * Viewport.height / 2 ) + 'px 0 0 ' + ( -1 * Viewport.width / 2 ) + 'px'
 		}
 	);
 }
@@ -107,11 +107,11 @@ function loadGame()
 	new AssetLoader()
 	.root( 'assets' )
 	.load( AssetManifest )
-	.progress(function( percent ) {
+	.progress( function( percent ) {
 		console.log( 'Loading...' + percent + '%' );
 	})
-	.then(function( assets ) {
-		var controller = new Controller( assets );
+	.then( function() {
+		var controller = new Controller();
 		controller.showTitle();
 	});
 }
@@ -121,5 +121,5 @@ function loadGame()
  */
 function createScreen()
 {
-	return new Canvas().setSize( viewport.width, viewport.height );
+	return new Canvas().setSize( Viewport.width, Viewport.height );
 }

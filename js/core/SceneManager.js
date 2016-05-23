@@ -21,50 +21,33 @@ function SceneManager()
 		var cleared = false;
 
 		scenes[active_scene].forAllComponentsOfType( Sprite, function( sprite ) {
-			if ( cleared )
-			{
-				// Whole screen area already cleared;
-				// skip the remaining clear operations
+			if ( cleared || sprite.getProperAlpha() === 0 || !sprite.isOnScreen() ) {
 				return;
 			}
 
-			// Get rendering information about the Sprite
 			position = sprite.getScreenCoordinates();
 			width = sprite.scale._ * sprite.getWidth();
 			height = sprite.scale._ * sprite.getHeight();
 
-			// Only clear screen around visible Sprites
-			if (
-				( position.x < viewport.width && position.x + width > 0 ) &&
-				( position.y < viewport.height && position.y + height > 0 )
-			)
-			{
-				if ( sprite.rotation._ > 0 )
-				{
-					// Clear more space surrounding the sprite
-					// if it is rotated to ensure proper erasure
-					buffer = Math.max( width, height );
-				}
-				else
-				{
-					if ( sprite.snap ) buffer = 0;
-					else buffer = 1;
-				}
+			if ( sprite.rotation._ > 0 ) {
+				// Widen the buffer zone around rotated Sprites
+				buffer = Math.max( width, height );
+			} else {
+				buffer = ( sprite.snap ? 0 : 1 );
+			}
 
-				// Constrain the clear rectangle to the screen's boundaries
-				box.x = Math.max( position.x - buffer, 0 );
-				box.y = Math.max( position.y - buffer, 0 );
-				box.width = Math.min( width + 2 * buffer, viewport.width );
-				box.height = Math.min( height + 2 * buffer, viewport.height );
+			// Constrain the clear rectangle to the screen's boundaries
+			box.x = Math.max( position.x - buffer, 0 );
+			box.y = Math.max( position.y - buffer, 0 );
+			box.width = Math.min( width + 2 * buffer, Viewport.width );
+			box.height = Math.min( height + 2 * buffer, Viewport.height );
 
-				screen.game.clear( box.x, box.y, box.width, box.height );
+			screen.game.clear( box.x, box.y, box.width, box.height );
 
-				if ( box.x === 0 && box.y === 0 && box.width === viewport.width && box.height === viewport.height )
-				{
-					// Last clear region took up whole screen
-					// area, so no need to clear any more sprites
-					cleared = true;
-				}
+			if ( box.x === 0 && box.y === 0 && box.width === Viewport.width && box.height === Viewport.height ) {
+				// Last clear region took up whole screen
+				// area, so no need to clear any more sprites
+				cleared = true;
 			}
 		});
 	}
@@ -74,8 +57,7 @@ function SceneManager()
 	 */
 	function loop()
 	{
-		if ( running )
-		{
+		if ( running ) {
 			var new_time = Date.now();
 			var dt = Math.min( ( new_time - time ) / 1000, max_dt );
 
@@ -129,19 +111,15 @@ function SceneManager()
 	 */
 	this.setActiveScene = function( name, entity )
 	{
-		if ( entity !== null )
-		{
+		if ( entity !== null ) {
 			_.addScene( name, entity );
 		}
 
-		if ( scenes.hasOwnProperty( name ) )
-		{
+		if ( scenes.hasOwnProperty( name ) ) {
 			active_scene = name;
 			screen.game.clear();
 
-			if ( !running )
-			{
-				// Restart the update loop
+			if ( !running ) {
 				_.resume();
 			}
 		}
@@ -163,9 +141,7 @@ function SceneManager()
 	 */
 	this.resume = function()
 	{
-		if ( running || !scenes.hasOwnProperty( active_scene ) )
-		{
-			// Already running *or* no active scene to resume
+		if ( running || !scenes.hasOwnProperty( active_scene ) ) {
 			return;
 		}
 

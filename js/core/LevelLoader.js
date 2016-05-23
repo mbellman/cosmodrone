@@ -31,7 +31,7 @@
 	/**
 	 * Resource for converting level data into game entities
 	 */
-	function LevelLoader( assets )
+	function LevelLoader()
 	{
 		// -- Private: --
 		var _ = this;
@@ -73,7 +73,7 @@
 		{
 			var module = new Entity()
 				.add( new Point().setPosition( positionX, positionY ) )
-				.add( new Sprite( assets.getImage( specs.file ) ) );
+				.add( new Sprite( Assets.getImage( specs.file ) ) );
 
 			entities.push( module );
 
@@ -314,7 +314,7 @@
 									.setMoving( LevelData[level].moving )
 							)
 							.add(
-								new Sprite( assets.getImage( specs.file ) )
+								new Sprite( Assets.getImage( specs.file ) )
 									.setXY( position.x, position.y )
 							)
 					);

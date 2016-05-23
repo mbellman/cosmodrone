@@ -74,7 +74,7 @@ var AssetManifest =
 			'title/star3.png',
 			'title/starfield.png',
 			'title/title.png',
-			'ui/menu-caret.png',
+			'ui/drone-cursor.png',
 		],
 	},
 	audio:
@@ -82,8 +82,8 @@ var AssetManifest =
 		folder: 'audio',
 		files:
 		[
-			'text/blip1.wav',
-			'text/blip2.wav',
+			'ui/blip1.wav',
+			'ui/blip2.wav',
 		],
 	}
 };

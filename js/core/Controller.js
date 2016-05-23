@@ -1,24 +1,18 @@
 /**
  * Game screen state controller
  */
-function Controller( assets )
+function Controller()
 {
 	// -- Private: --
 	var _ = this;
 	var level = 1;
-
-	/**
-	 * Save references to fonts for easy reuse.
-	 * (BitmapFont is an object created in Text.js)
-	 */
-	BitmapFont.Monitor = assets.getImage( 'fonts/Monitor.png' );
 
 	// -- Public: --
 	this.scenes = new SceneManager();
 
 	this.showTitle = function()
 	{
-		var title = new TitleScene( _, assets );
+		var title = new TitleScene( _ );
 		_.scenes.setActiveScene( 'title', new Entity().add( title ) );
 	}
 
@@ -30,7 +24,7 @@ function Controller( assets )
 			_.scenes.getScene( 'game' ).get( GameScene ).unload();
 		}
 
-		var game = new GameScene( _, assets ).setLevel( level );
+		var game = new GameScene( _ ).setLevel( level );
 
 		_.scenes.setActiveScene( 'game', new Entity().add( game ) );
 

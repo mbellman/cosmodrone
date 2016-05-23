@@ -16,31 +16,28 @@
  *
  * Component which sets up the game's title scene
  */
-function TitleScene( controller, assets )
+function TitleScene( controller )
 {
 	// Private:
 	var _ = this;
 	var owner = null;
-	var input = new InputHandler();
 	var menu = 1;
 	var stage = new Entity();
 	var props = {};
 	var slide = 1.5;
-
-	var caret_position = 1;
 
 	// --------------------------------------- //
 	// ------------- SCENE SETUP ------------- //
 	// --------------------------------------- //
 
 	/**
-	 * Adds a twinkling star entity to [props]
+	 * Creates and returns a twinkling star entity
 	 */
-	function create_star( type, x, y )
+	function create_twinkling_star( type, x, y )
 	{
 		return new Entity()
 			.add(
-				new Sprite( assets.getImage( 'title/star' + type + '.png' ) )
+				new Sprite( Assets.getImage( 'title/star' + type + '.png' ) )
 					.setXY( x, y )
 			)
 			.add(
@@ -51,11 +48,38 @@ function TitleScene( controller, assets )
 	}
 
 	/**
+	 * Set up background + foreground layers
+	 */
+	function add_backdrop()
+	{
+		stage.add(
+			new Entity().add(
+				new FillSprite( '#000', Viewport.width, Viewport.height )
+			)
+		);
+
+		props.nova = new Entity().add(
+			new Sprite( Assets.getImage( 'title/nova1.png' ) ).setXY( 0, -50 )
+		);
+		props.nova2 = new Entity().add(
+			new Sprite( Assets.getImage( 'title/nova2.png' ) ).setXY( 0, -50 )
+		);
+		props.sky = new Entity().add(
+			new Sprite( Assets.getImage( 'title/sky.png' ) ).setXY( 0, -1200 + Viewport.height )
+		);
+		props.stars = new Entity().add(
+			new Sprite( Assets.getImage( 'title/starfield.png' ) ).setAlpha( 0.2 )
+		);
+		props.ground = new Entity().add(
+			new Sprite( Assets.getImage( 'title/ground.png' ) ).setXY( 0, Viewport.height - 208 )
+		);
+	}
+
+	/**
 	 * Introduces the game title with an animation
 	 */
-	function create_title()
+	function add_title()
 	{
-		// Sprite coordinates
 		var stars = {
 			x: [55, 145, 205, 335, 410, 485, 555, 660, 740, 830, 910],
 			y: [30, 150, 80, 120, 135, 80, 80, 70, 80, 130, 20],
@@ -68,24 +92,28 @@ function TitleScene( controller, assets )
 			characters: ['c', 'o', 's', 'm', 'o2', 'd', 'r', 'o3', 'n', 'e']
 		}
 
-		// Set up a parent entity for the stars
-		props.starlogo = new Entity().add( new Sprite().setXY( 90, 90 ) );
+		// ----------------------------
 
-		// Lay out twinkling stars
+		props.starlogo = new Entity().add(
+			new Sprite().setXY( 90, 90 )
+		);
+
 		for ( var t = 0 ; t < stars.x.length ; t++ ) {
 			props.starlogo.addChild(
-				create_star( stars.type[t], stars.x[t], stars.y[t] )
+				create_twinkling_star( stars.type[t], stars.x[t], stars.y[t] )
 			);
 		}
 
-		// Set up a parent entity for the logo
-		props.logo = new Entity().add( new Sprite().setXY( 90, 120 ) );
+		// ----------------------------
 
-		// Add individual letters to the logo Entity and fade them in
+		props.logo = new Entity().add(
+			new Sprite().setXY( 90, 120 )
+		);
+
 		for ( var c = 0 ; c < logo.characters.length ; c++ ) {
 			var character = logo.characters[c];
 			var entity = new Entity().add(
-				new Sprite( assets.getImage( 'title/letters/' + character + '.png' ) )
+				new Sprite( Assets.getImage( 'title/letters/' + character + '.png' ) )
 					.setXY( logo.x[c], logo.y[c] )
 					.setAlpha( 0 )
 			);
@@ -101,32 +129,53 @@ function TitleScene( controller, assets )
 	/**
 	 * Show the initial options on the title screen
 	 */
-	function create_title_menu()
+	function add_title_menu()
 	{
-		var options = {
-			text: ['NEW GAME', 'STATION BUILDER'],
-			position: [{x: 522, y: 375}, {x: 474, y: 420}]
-		};
-
-		for ( var o = 0 ; o < options.text.length ; o++ ) {
-			var text = options.text[o];
-			var position = options.position[o];
-
-			props[text] = new Entity().add(
-				new Sprite().setXY( position.x, position.y ).setAlpha( 0 )
+		props.TITLE_MENU = new Entity()
+			.add(
+				new Sprite().setXY( 465, 375 ).setAlpha( 0 )
 			)
 			.add(
-				new TextString( 'Monitor', BitmapFont.Monitor )
-					.setString( text )
+				new Menu( 'list' )
+					.configure(
+						{
+							font: 'Monitor',
+							options: {
+								'NEW GAME': view_level_select,
+								'STATION BUILDER': null,
+								'CREDITS': null
+							},
+							sounds: {
+								cursor: Assets.getAudio( 'ui/blip2.wav' ),
+								select: Assets.getAudio( 'ui/blip2.wav' ),
+								invalid: Assets.getAudio( 'ui/blip1.wav' )
+							},
+							cursor: Assets.getImage( 'ui/drone-cursor.png' ),
+							cursorOffset: {
+								x: -40,
+								y: 2
+							},
+							align: 'center',
+							lineHeight: 40
+						}
+					)
 			);
 
-			props[text].get( Sprite ).alpha.delay( 2.0 ).tweenTo( 1, 1.0, Ease.quad.in );
-		}
+		props.TITLE_MENU.get( Sprite ).alpha
+			.delay( 2.5 )
+			.tweenTo( 1, 1.0, Ease.quad.in );
+	}
 
-		props.caret = new Entity().add(
-			new Sprite( assets.getImage( 'ui/menu-caret.png' ) )
-				.setXY( 490, 377 )
-		);
+	/**
+	 * Add all [props] entities to [stage]
+	 */
+	function stage_all_props()
+	{
+		for ( var p in props ) {
+			if ( props.hasOwnProperty( p ) ) {
+				stage.addChild( props[p] );
+			}
+		}
 	}
 
 	// -------------------------------------------- //
@@ -143,11 +192,11 @@ function TitleScene( controller, assets )
 		props.nova.remove( Flicker );
 		props.nova2.remove( Flicker );
 
-		props.sky.get( Sprite ).y.tweenTo( -1200 + viewport.height, slide, Ease.quad.inOut );
+		props.sky.get( Sprite ).y.tweenTo( -1200 + Viewport.height, slide, Ease.quad.inOut );
 		props.nova.get( Sprite ).y.tweenTo( -50, slide, Ease.quad.inOut );
 		props.nova2.get( Sprite ).y.tweenTo( -50, slide, Ease.quad.inOut );
 		props.stars.get( Sprite ).alpha.tweenTo( 0.2, slide, Ease.quad.out );
-		props.ground.get( Sprite ).y.tweenTo( viewport.height - 208, slide, Ease.quad.inOut );
+		props.ground.get( Sprite ).y.tweenTo( Viewport.height - 208, slide, Ease.quad.inOut );
 
 		props.logo.get( Sprite ).alpha.tweenTo( 1, slide, Ease.quad.in );
 		props.starlogo.get( Sprite ).alpha.tweenTo( 1, slide, Ease.quad.in );
@@ -163,14 +212,17 @@ function TitleScene( controller, assets )
 		props.nova.add( new Flicker().setAlphaRange( 0.8, 1.0 ) );
 		props.nova2.add( new Flicker().setAlphaRange( 0.8, 1.0 ) );
 
-		props.sky.get( Sprite ).y.tweenTo( viewport.height - 100, slide, Ease.quad.inOut );
+		props.sky.get( Sprite ).y.tweenTo( Viewport.height - 100, slide, Ease.quad.inOut );
 		props.nova.get( Sprite ).y.tweenTo( 0, slide, Ease.quad.inOut );
 		props.nova2.get( Sprite ).y.tweenTo( 0, slide, Ease.quad.inOut );
 		props.stars.get( Sprite ).alpha.tweenTo( 1, slide, Ease.quad.in );
-		props.ground.get( Sprite ).y.tweenTo( viewport.height * 2, slide, Ease.quad.inOut );
+		props.ground.get( Sprite ).y.tweenTo( Viewport.height * 2, slide, Ease.quad.inOut );
 
 		props.logo.get( Sprite ).alpha.tweenTo( 0, slide, Ease.quad.out );
 		props.starlogo.get( Sprite ).alpha.tweenTo( 0, slide, Ease.quad.out );
+
+		props.TITLE_MENU.get( Menu ).disable();
+		props.TITLE_MENU.get( Sprite ).alpha.tweenTo( 0, slide / 2, Ease.quad.out );
 	}
 
 	/**
@@ -186,93 +238,7 @@ function TitleScene( controller, assets )
 	 */
 	function exit_scene()
 	{
-		input.unlisten();
-	}
 
-	// ------------------------------------------ //
-	// ------------- INPUT HANDLING ------------- //
-	// ------------------------------------------ //
-
-	function cycle_caret( shift )
-	{
-		switch ( menu ) {
-			// Title screen
-			case 1:
-				var caret_coords = {
-					1: {x: 490, y: 377},
-					2: {x: 442, y: 422}
-				};
-
-				caret_position += shift;
-
-				if ( caret_position > 2 ) {
-					caret_position = 1;
-				} else if ( caret_position < 1 ) {
-					caret_position = 2;
-				}
-
-				props.caret.get( Sprite ).setXY(
-					caret_coords[caret_position].x,
-					caret_coords[caret_position].y
-				);
-
-				assets.getAudio( 'text/blip2.wav' ).play();
-
-				break;
-			case 2:
-				break;
-			case 3:
-				break;
-		}
-	}
-
-	function input_UP()
-	{
-		switch ( menu ) {
-			// Main title scene
-			case 1:
-				cycle_caret( -1 );
-				break;
-			// Level select scene
-			case 2:
-				break;
-			// Station creator menu scene
-			case 3:
-				break;
-		}
-	}
-
-	function input_DOWN()
-	{
-		switch ( menu ) {
-			// Main title scene
-			case 1:
-				cycle_caret( 1 );
-				break;
-			// Level select scene
-			case 2:
-				break;
-			// Station creator menu scene
-			case 3:
-				break;
-		}
-	}
-
-	function input_ENTER()
-	{
-		if ( menu === 1 && caret_position === 1 ) {
-			view_level_select();
-		}
-	}
-
-	/**
-	 * Sets up key input events
-	 */
-	function bind_input_handlers()
-	{
-		input.on( 'UP', input_UP );
-		input.on( 'DOWN', input_DOWN );
-		input.on( 'ENTER', input_ENTER );
 	}
 
 	// Public:
@@ -282,43 +248,10 @@ function TitleScene( controller, assets )
 	{
 		owner = entity;
 
-		input.listen();
-		bind_input_handlers();
-
-		// Solid black background fill
-		stage.add( new Entity().add( new FillSprite( '#000', viewport.width, viewport.height ) ) );
-
-		// Background layers
-		props.nova = new Entity().add(
-			new Sprite( assets.getImage( 'title/nova1.png' ) ).setXY( 0, -50 )
-		);
-		props.nova2 = new Entity().add(
-			new Sprite( assets.getImage( 'title/nova2.png' ) ).setXY( 0, -50 )
-		);
-		props.sky = new Entity().add(
-			new Sprite( assets.getImage( 'title/sky.png' ) ).setXY( 0, -1200 + viewport.height )
-		);
-		props.stars = new Entity().add(
-			new Sprite( assets.getImage( 'title/starfield.png' ) ).setAlpha( 0.2 )
-		);
-
-		// Set up title introduction animation
-		create_title();
-
-		// Foreground layer
-		props.ground = new Entity().add(
-			new Sprite( assets.getImage( 'title/ground.png' ) ).setXY( 0, viewport.height - 208 )
-		);
-
-		// Title menu
-		create_title_menu();
-
-		// Add all props to [stage]
-		for ( var p in props ) {
-			if ( props.hasOwnProperty(p) ) {
-				stage.addChild( props[p] );
-			}
-		}
+		add_backdrop();
+		add_title();
+		add_title_menu();
+		stage_all_props();
 
 		owner.addChild( stage );
 	}

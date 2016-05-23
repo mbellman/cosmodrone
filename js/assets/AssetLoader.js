@@ -236,6 +236,7 @@
 		this.lock = function()
 		{
 			locked = true;
+			return _;
 		}
 	}
 
@@ -247,7 +248,7 @@
 	 * Instance of the asset loader resource,
 	 * which can be used to load a list of
 	 * assets into memory and handle them
-	 * through the returned asset manager
+	 * through the global Asset Manager
 	 */
 	function AssetLoader()
 	{
@@ -270,9 +271,6 @@
 			var _root = './' + root + '/';
 			var asset_count = images.length + audio.length;
 			var loaded = 0;
-
-			// Instance which will be returned through
-			// onComplete() once all assets are loaded
 			var asset_manager = new AssetManager( _root )
 				.path( 'images', assets.images.folder )
 				.path( 'audio', assets.audio.folder );
@@ -286,19 +284,21 @@
 				onProgress( Math.round( 100 * ( ++loaded / asset_count ) ) );
 
 				if (loaded >= asset_count) {
-					asset_manager.lock();
-					onComplete( asset_manager );
+					// Expose Asset Manager to the global scope
+					// for use across any and all script files
+					scope.Assets = asset_manager.lock();
+					onComplete();
 				}
 			}
 
-			images.forEach(function( file ) {
+			images.forEach( function( file ) {
 				new Asset( 'image' )
 					.from( _root + assets.images.folder + '/' + file )
 					.loaded( INTERNAL_load_progress )
 					.fail( onError );
 			});
 
-			audio.forEach(function( file ) {
+			audio.forEach( function( file ) {
 				new Asset( 'audio' )
 					.from( _root + assets.audio.folder + '/' + file )
 					.loaded( INTERNAL_load_progress )
@@ -354,5 +354,6 @@
 		}
 	}
 
+	scope.Assets = {};
 	scope.AssetLoader = AssetLoader;
 })( window );

@@ -21,7 +21,7 @@
  *
  * Active Game object
  */
-function GameScene( controller, assets )
+function GameScene( controller )
 {
 	// -- Private: --
 	var _ = this;
@@ -59,7 +59,7 @@ function GameScene( controller, assets )
 			var player = drone.get( Point ).getPosition( true );
 
 			var data = [
-				viewport.width + ' x ' + viewport.height,
+				Viewport.width + ' x ' + Viewport.height,
 				fps + 'fps, ' + dt,
 				'X: ' + player.x + ', Y:' + player.y
 			];
@@ -94,7 +94,7 @@ function GameScene( controller, assets )
 		destroy_background();
 
 		background = new Entity().add(
-			new Background( assets )
+			new Background()
 				.configure(
 					{
 						iterations: 11,
@@ -151,7 +151,7 @@ function GameScene( controller, assets )
 	 */
 	function load_level()
 	{
-		var entities = new LevelLoader( assets )
+		var entities = new LevelLoader()
 			.buildLevel( level )
 			.getEntities();
 
@@ -159,7 +159,7 @@ function GameScene( controller, assets )
 			var module = entities[e];
 
 			module.get( Sprite )
-				.setOffset( viewport.width / 2, viewport.height / 2 )
+				.setOffset( Viewport.width / 2, Viewport.height / 2 )
 				.setPivot( camera.get( Point ) );
 
 			stage.addChild( module );
@@ -182,8 +182,8 @@ function GameScene( controller, assets )
 			.add( new Drone() )
 			.add( new Point() )
 			.add(
-				new Sprite( assets.getImage( 'game/drone/drone.png' ) )
-					.setOffset( viewport.width / 2, viewport.height / 2 )
+				new Sprite( Assets.getImage( 'game/drone/drone.png' ) )
+					.setOffset( Viewport.width / 2, Viewport.height / 2 )
 					.setPivot( camera.get( Point ) )
 					.centerOrigin()
 			);
@@ -194,7 +194,7 @@ function GameScene( controller, assets )
 		stage.addChild( camera );
 		stage.addChild( drone );
 
-		hud = new HUD( assets );
+		hud = new HUD();
 
 		update_camera();
 		_.start();

@@ -13,6 +13,7 @@ function Entity()
 	var components = [];
 	var children = [];
 	var searched_component = null;
+	var searched_parent_component = null;
 
 	/**
 	 * Depending on [action], either returns the component or
@@ -105,6 +106,14 @@ function Entity()
 	 */
 	this.disposeChildren = function()
 	{
+		for ( var c = 0 ; c < children.length ; c++ ) {
+			children[c].forAllComponents( function( component ) {
+				if ( typeof component.onRemoved === 'function' ) {
+					component.onRemoved();
+				}
+			});
+		}
+
 		children.length = 0;
 		return _;
 	}
@@ -115,6 +124,30 @@ function Entity()
 	this.get = function( component )
 	{
 		return component_lookup( component, 'get' );
+	}
+
+	/**
+	 * Retrieve a Component from parent entities by instance
+	 * name; returns null if no parents have the Component
+	 */
+	this.getFromParents = function( component )
+	{
+		if ( searched_parent_component instanceof component ) {
+			return searched_parent_component;
+		}
+
+		var parent = _.parent;
+
+		while ( parent !== null ) {
+			if ( parent.has( component ) ) {
+				searched_parent_component = component;
+				return parent.get( component );
+			}
+
+			parent = parent.parent;
+		}
+
+		return null;
 	}
 
 	/**
@@ -147,10 +180,23 @@ function Entity()
 	}
 
 	/**
-	 * Recursively look for all instances of a Component
-	 * in the entity and its children, and run a [handler]
-	 * routine for all of them. [handler] automatically
+	 * Run a [handler] operation on all Components of this
+	 * Entity, and recursively on its children. [handler]
 	 * receives the Component instance as an argument.
+	 */
+	this.forAllComponents = function( handler )
+	{
+		for ( var c = 0 ; c < components.length ; c++ ) {
+			handler( components[c] );
+		}
+
+		for ( var c = 0 ; c < children.length ; c++ ) {
+			children[c].forAllComponents( handler );
+		}
+	}
+
+	/**
+	 * Component-selective variant of forAllComponents()
 	 */
 	this.forAllComponentsOfType = function( component, handler )
 	{

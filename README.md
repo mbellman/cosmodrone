@@ -4,11 +4,11 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
-* Title/menus
 * Loading bar/indicator of some kind
 * New drone sprite
 * Make sure hardware asset "light source" is adjusted based on the side of the module
 * Collisions/drone damage
+* Grid Menu implementation
 * Hardware/part maintenance interface
 * Components with update cycles/architecture for various hardware parts
 * Alerts screen with ability to select hardware maintenance jobs
@@ -29,12 +29,10 @@ A game about space station maintenance!
 * Rivers
 
 ##### CODE
-* Easier UI/Menu builder routines
-* Handy routine for checking on-screen condition
 * Handy routine for converting to/from Canvas pixel data index and [x, y] pixel coordinate
+* Text coloring
 * List script dependencies in comments at the top of each file where applicable
 * Change curly brace line break convention across files (only inside functions)
 * Add Class/Object/Constructor/Etc. labels to major items
-* Text coloring
 * Base "Component" class inherited by all components
 * Background, Terrain, and HeightMap classes need some tidying

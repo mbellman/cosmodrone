@@ -173,7 +173,7 @@
 		var type;
 
 		// -- Public: --
-		this.update = function( dt ){}
+		this.update = function( dt ) {}
 
 		this.getImage = function()
 		{
@@ -216,7 +216,7 @@
 	 *
 	 * A drifting planetary background layer beneath the game scene
 	 */
-	function Background( assets )
+	function Background()
 	{
 		// -- Private: --
 		var _ = this;
@@ -455,7 +455,7 @@
 		function start()
 		{
 			cloud_stage = new Canvas()
-				.setSize( viewport.width, viewport.height );
+				.setSize( Viewport.width, Viewport.height );
 
 			camera = new Point()
 				.setVelocity( -1 * configuration.scrollSpeed.x, -1 * configuration.scrollSpeed.y );
@@ -489,7 +489,7 @@
 			var name = cloud_bank[cloud].file;
 			var type = cloud_bank[cloud].type;
 
-			var cloud_asset = assets.getImage( 'game/clouds/' + name + '.png' );
+			var cloud_asset = Assets.getImage( 'game/clouds/' + name + '.png' );
 			var cloud_canvas = new Canvas()
 				.setSize(cloud_asset.width, cloud_asset.height);
 
@@ -499,7 +499,7 @@
 
 			if ( type !== 'cirrus' ) {
 				// Store shadow for normal clouds
-				var shadow_asset = assets.getImage( 'game/shadows/' + name + '.png' );
+				var shadow_asset = Assets.getImage( 'game/shadows/' + name + '.png' );
 				var shadow_canvas = new Canvas()
 					.setSize( shadow_asset.width, shadow_asset.height );
 
@@ -705,8 +705,8 @@
 				var index = random_cloud_index( type );
 
 				var position = {
-					x: random( -600, viewport.width + 600 ),
-					y: random( -600, viewport.height + 600 )
+					x: random( -600, Viewport.width + 600 ),
+					y: random( -600, Viewport.height + 600 )
 				};
 
 				spawn_cloud( index, position.x, position.y );
@@ -720,7 +720,7 @@
 		{
 			var bg_velocity = camera.getVelocity();
 			var bg_abs_velocity = camera.getAbsoluteVelocity();
-			var screen_area = viewport.width * viewport.height;
+			var screen_area = Viewport.width * Viewport.height;
 			var screen_area_ratio = screen_area / 720000;
 			var spawn_probability = screen_area_ratio * 0.00015 * bg_abs_velocity;
 			var type, index, size, spawn_offset;
@@ -772,16 +772,16 @@
 
 			if ( Math.abs( bg_velocity.x ) > Math.abs( bg_velocity.y ) ) {
 				// Background scrolling faster horizontally than vertically
-				position.y = random( 0 - size.height, viewport.height );
+				position.y = random( 0 - size.height, Viewport.height );
 				// Scrolling right
-				if ( bg_velocity.x > 0 ) position.x = viewport.width + spawn_offset.x;
+				if ( bg_velocity.x > 0 ) position.x = Viewport.width + spawn_offset.x;
 				// Scrolling left
 				if ( bg_velocity.x < 0 ) position.x = 0 - size.width - spawn_offset.x;
 			} else {
 				// Background scrolling faster vertically than horizontally
-				position.x = random( 0 - size.width, viewport.width );
+				position.x = random( 0 - size.width, Viewport.width );
 				// Scrolling down
-				if ( bg_velocity.y > 0 ) position.y = viewport.height + spawn_offset.y;
+				if ( bg_velocity.y > 0 ) position.y = Viewport.height + spawn_offset.y;
 				// Scrolling up
 				if ( bg_velocity.y < 0 ) position.y = 0 - size.height - spawn_offset.y;
 			}
@@ -813,7 +813,7 @@
 				return true;
 			}
 
-			if ( velocity.x > 0 && position.x > viewport.width ) {
+			if ( velocity.x > 0 && position.x > Viewport.width ) {
 				// Cloud scrolling right and off right edge
 				clouds.splice( c, 1 );
 				return true;
@@ -825,7 +825,7 @@
 				return true;
 			}
 
-			if ( velocity.y > 0 && position.y > viewport.height ) {
+			if ( velocity.y > 0 && position.y > Viewport.height ) {
 				// Cloud scrolling down and off bottom edge
 				clouds.splice( c, 1 );
 				return true;
@@ -926,12 +926,12 @@
 			var color = get_time_color();
 			screen.clouds.setCompositing( 'source-over' ).setAlpha( 0.7 );
 			screen.clouds.draw
-				.rectangle( 0, 0, viewport.width, viewport.height )
+				.rectangle( 0, 0, Viewport.width, Viewport.height )
 				.fill( rgb( color.red, color.green, color.blue ) );
 
 			// Cloud/shadow rendering
-			var viewport_W2 = viewport.width / 2;
-			var viewport_H2 = viewport.height / 2;
+			var viewport_W2 = Viewport.width / 2;
+			var viewport_H2 = Viewport.height / 2;
 			var cirrus_offset = ( 40 / viewport_W2 );
 			var normal_offset = ( 15 / viewport_H2 );
 			var cloud, position, instance, sprite, shadow, offset_factor, offset, draw;
@@ -950,10 +950,9 @@
 						y: position.y + shadow_offset.y
 					};
 
-					// TAG: on-screen
 					if (
-						( draw.x < viewport.width && draw.x + shadow.width > 0 ) &&
-						( draw.y < viewport.height && draw.y + shadow.height > 0 )
+						( draw.x < Viewport.width && draw.x + shadow.width > 0 ) &&
+						( draw.y < Viewport.height && draw.y + shadow.height > 0 )
 					) {
 						screen.bg0.draw.image( shadow, draw.x, draw.y );
 
@@ -977,10 +976,9 @@
 					y: position.y + offset.y
 				};
 
-				// TAG: on-screen
 				if (
-					( draw.x < viewport.width && draw.x + sprite.width > 0 ) &&
-					( draw.y < viewport.height && draw.y + sprite.height > 0 )
+					( draw.x < Viewport.width && draw.x + sprite.width > 0 ) &&
+					( draw.y < Viewport.height && draw.y + sprite.height > 0 )
 				) {
 					cloud_stage.draw.image( sprite, draw.x, draw.y );
 				}

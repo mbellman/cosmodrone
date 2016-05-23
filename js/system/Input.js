@@ -15,27 +15,43 @@
 	};
 
 	/**
+	 * -------------------
+	 * Class: InputHandler
+	 * -------------------
+	 *
 	 * An input manager allowing for custom key event queues
 	 */
 	function InputHandler()
 	{
 		// -- Private: --
 		var _ = this;
+		var namespace = Date.now();
 		var bound = false;
+		var disabled = false;
 		var events = {};
+
+		/**
+		 * Returns a uniquely namespaced [event] string
+		 */
+		function get_namespaced_event( event )
+		{
+			return event + '.InputHandler-' + namespace;
+		}
 
 		/**
 		 * Check key input and dispatch appropriate events
 		 */
 		function handle_input( event )
 		{
+			if ( disabled ) {
+				return;
+			}
+
 			var key = KeyCodes[event.keyCode];
 			var handlers = events[key];
 
-			if ( !!handlers )
-			{
-				for ( var h = 0 ; h < handlers.length ; h++ )
-				{
+			if ( !!handlers ) {
+				for ( var h = 0 ; h < handlers.length ; h++ ) {
 					handlers[h]( key );
 				}
 			}
@@ -47,9 +63,8 @@
 		 */
 		this.listen = function()
 		{
-			if ( !bound )
-			{
-				$( document ).on( 'keydown.InputHandler', handle_input );
+			if ( !bound ) {
+				$( document ).on( get_namespaced_event( 'keydown' ), handle_input );
 				bound = true;
 			}
 
@@ -61,9 +76,8 @@
 		 */
 		this.unlisten = function()
 		{
-			if ( bound )
-			{
-				$( document ).off( 'keydown.InputHandler' );
+			if ( bound ) {
+				$( document ).off( get_namespaced_event( 'keydown' ) );
 				bound = false;
 			}
 
@@ -75,13 +89,11 @@
 		 */
 		this.on = function( key, handler )
 		{
-			if ( !bound )
-			{
+			if ( !bound ) {
 				listen();
 			}
 
-			if ( typeof events[key] === 'undefined' )
-			{
+			if ( typeof events[key] === 'undefined' ) {
 				events[key] = [];
 			}
 
@@ -94,8 +106,7 @@
 		 */
 		this.unbindKey = function( key )
 		{
-			if ( events.hasOwnProperty( key ) )
-			{
+			if ( events.hasOwnProperty( key ) ) {
 				delete events[key];
 			}
 		}
@@ -105,10 +116,8 @@
 		 */
 		this.unbindEvents = function()
 		{
-			for ( var key in events )
-			{
-				if ( events.hasOwnProperty( key ) )
-				{
+			for ( var key in events ) {
+				if ( events.hasOwnProperty( key ) ) {
 					delete events[key];
 				}
 			}
@@ -116,15 +125,39 @@
 			events = {};
 			return _;
 		}
+
+		/**
+		 * Internally disable input callbacks
+		 * without destroying any bindings
+		 */
+		this.disable = function()
+		{
+			disabled = true;
+			return _;
+		}
+
+		/**
+		 * Re-enable the disabled listener state
+		 */
+		this.enable = function()
+		{
+			disabled = false;
+			return _;
+		}
 	}
 
 	/**
+	 * -----------
+	 * Class: Keys
+	 * -----------
+	 *
 	 * A boolean list of key-press states for common game keys
 	 */
 	function Keys()
 	{
 		// -- Private: --
 		var _ = this;
+		var namespace = Date.now();
 		var bound = false;
 		var listener = new InputHandler();
 		var state = {
@@ -140,22 +173,34 @@
 		};
 
 		/**
-		 * Toggle the key state depending on the event type
+		 * Returns any number of space-separated [event]
+		 * values as a string of namespaced events
+		 */
+		function get_namespaced_events( events )
+		{
+			events = events.split( ' ' );
+
+			for ( var e = 0 ; e < events.length ; e++ ) {
+				events[e] += '.Keys-' + namespace;
+			}
+
+			return events.join( ' ' );
+		}
+
+		/**
+		 * Toggle the key state to true/false depending on the [event] type
 		 */
 		function set_state( event )
 		{
-			var key_name = KeyCodes[event.keyCode] || 'null';
+			var key = KeyCodes[event.keyCode] || 'null';
 
-			if ( typeof state[key_name] !== 'undefined' )
-			{
-				if ( event.type === 'keydown' )
-				{
-					state[key_name] = true;
+			if ( typeof state[key] !== 'undefined' ) {
+				if ( event.type === 'keydown' ) {
+					state[key] = true;
 				}
 
-				if ( event.type === 'keyup' )
-				{
-					state[key_name] = false;
+				if ( event.type === 'keyup' ) {
+					state[key] = false;
 				}
 			}
 		}
@@ -166,9 +211,8 @@
 		 */
 		this.listen = function()
 		{
-			if ( !bound )
-			{
-				$( document ).on( 'keydown.Keys keyup.Keys', set_state );
+			if ( !bound ) {
+				$( document ).on( get_namespaced_events( 'keydown keyup' ), set_state );
 				bound = true;
 			}
 
@@ -180,9 +224,8 @@
 		 */
 		this.unlisten = function()
 		{
-			if ( bound )
-			{
-				$( document ).off( 'keydown.Keys keyup.Keys' );
+			if ( bound ) {
+				$( document ).off( get_namespaced_events( 'keydown keyup' ) );
 				bound = false;
 			}
 
@@ -202,10 +245,8 @@
 		 */
 		this.reset = function()
 		{
-			for ( var key in state )
-			{
-				if ( state.hasOwnProperty( key ) )
-				{
+			for ( var key in state ) {
+				if ( state.hasOwnProperty( key ) ) {
 					state[key] = false;
 				}
 			}

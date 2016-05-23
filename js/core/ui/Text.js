@@ -4,6 +4,8 @@
 	 */
 	var Fonts = {
 		Monitor: {
+			file: 'fonts/Monitor.png',
+
 			// Capital letters
 			'A': {x: 0, y: 0, width: 16, height: 22, top: 0},
 			'B': {x: 20, y: 0, width: 16, height: 22, top: 0},
@@ -99,15 +101,14 @@
 	 *
 	 * A printed string of bitmap font characters
 	 */
-	function TextString( _font, _source )
+	function TextString( _font )
 	{
 		// -- Private: --
 		var _ = this;
 		var owner = null;
-		var source = _source;
-		var bitmap = {};
 		var render = new Canvas();
 		var font = _font;
+		var bitmap = Assets.getImage( Fonts[font].file );
 		var string = '';
 		var line_height = 30;
 		var letter_spacing = 2;
@@ -174,7 +175,7 @@
 		function print_character( clip )
 		{
 			render.draw.image(
-				source,
+				bitmap,
 				clip.x, clip.y, clip.width, clip.height,
 				offset.x, offset.y + clip.top, clip.width, clip.height
 			);
@@ -259,18 +260,42 @@
 		{
 			owner = entity;
 
-			if ( owner.has(Sprite) ) {
-				owner.get(Sprite).setSource( render.element );
+			if ( !owner.has(Sprite) ) {
+				owner.add( new Sprite() );
 			}
+
+			owner.get( Sprite ).setSource( render.element );
 		}
 
 		/**
-		 * Change the [font] name and [source] asset
+		 * Get text area dimensions
 		 */
-		this.setFont = function( _font, _source )
+		this.getSize = function()
+		{
+			return {
+				width: size.width,
+				height: size.height
+			};
+		}
+
+		/**
+		 * Get local text coordinates
+		 */
+		this.getPosition = function()
+		{
+			return {
+				x: owner.get( Sprite ).x._,
+				y: owner.get( Sprite ).y._,
+			};
+		}
+
+		/**
+		 * Set the text [font]
+		 */
+		this.setFont = function( _font )
 		{
 			font = _font;
-			source = _source;
+			bitmap = Assets.getImage( Fonts[font].file );
 			_.setString( string );
 			return _;
 		}
@@ -283,6 +308,15 @@
 			string = _string;
 			set_canvas_size();
 			print_string();
+			return _;
+		}
+
+		/**
+		 * Update the text position via the owner Sprite
+		 */
+		this.setXY = function( x, y )
+		{
+			owner.get( Sprite ).setXY( x, y );
 			return _;
 		}
 
@@ -305,12 +339,12 @@
 	 *
 	 * Displays a string with updating letter-by-letter output
 	 */
-	function TextPrinter( _font, _source )
+	function TextPrinter( _font )
 	{
 		// -- Private: --
 		var _ = this;
 		var owner = null;
-		var text = new TextString( _font, _source );
+		var text = new TextString( _font );
 		var string = '';
 		var output = '';
 		var buffer = 0;
@@ -347,26 +381,27 @@
 			sound_queued = false;
 		}
 
+		/**
+		 * Advances the output buffer and prints the next character
+		 */
 		function print_next_character()
 		{
-			// Print special 'instruction' blocks silently
 			for ( var i = 0 ; i < instructions.length ; i++ ) {
 				var instruction = instructions[i];
 
 				if ( string.substr( buffer, instruction.length ) === instruction ) {
+					// Print special 'instruction' blocks silently
 					output += instruction;
 					buffer += instruction.length;
 					break;
 				}
 			}
 
-			// Print next character to [output] buffer
 			output += string.charAt( buffer++ );
 			text.setString( output );
 
-			// Queue sound to play on next
-			// update cycle, once Sprite
-			// has updated with new character
+			// Queue sound to play on next update cycle,
+			// once Sprite has updated with new character
 			sound_queued = true;
 		}
 
@@ -427,6 +462,15 @@
 		}
 
 		/**
+		 * Set the internal TextString [font]
+		 */
+		this.setFont = function( _font )
+		{
+			text.setFont( _font );
+			return _;
+		}
+
+		/**
 		 * Print a new [string]
 		 */
 		this.print = function( _string )
@@ -437,7 +481,6 @@
 		}
 	}
 
-	scope.BitmapFont = {};
 	scope.TextString = TextString;
 	scope.TextPrinter = TextPrinter;
 })( window );

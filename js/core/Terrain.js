@@ -394,7 +394,7 @@ function Terrain()
 			};
 
 			// Skew more cities toward the coastal regions
-			var is_last_quarter = total > Math.max( Math.round( city_count * 0.75), 5 );
+			var is_last_quarter = ( total > Math.max( Math.round( city_count * 0.75), 5 ) );
 			var elevation = height_data[location.y][location.x];
 			var min_elevation = ( is_last_quarter ? sea_level + 8 : sea_level + 2 );
 			var max_elevation = ( is_last_quarter ? tree_level - 20 : sea_level + 6 );
@@ -636,7 +636,8 @@ function Terrain()
 				if ( tile_just_above( height.data, y, x, sea_level - 1 ) ) {
 					hue.r += 20;
 					hue.g += 20;
-				} else if ( tile_just_below( height.data, y, x, sea_level ) ) {
+				} else
+				if ( tile_just_below( height.data, y, x, sea_level ) ) {
 					hue.g += 50;
 					hue.b += 40;
 				}

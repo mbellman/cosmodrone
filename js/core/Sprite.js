@@ -20,8 +20,8 @@ function Sprite( _source )
 	// -- Private: --
 	var _ = this;
 	var owner = null;
-	var source = _source || null;          // Image to render (Image or HTMLCanvasElement)
-	var parent_offset = {x: 0, y: 0};      // The offset of the owner's parent entity Sprite (updated internally)
+	var source = _source || null;          // Graphic to render (Image or HTMLCanvasElement)
+	var parent_offset = {x: 0, y: 0};      // Offset of the owner's parent entity Sprite (where applicable)
 	var offset = {x: 0, y: 0};             // A persistent offset as specified via Sprite.setOffset(x, y)
 	var origin = {x: 0, y: 0};             // Origin point of the Sprite (for positioning, rotations, scaling, etc.)
 	var render = {x: 0, y: 0};             // On-screen coordinates of the Sprite (updated internally)
@@ -41,16 +41,16 @@ function Sprite( _source )
 	}
 
 	/**
-	 * Update the saved on-screen coordinates of the sprite
+	 * Recalculate the Sprite's global (on-screen) coordinates
 	 */
-	function update_screen_coordinates()
+	function update_render_coordinates()
 	{
-		// Update info on owner's parent entity Sprite offset
-		if ( owner.parent !== null && owner.parent.has( Sprite ) ) {
-			parent_offset = owner.parent.get( Sprite ).getScreenCoordinates();
+		var parent = owner.getFromParents( Sprite );
+
+		if ( parent !== null ) {
+			parent_offset = parent.getScreenCoordinates();
 		}
 
-		// Update screen coordinates
 		render.x = _.x._ - ( !!pivot ? pivot.getPosition().x : 0 ) + parent_offset.x + offset.x - origin.x;
 		render.y = _.y._ - ( !!pivot ? pivot.getPosition().y : 0 ) + parent_offset.y + offset.y - origin.y;
 
@@ -66,8 +66,10 @@ function Sprite( _source )
 	 */
 	function update_proper_alpha()
 	{
-		if ( owner.parent !== null && owner.parent.has( Sprite ) ) {
-			alpha = _.alpha._ * owner.parent.get( Sprite ).getProperAlpha();
+		var parent = owner.getFromParents( Sprite );
+
+		if ( parent !== null ) {
+			alpha = _.alpha._ * parent.getProperAlpha();
 			return;
 		}
 
@@ -85,7 +87,7 @@ function Sprite( _source )
 	}
 
 	/**
-	 * Prepares [screen.game] for rendering rotated Sprite
+	 * Sets rotation of [screen.game]
 	 */
 	function apply_rotation()
 	{
@@ -117,17 +119,12 @@ function Sprite( _source )
 	this.update = function( dt )
 	{
 		update_tweens( dt );
-		update_screen_coordinates();
+		update_render_coordinates();
 		update_proper_alpha();
 
-		if (source === null || alpha === 0) {
-			// No need to draw blank/invisible Sprites
+		if (source === null || alpha === 0 || !_.isOnScreen() ) {
 			return;
 		}
-
-		// Don't draw offscreen objects
-		if ( render.x > viewport.width || render.x + source.width < 0 ) return;
-		if ( render.y > viewport.height || render.y + source.height < 0 ) return;
 
 		if ( has_effects() ) screen.game.save();
 
@@ -136,8 +133,8 @@ function Sprite( _source )
 
 		screen.game.draw.image(
 			source,
-			( _.rotation._ > 0 ? -origin.x : render.x ),
-			( _.rotation._ > 0 ? -origin.y : render.y ),
+			( _.rotation._ > 0 ? ( -origin.x * _.scale._ ) : render.x ),
+			( _.rotation._ > 0 ? ( -origin.y * _.scale._ ) : render.y ),
 			source.width * _.scale._,
 			source.height * _.scale._
 		);
@@ -159,7 +156,7 @@ function Sprite( _source )
 	}
 
 	/**
-	 * Returns the rendered coordinates of the Sprite
+	 * Returns the global (on-screen) coordinates of the Sprite
 	 */
 	this.getScreenCoordinates = function()
 	{
@@ -280,6 +277,25 @@ function Sprite( _source )
 		_.rotation.stop();
 		_.alpha.stop();
 		return _;
+	}
+
+	/**
+	 * Determine whether the Sprite's rendering area is on-screen
+	 */
+	this.isOnScreen = function()
+	{
+		return (
+			( render.x < Viewport.width && render.x + ( source.width * _.scale._ ) > 0) &&
+			( render.y < Viewport.height && render.y + ( source.height * _.scale._ ) > 0)
+		);
+	}
+
+	/**
+	 * Determine whether or not this Sprite lacks a [source] graphic
+	 */
+	this.isBlankSprite = function()
+	{
+		return ( source === null );
 	}
 }
 

@@ -1,17 +1,17 @@
 /**
  * An instance of the game's HUD
  */
-function HUD( assets )
+function HUD()
 {
 	// -- Private: --
 	var _ = this;
 	var graphics = {
-		droneHUD: assets.getImage( 'game/ui/drone.png' )
+		droneHUD: Assets.getImage( 'game/ui/drone.png' )
 	};
 	var UI = {
 		droneHUD: {
 			x: 10,
-			y: viewport.height - 10 - graphics.droneHUD.height
+			y: Viewport.height - 10 - graphics.droneHUD.height
 		},
 		meters: {
 			power: {
@@ -112,7 +112,7 @@ function HUD( assets )
 			var file = 'game/ui/indicators/' + indicator + '-' + (system[indicator] ? 'on.png' : 'off.png');
 
 			screen.HUD.draw.image(
-				assets.getImage( file ),
+				Assets.getImage( file ),
 				UI.droneHUD.x + UI.indicators[indicator].x,
 				UI.droneHUD.y + UI.indicators[indicator].y
 			);
