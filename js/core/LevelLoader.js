@@ -1,5 +1,20 @@
+/**
+ * ------------------
+ * DEPENDENCIES:
+ *
+ * core/Entity.js
+ * core/Components.js
+ * core/Sprite.js
+ * station/Objects.js
+ * ------------------
+ */
+
 (function(scope){
 	/**
+	 * -----------------
+	 * Object: LevelData
+	 * -----------------
+	 *
 	 * Layouts for the various levels
 	 */
 	var LevelData = {
@@ -29,6 +44,10 @@
 	};
 
 	/**
+	 * ------------------
+	 * Class: LevelLoader
+	 * ------------------
+	 *
 	 * Resource for converting level data into game entities
 	 */
 	function LevelLoader()
@@ -38,6 +57,7 @@
 		var width;                  // Width of the level in station modules
 		var height;                 // Height of the level in station modules
 		var level;                  // The level to be loaded
+		var data = {};              // Level data
 		var is_built = [];          // Module build completion flags
 		var entities = [];          // List of entities to be created
 
@@ -86,7 +106,7 @@
 		 */
 		function get_offshoot_modules( y, x )
 		{
-			var parent = get_module_specs( LevelData[level].layout[y][x] );
+			var parent = get_module_specs( data.layout[y][x] );
 			var offshoots = {}, offshoot = {};
 
 			// Adjacent module index values
@@ -97,31 +117,21 @@
 				bottom: {x: x, y: ( y + 1 )}
 			};
 
-			for ( var side in adjacents )
-			{
-				if ( adjacents.hasOwnProperty( side ) )
-				{
-					// Get [layout] array index for offshoot module
+			for ( var side in adjacents ) {
+				if ( adjacents.hasOwnProperty( side ) ) {
 					offshoot.index = adjacents[side];
 
-					// Make sure index is within level layout array bounds
-					if ( offshoot.index.x >= 0 && offshoot.index.y >= 0 && offshoot.index.x < width && offshoot.index.y < height )
-					{
-						offshoot.module = LevelData[level].layout[offshoot.index.y][offshoot.index.x];
+					// Make sure adjacent index is within level layout bounds
+					if ( offshoot.index.x >= 0 && offshoot.index.y >= 0 && offshoot.index.x < width && offshoot.index.y < height ) {
+						offshoot.module = data.layout[offshoot.index.y][offshoot.index.x];
 						offshoot.specs = get_module_specs( offshoot.module );
 
-						// In order for a offshoot module to be returned...
 						if (
-							// ...it must be stored with a non-zero module ID...
 							offshoot.module !== 0 &&
-							// ...its parent module must have a docking port on this adjacent end...
 							parent.docking.hasOwnProperty( side ) &&
-							// ...it must have a docking port on the opposite end...
 							offshoot.specs.docking.hasOwnProperty( opposite_side( side ) ) &&
-							// ...and it can't have been built already!
 							!is_built[offshoot.index.y][offshoot.index.x]
-						)
-						{
+						) {
 							offshoots[side] = {
 								y: offshoot.index.y,
 								x: offshoot.index.x,
@@ -141,48 +151,35 @@
 		 */
 		function build_module_recursive( y, x, positionX, positionY )
 		{
-			if ( is_built[y][x] )
-			{
-				// When a station layout has multiple converging
-				// "branches", recursions can cause previously
-				// unbuilt offshoot modules to become built. As a
-				// precaution we always want to check this flag.
-				// If this module is already built, stop here.
+			if ( is_built[y][x] ) {
 				return;
 			}
 
-			// Update build flag to avoid recursing back to this module
 			is_built[y][x] = true;
 
-			var specs = get_module_specs( LevelData[level].layout[y][x] );
+			var specs = get_module_specs( data.layout[y][x] );
 			var module = create_module( specs, positionX, positionY );
 			var offshoots = get_offshoot_modules( y, x );
 			var offshoot = {}, dock = {};
 
-			if ( !!LevelData[level].parts[y] && !!LevelData[level].parts[y][x] )
-			{
+			if ( !!data.parts[y] && !!data.parts[y][x] ) {
 				var parts = create_hardware_parts( y, x );
 
-				for ( var p = 0 ; p < parts.length ; p++ )
-				{
+				for ( var p = 0 ; p < parts.length ; p++ ) {
 					module.addChild( parts[p] );
 				}
 			}
-
-			// Build connecting offshoot modules
-			for ( var side in offshoots )
-			{
-				if ( offshoots.hasOwnProperty( side ) )
-				{
+ 
+			for ( var side in offshoots ) {
+				if ( offshoots.hasOwnProperty( side ) ) {
 					dock.x = specs.docking[side].x;
 					dock.y = specs.docking[side].y;
 
 					offshoot.index = offshoots[side];
-					offshoot.specs = get_module_specs( LevelData[level].layout[offshoot.index.y][offshoot.index.x] );
+					offshoot.specs = get_module_specs( data.layout[offshoot.index.y][offshoot.index.x] );
 
-					// Adjust docking values to align
-					// offshoot and parent docking ports
-					switch (side)
+					// Align docking ports
+					switch ( side )
 					{
 						case 'top':
 							dock.x -= offshoot.specs.docking.bottom.x;
@@ -217,16 +214,14 @@
 		 */
 		function set_initial_build_flags()
 		{
-			height = LevelData[level].layout.length;
-			width = LevelData[level].layout[0].length;
+			height = data.layout.length;
+			width = data.layout[0].length;
 			is_built.length = 0;
 
-			for ( var y = 0 ; y < height ; y++ )
-			{
+			for ( var y = 0 ; y < height ; y++ ) {
 				is_built[y] = [];
 
-				for ( var x = 0 ; x < width ; x++ )
-				{
+				for ( var x = 0 ; x < width ; x++ ) {
 					is_built[y][x] = false;
 				}
 			}
@@ -238,7 +233,7 @@
 
 		/**
 		 * Returns hardware part specs based on name and
-		 * module side (which determines orientation)
+		 * module side, which determines orientation
 		 */
 		function get_part_specs( part, side )
 		{
@@ -247,8 +242,7 @@
 			var specs = HardwareParts[part];
 			var data = {};
 
-			switch ( side )
-			{
+			switch ( side ) {
 				case 'top':
 					data.file = specs.file + 'top.png';
 					data.width = specs.width;
@@ -289,17 +283,15 @@
 		 */
 		function create_hardware_parts( y, x )
 		{
-			var module = get_module_specs( LevelData[level].layout[y][x] );
-			var part_list = LevelData[level].parts[y][x];
+			var module = get_module_specs( data.layout[y][x] );
+			var part_list = data.parts[y][x];
 			var part, terminal, specs, position = {}, entities = [];
 
-			for ( var p = 0 ; p < part_list.length ; p++ )
-			{
+			for ( var p = 0 ; p < part_list.length ; p++ ) {
 				part = part_list[p];
 				terminal = part.side + part.index;
 
-				if ( module.terminals.hasOwnProperty( terminal ) )
-				{
+				if ( module.terminals.hasOwnProperty( terminal ) ) {
 					specs = get_part_specs( part.name, part.side );
 					specs.orientation = part.side;
 
@@ -311,7 +303,7 @@
 							.add(
 								new HardwarePart()
 									.setSpecs( specs )
-									.setMoving( LevelData[level].moving )
+									.setMoving( data.moving )
 							)
 							.add(
 								new Sprite( Assets.getImage( specs.file ) )
@@ -330,23 +322,20 @@
 		 */
 		this.buildLevel = function( _level )
 		{
-			// Save level # for internal methods
 			level = _level;
-			// Set all modules as unbuilt
+			data = LevelData[level];
 			set_initial_build_flags();
 
-			// Loop through layout data and find
-			// a station module to start from
-			var y = 0, x = 0, can_start = false;
+			var y = 0;
+			var x = 0;
+			var can_start = false;
 
-			while ( y < height - 1 )
-			{
+			// Look for a module to start from
+			while ( y < height - 1 ) {
 				x = 0;
 
-				while ( x < width )
-				{
-					if ( LevelData[level].layout[y][x] !== 0 )
-					{
+				while ( x < width ) {
+					if ( data.layout[y][x] !== 0 ) {
 						can_start = true;
 						break;
 					}
@@ -359,7 +348,6 @@
 				y++;
 			}
 
-			// Build station outward from starting module
 			build_module_recursive( y, x, 0, 0 );
 
 			return _;

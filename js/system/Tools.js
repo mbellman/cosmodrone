@@ -50,12 +50,8 @@ function minimum()
 	var min = Number.POSITIVE_INFINITY;
 	var len = arguments.length;
 
-	for ( var n = 0 ; n < len ; n++ )
-	{
-		if ( arguments[n] < min )
-		{
-			min = arguments[n];
-		}
+	for ( var n = 0 ; n < len ; n++ ) {
+		min = Math.min( arguments[n], min );
 	}
 
 	return min;

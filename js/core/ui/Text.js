@@ -105,7 +105,6 @@
 	{
 		// -- Private: --
 		var _ = this;
-		var owner = null;
 		var render = new Canvas();
 		var font = _font;
 		var bitmap = Assets.getImage( Fonts[font].file );
@@ -248,23 +247,25 @@
 		{
 			feed_string( true );
 
-			if ( owner !== null && owner.has( Sprite ) ) {
-				owner.get(Sprite).setSource( render.element );
+			if ( _.owner !== null && _.owner.has( Sprite ) ) {
+				_.owner.get(Sprite).setSource( render.element );
 			}
 		}
 
 		// -- Public: --
+		this.owner = null;
+
 		this.update = function( dt ) {}
 
 		this.onAdded = function( entity )
 		{
-			owner = entity;
+			_.owner = entity;
 
-			if ( !owner.has(Sprite) ) {
-				owner.add( new Sprite() );
+			if ( !_.owner.has(Sprite) ) {
+				_.owner.add( new Sprite() );
 			}
 
-			owner.get( Sprite ).setSource( render.element );
+			_.owner.get( Sprite ).setSource( render.element );
 		}
 
 		/**
@@ -284,8 +285,8 @@
 		this.getPosition = function()
 		{
 			return {
-				x: owner.get( Sprite ).x._,
-				y: owner.get( Sprite ).y._,
+				x: _.owner.get( Sprite ).x._,
+				y: _.owner.get( Sprite ).y._,
 			};
 		}
 
@@ -316,7 +317,7 @@
 		 */
 		this.setXY = function( x, y )
 		{
-			owner.get( Sprite ).setXY( x, y );
+			_.owner.get( Sprite ).setXY( x, y );
 			return _;
 		}
 
@@ -343,7 +344,6 @@
 	{
 		// -- Private: --
 		var _ = this;
-		var owner = null;
 		var text = new TextString( _font );
 		var string = '';
 		var output = '';
@@ -406,6 +406,8 @@
 		}
 
 		// -- Public: --
+		this.owner = null;
+
 		this.update = function( dt )
 		{
 			if ( sound_queued ) {
@@ -429,8 +431,8 @@
 
 		this.onAdded = function( entity )
 		{
-			owner = entity;
-			owner.add( text );
+			_.owner = entity;
+			_.owner.add( text );
 		}
 
 		/**

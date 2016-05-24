@@ -70,8 +70,7 @@ function Terrain()
 			red: function( t, e ) {
 				if ( e >= 80 ) return 0;
 				if ( e > tree_line ) return -55;
-				if ( e > sea_line + 5 )
-				{
+				if ( e > sea_line + 5 ) {
 					if ( is_in_between( t, desert_line, desert_line + 5 ) ) return -10 + Math.round( 0.75 * t );
 					if ( t > arid_line ) return -20 + Math.round( 0.75 * t );
 					if ( t > jungle_line ) return -70 + t;
@@ -84,8 +83,7 @@ function Terrain()
 			green: function( t, e ) {
 				if ( e >= 80 ) return 0;
 				if ( e > tree_line ) return -50;
-				if ( e > sea_line + 5 )
-				{
+				if ( e > sea_line + 5 ) {
 					if ( is_in_between( t, desert_line, desert_line + 5 ) ) return 10 + Math.round( -2.5 * e ) + Math.round( t / 2 );
 					if ( t > arid_line ) return 30 + Math.round( -2.5 * e ) + Math.round( t / 2 );
 					if ( t > jungle_line ) return -130 + t;
@@ -98,8 +96,7 @@ function Terrain()
 			blue: function( t, e ) {
 				if ( e >= 80 ) return 0;
 				if ( e > tree_line ) return -65;
-				if ( e > sea_line + 5 )
-				{
+				if ( e > sea_line + 5 ) {
 					if ( t > arid_line ) return -30 + ( sea_line + 5 ) + Math.round( t / 2 ) - e;
 					if ( t > jungle_line ) return -30 + Math.round( t / 25 );
 					return -50 + Math.round( t / 25 );
@@ -260,9 +257,9 @@ function Terrain()
 		var map_size = data.length;
 
 		for ( var i = 0 ; i < 3 ; i++ ) {
-			var _y = Math.round( y - Math.sin( light_angle ) * ( i + 1 ) );
-			var _x = Math.round( x + Math.cos( light_angle ) * ( i + 1 ) );
-			var height = data[mod( _y, map_size )][mod( _x, map_size )];
+			var ty = Math.round( y - Math.sin( light_angle ) * ( i + 1 ) );
+			var tx = Math.round( x + Math.cos( light_angle ) * ( i + 1 ) );
+			var height = data[mod( ty, map_size )][mod( tx, map_size )];
 
 			if ( height < elevation + i ) return true;
 		}
@@ -612,27 +609,27 @@ function Terrain()
 		generate_roads( sea_level );
 
 		height_map.scan( function( y, x, elevation ) {
-			// Scale elevation to [0-100] for use by the tile coloration formulas
-			var _elevation = Math.round(elevation*ratio);
+			// Scale [elevation] to [0 - 100] for use by the tile coloration formulas
+			elevation = Math.round( elevation * ratio );
 
-			var temp_x = mod( y, climate.size );
-			var temp_y = mod( x, climate.size );
+			var temp_x = y % climate.size;
+			var temp_y = x % climate.size;
 			var temperature = 5 + climate.map[temp_y][temp_x];
 			var is_sunny = (
-				( _elevation < sea_line ) ?
+				( elevation < sea_line ) ?
 					false
 				:
-					( _elevation < sea_line+6 || tile_is_lit( height.map, y, x ) )
+					( elevation < sea_line+6 || tile_is_lit( height.map, y, x ) )
 			);
 
 			var hue = {
-				r: color.elevation.red( _elevation ) + color.temperature.red( temperature, _elevation ) + ( is_sunny ? 0 : -20 ),
-				g: color.elevation.green( _elevation ) + color.temperature.green( temperature, _elevation ) + ( is_sunny ? 0 : -20 ),
-				b: color.elevation.blue( _elevation ) + color.temperature.blue( temperature, _elevation )
+				r: color.elevation.red( elevation ) + color.temperature.red( temperature, elevation ) + ( is_sunny ? 0 : -20 ),
+				g: color.elevation.green( elevation ) + color.temperature.green( temperature, elevation ) + ( is_sunny ? 0 : -20 ),
+				b: color.elevation.blue( elevation ) + color.temperature.blue( temperature, elevation )
 			};
 
 			// Special coloration for shoreline tiles
-			if ( _elevation > sea_line - 6 && _elevation < sea_line + 6 ) {
+			if ( elevation > sea_line - 6 && elevation < sea_line + 6 ) {
 				if ( tile_just_above( height.map, y, x, sea_level - 1 ) ) {
 					hue.r += 20;
 					hue.g += 20;
@@ -644,8 +641,8 @@ function Terrain()
 			}
 
 			// Render coastal roads to [city_canvas]
-			if ( _elevation > sea_line + 2 && _elevation < sea_line + 6 && Generator.random() < 0.1 ) {
-				var light_reduction = Generator.random( 0, 20 ) + ( _elevation !== sea_line + 4 ? 20 : 0 );
+			if ( elevation > sea_line + 2 && elevation < sea_line + 6 && Generator.random() < 0.1 ) {
+				var light_reduction = Generator.random( 0, 20 ) + ( elevation !== sea_line + 4 ? 20 : 0 );
 				var road_hue = {
 					r: color.presets.city.r - light_reduction,
 					g: color.presets.city.g - light_reduction,
@@ -756,7 +753,7 @@ function Terrain()
 		time_canvas.data.put( composite );
 	}
 
-	// Public:
+	// -- Public: --
 	this.canvas;
 
 	/**

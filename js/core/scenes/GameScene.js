@@ -26,7 +26,6 @@ function GameScene( controller )
 	// -- Private: --
 	var _ = this;
 
-	var owner = null;
 	var running = true;
 	var initialized = false;
 	var level = 1;
@@ -225,7 +224,7 @@ function GameScene( controller )
 			distance = Vec2.distance( player.x, player.y, position.x, position.y );
 
 			if ( distance < minimum_distance ) {
-				entity = part.getOwner();
+				entity = part.owner;
 				minimum_distance = distance;
 			}
 		});
@@ -310,6 +309,8 @@ function GameScene( controller )
 	}
 
 	// Public:
+	this.owner = null;
+
 	this.update = function( dt )
 	{
 		if ( initialized && running ) {
@@ -326,8 +327,8 @@ function GameScene( controller )
 
 	this.onAdded = function( entity )
 	{
-		owner = entity;
-		owner.addChild( stage );
+		_.owner = entity;
+		_.owner.addChild( stage );
 	}
 
 	/**

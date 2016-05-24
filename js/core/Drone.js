@@ -19,7 +19,6 @@ function Drone()
 {
 	// -- Private: --
 	var _ = this;
-	var owner = null;
 
 	// Real-time drone properties
 	var spin = 0;
@@ -102,7 +101,7 @@ function Drone()
 	 */
 	function update_retrograde_angle()
 	{
-		var velocity = owner.get( Point ).getVelocity();
+		var velocity = _.owner.get( Point ).getVelocity();
 		retrograde_angle =  mod( Math.RAD_PI * -1 * Math.atan2( velocity.x, velocity.y ), 360 );
 	}
 
@@ -125,7 +124,7 @@ function Drone()
 	 */
 	function get_rotation_direction( angle )
 	{
-		var rotation = owner.get( Sprite ).rotation._;
+		var rotation = _.owner.get( Sprite ).rotation._;
 
 		var high = Math.max( rotation, angle );
 		var low = Math.min( rotation, angle );
@@ -172,15 +171,15 @@ function Drone()
 	 */
 	function track_target_distance()
 	{
-		var player = owner.get( Point ).getPosition();
+		var player = _.owner.get( Point ).getPosition();
 		var target = docking.target.get( HardwarePart ).getPosition();
 		var specs = docking.target.get( HardwarePart ).getSpecs();
 
 		var top = ( specs.orientation === 'top' );
 		var left = ( specs.orientation === 'left' );
 
-		target.x += ( specs.x + ( left ? -1 : 1 ) * owner.get( Sprite ).getWidth() / 2 );
-		target.y += ( specs.y + ( top ? -1 : 1 ) * owner.get( Sprite ).getHeight() / 2 );
+		target.x += ( specs.x + ( left ? -1 : 1 ) * _.owner.get( Sprite ).getWidth() / 2 );
+		target.y += ( specs.y + ( top ? -1 : 1 ) * _.owner.get( Sprite ).getHeight() / 2 );
 
 		docking.distance.x = player.x - target.x;
 		docking.distance.y = player.y - target.y;
@@ -225,7 +224,7 @@ function Drone()
 	{
 		consume_fuel( dt );
 
-		var distance = get_rotation_distance( owner.get( Sprite ).rotation._, angle );
+		var distance = get_rotation_distance( _.owner.get( Sprite ).rotation._, angle );
 		var direction = get_rotation_direction( angle );
 
 		if ( angle_slow ) {
@@ -236,7 +235,7 @@ function Drone()
 			{
 				spin = 0;
 				stabilizing = false;
-				owner.get( Sprite ).rotation._ = angle;
+				_.owner.get( Sprite ).rotation._ = angle;
 			}
 
 			return;
@@ -308,7 +307,7 @@ function Drone()
 
 			// 1. Spin to [retrograde_angle]
 			case 1:
-				if ( owner.get( Point ).getAbsoluteVelocity() === 0 ) {
+				if ( _.owner.get( Point ).getAbsoluteVelocity() === 0 ) {
 					// Already stopped; advance to docking phase 3
 					reset_spin_procedure();
 					docking.phase = 3;
@@ -317,7 +316,7 @@ function Drone()
 
 				spin_to_angle( retrograde_angle, dt );
 
-				if ( owner.get( Sprite ).rotation._ === retrograde_angle ) {
+				if ( _.owner.get( Sprite ).rotation._ === retrograde_angle ) {
 					docking.phase = 2;
 				}
 
@@ -325,14 +324,14 @@ function Drone()
 
 			// 2. Slow drone to 0 velocity
 			case 2:
-				if ( owner.get( Point ).getAbsoluteVelocity() > MAX_SPEED ) {
+				if ( _.owner.get( Point ).getAbsoluteVelocity() > MAX_SPEED ) {
 					// Fire thrusters retrograde
 					_.addVelocity( MAX_SPEED );
 					consume_fuel( dt );
 					return;
 				}
 
-				owner.get( Point ).setVelocity( 0, 0 );
+				_.owner.get( Point ).setVelocity( 0, 0 );
 				reset_spin_procedure();
 				docking.phase = 3;
 				break;
@@ -344,7 +343,7 @@ function Drone()
 				var angle = get_docking_alignment_angle();
 				spin_to_angle( angle, dt );
 
-				if ( owner.get( Sprite ).rotation._ === angle ) {
+				if ( _.owner.get( Sprite ).rotation._ === angle ) {
 					// Alignment approach angle reached; give a small forward pulse
 					_.addVelocity( 4 * MAX_SPEED );
 					consume_fuel( 4 * dt );
@@ -361,7 +360,7 @@ function Drone()
 			case 4:
 				spin_to_angle( retrograde_angle, dt );
 
-				if ( owner.get( Sprite ).rotation._ === retrograde_angle ) {
+				if ( _.owner.get( Sprite ).rotation._ === retrograde_angle ) {
 					docking.phase = 5;
 				}
 
@@ -380,19 +379,19 @@ function Drone()
 				);
 
 				if ( Math.abs( distance ) < 1 ) {
-					if ( owner.get( Point ).getAbsoluteVelocity() > MAX_SPEED ) {
+					if ( _.owner.get( Point ).getAbsoluteVelocity() > MAX_SPEED ) {
 						// Fire thrusters retrograde
 						_.addVelocity( MAX_SPEED );
 						consume_fuel( dt );
 						return;
 					}
 
-					owner.get( Point ).setVelocity( 0, 0 );
+					_.owner.get( Point ).setVelocity( 0, 0 );
 					reset_spin_procedure();
 					docking.phase = 6;
 				} else {
 					if (
-						owner.get( Sprite ).rotation._ === get_docking_alignment_angle() &&
+						_.owner.get( Sprite ).rotation._ === get_docking_alignment_angle() &&
 						Math.abs( distance ) > 30
 					) {
 						// Overshot target; reset to phase 2
@@ -406,7 +405,7 @@ function Drone()
 			case 6:
 				spin_to_angle( docking.angle, dt );
 
-				if ( owner.get( Sprite ).rotation._ === docking.angle ) {
+				if ( _.owner.get( Sprite ).rotation._ === docking.angle ) {
 					// Give a small forward pulse
 					_.addVelocity( 4 * MAX_SPEED );
 					consume_fuel( 4 * dt );
@@ -429,7 +428,7 @@ function Drone()
 				if ( distance < 1 )
 				{
 					// Docked!
-					owner.get( Point ).setVelocity( 0, 0 );
+					_.owner.get( Point ).setVelocity( 0, 0 );
 					docking.on = false;
 				}
 
@@ -481,23 +480,22 @@ function Drone()
 	}
 
 	// -- Public: --
+	this.owner = null;
+
 	this.update = function( dt )
 	{
-		// Docking procedure
 		if ( docking.on && !out_of_power && !out_of_fuel ) {
 			control_docking_procedure( dt );
 		}
 
-		// Regular spin stabilization
 		if ( stabilizing && !docking.on && !out_of_power && !out_of_fuel ) {
 			stabilize_spin();
 		}
 
-		// Update drone Sprite rotation with new [spin] value
-		owner.get( Sprite ).rotation._ += ( spin * dt );
-		// Gradually reduce drone energy
+		_.owner.get( Sprite ).rotation._ += ( spin * dt );
+
 		consume_power( dt );
-		// Gradually reduce fuel during stabilization
+
 		if ( stabilizing ) {
 			consume_fuel( dt );
 		}
@@ -505,7 +503,7 @@ function Drone()
 
 	this.onAdded = function( entity )
 	{
-		owner = entity;
+		_.owner = entity;
 	}
 
 	/**
@@ -522,7 +520,7 @@ function Drone()
 	this.getSystem = function()
 	{
 		return {
-			velocity: owner.get( Point ).getAbsoluteVelocity(),
+			velocity: _.owner.get( Point ).getAbsoluteVelocity(),
 			stabilizing: stabilizing,
 			docking: docking.on,
 			power: power,
@@ -559,11 +557,11 @@ function Drone()
 	 */
 	this.addVelocity = function( amount )
 	{
-		var rotation = owner.get( Sprite ).rotation._;
+		var rotation = _.owner.get( Sprite ).rotation._;
 		var x = Math.sin( rotation * Math.PI_RAD );
 		var y = Math.cos( rotation * Math.PI_RAD ) * -1;
 
-		owner.get( Point ).setVelocity(
+		_.owner.get( Point ).setVelocity(
 			x * amount,
 			y * amount,
 			true

@@ -20,11 +20,39 @@ function TitleScene( controller )
 {
 	// Private:
 	var _ = this;
-	var owner = null;
 	var menu = 1;
 	var stage = new Entity();
 	var props = {};
 	var slide = 1.5;
+
+	// List of props and properties to be
+	// tweened when navigating between menus
+	var transitions = {
+		// To title screen
+		1: {
+			sky: {tween: 'y', to: ( -1200 + Viewport.height ), time: slide, ease: Ease.quad.inOut},
+			nova: {tween: 'y', to: -50, time: slide, ease: Ease.quad.inOut},
+			nova2: {tween: 'y', to: -50, time: slide, ease: Ease.quad.inOut},
+			stars: {tween: 'alpha', to: 0.2, time: slide, ease: Ease.quad.out},
+			ground: {tween: 'y', to: ( Viewport.height - 208 ), time: slide, ease: Ease.quad.inOut},
+			logo: {tween: 'alpha', to: 1, time: slide, ease: Ease.quad.in},
+			starlogo: {tween: 'alpha', to: 1, time: slide, ease: Ease.quad.in},
+			TITLE_MENU: {tween: 'alpha', to: 1, time: slide, ease: Ease.quad.out},
+			LEVEL_MENU: {tween: 'alpha', to: 0, time: ( slide / 2 ), ease: Ease.quad.out}
+		},
+		// To level select
+		2: {
+			sky: {tween: 'y', to: ( Viewport.height - 100 ), time: slide, ease: Ease.quad.inOut},
+			nova: {tween: 'y', to: 0, time: slide, ease: Ease.quad.inOut},
+			nova2: {tween: 'y', to: 0, time: slide, ease: Ease.quad.inOut},
+			stars: {tween: 'alpha', to: 1, time: slide, ease: Ease.quad.out},
+			ground: {tween: 'y', to: Viewport.height * 2, time: slide, ease: Ease.quad.inOut},
+			logo: {tween: 'alpha', to: 0, time: slide, ease: Ease.quad.out},
+			starlogo: {tween: 'alpha', to: 0, time: slide, ease: Ease.quad.in},
+			TITLE_MENU: {tween: 'alpha', to: 0, time: ( slide / 2 ), ease: Ease.quad.out},
+			LEVEL_MENU: {tween: 'alpha', to: 1, time: slide, ease: Ease.quad.in}
+		}
+	};
 
 	// --------------------------------------- //
 	// ------------- SCENE SETUP ------------- //
@@ -127,7 +155,23 @@ function TitleScene( controller )
 	}
 
 	/**
-	 * Show the initial options on the title screen
+	 * Add all [props] entities to [stage]
+	 */
+	function stage_all_props()
+	{
+		for ( var p in props ) {
+			if ( props.hasOwnProperty( p ) ) {
+				stage.addChild( props[p] );
+			}
+		}
+	}
+
+	// -------------------------------------- //
+	// ------------- MENU SETUP ------------- //
+	// -------------------------------------- //
+
+	/**
+	 * Set up the title screen options
 	 */
 	function add_title_menu()
 	{
@@ -167,20 +211,99 @@ function TitleScene( controller )
 	}
 
 	/**
-	 * Add all [props] entities to [stage]
+	 * Set up the level selection menu
 	 */
-	function stage_all_props()
+	function add_level_menu()
 	{
-		for ( var p in props ) {
-			if ( props.hasOwnProperty( p ) ) {
-				stage.addChild( props[p] );
-			}
+		/**
+		 * Level option builder function
+		 */
+		function INTERNAL_option_builder( i )
+		{
+			var x = 200 * Math.floor( i / 4 );
+			var y = 120 * ( i % 4 );
+
+			var entity = new Entity().add(
+				new Sprite().setXY( x, y )
+			)
+			.addChild(
+				new Entity().add(
+					new FillSprite( '#ffd52e', 175, 90 ).setAlpha( 0.2 )
+				)
+			);
+
+			return entity;
 		}
+
+		/**
+		 * Handler for navigating to a level option
+		 */
+		function INTERNAL_option_onFocus( entity, i )
+		{
+			entity.find( FillSprite ).alpha.tweenTo( 0.5, 0.25, Ease.quad.out );
+		}
+
+		/**
+		 * Handler for navigating away from a level option
+		 */
+		function INTERNAL_option_onUnFocus( entity, i )
+		{
+			entity.find( FillSprite ).alpha.tweenTo( 0.2, 0.25, Ease.quad.out );
+		}
+
+		/**
+		 * Handler for selecting a grid option
+		 */
+		function INTERNAL_option_onSelect( entity, i )
+		{
+			if ( i < 1 ) {
+				return true;
+			}
+
+			return false;
+		}
+
+		props.LEVEL_MENU = new Entity().add(
+			new Sprite().setXY( 200, 100 ).setAlpha( 0 )
+		)
+		.add(
+			new Menu( 'grid' )
+				.configure(
+					{
+						items: 16,
+						options: INTERNAL_option_builder,
+						focus: INTERNAL_option_onFocus,
+						unfocus: INTERNAL_option_onUnFocus,
+						select: INTERNAL_option_onSelect,
+						sounds: {
+							cursor: Assets.getAudio( 'ui/blip2.wav' ),
+							select: Assets.getAudio( 'ui/blip2.wav' ),
+							invalid: Assets.getAudio( 'ui/blip1.wav' )
+						}
+					}
+				)
+		);
+
+		props.LEVEL_MENU.get( Sprite ).setAlpha( 0 );
 	}
 
 	// -------------------------------------------- //
 	// ------------- MENU TRANSITIONS ------------- //
 	// -------------------------------------------- //
+
+	/**
+	 * Runs all menu transition tweens
+	 */
+	function run_transition_tweens()
+	{
+		var tweens = transitions[menu];
+
+		for ( var t in tweens ) {
+			if ( tweens.hasOwnProperty( t ) ) {
+				props[t].get( Sprite )[tweens[t].tween].tweenTo( tweens[t].to, tweens[t].time, tweens[t].ease );
+			}
+		}
+	}
 
 	/**
 	 * Slide to the main title view
@@ -192,14 +315,10 @@ function TitleScene( controller )
 		props.nova.remove( Flicker );
 		props.nova2.remove( Flicker );
 
-		props.sky.get( Sprite ).y.tweenTo( -1200 + Viewport.height, slide, Ease.quad.inOut );
-		props.nova.get( Sprite ).y.tweenTo( -50, slide, Ease.quad.inOut );
-		props.nova2.get( Sprite ).y.tweenTo( -50, slide, Ease.quad.inOut );
-		props.stars.get( Sprite ).alpha.tweenTo( 0.2, slide, Ease.quad.out );
-		props.ground.get( Sprite ).y.tweenTo( Viewport.height - 208, slide, Ease.quad.inOut );
+		props.TITLE_MENU.get( Menu ).enable();
+		props.LEVEL_MENU.get( Menu ).disable();
 
-		props.logo.get( Sprite ).alpha.tweenTo( 1, slide, Ease.quad.in );
-		props.starlogo.get( Sprite ).alpha.tweenTo( 1, slide, Ease.quad.in );
+		run_transition_tweens();
 	}
 
 	/**
@@ -212,17 +331,10 @@ function TitleScene( controller )
 		props.nova.add( new Flicker().setAlphaRange( 0.8, 1.0 ) );
 		props.nova2.add( new Flicker().setAlphaRange( 0.8, 1.0 ) );
 
-		props.sky.get( Sprite ).y.tweenTo( Viewport.height - 100, slide, Ease.quad.inOut );
-		props.nova.get( Sprite ).y.tweenTo( 0, slide, Ease.quad.inOut );
-		props.nova2.get( Sprite ).y.tweenTo( 0, slide, Ease.quad.inOut );
-		props.stars.get( Sprite ).alpha.tweenTo( 1, slide, Ease.quad.in );
-		props.ground.get( Sprite ).y.tweenTo( Viewport.height * 2, slide, Ease.quad.inOut );
-
-		props.logo.get( Sprite ).alpha.tweenTo( 0, slide, Ease.quad.out );
-		props.starlogo.get( Sprite ).alpha.tweenTo( 0, slide, Ease.quad.out );
-
 		props.TITLE_MENU.get( Menu ).disable();
-		props.TITLE_MENU.get( Sprite ).alpha.tweenTo( 0, slide / 2, Ease.quad.out );
+		props.LEVEL_MENU.get( Menu ).enable();
+
+		run_transition_tweens();
 	}
 
 	/**
@@ -241,18 +353,22 @@ function TitleScene( controller )
 
 	}
 
-	// Public:
+	// -- Public: --
+	this.owner = null;
+
 	this.update = function( dt ) {}
 
 	this.onAdded = function( entity )
 	{
-		owner = entity;
+		_.owner = entity;
 
 		add_backdrop();
 		add_title();
 		add_title_menu();
+		add_level_menu();
 		stage_all_props();
 
-		owner.addChild( stage );
+		props.LEVEL_MENU.get( Menu ).disable();
+		_.owner.addChild( stage );
 	}
 }

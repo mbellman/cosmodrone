@@ -21,16 +21,198 @@
 	{
 		// -- Private: --
 		var _ = this;
-		var owner = null;
 		var stage = new Entity();
+		var total = 0;
+		var builder;
+		var selection = 0;
+		var events = {
+			focus: null,
+			unfocus: null,
+			select: null
+		};
+		var sounds = {
+			cursor: null,
+			select: null,
+			invalid: null
+		};
+
+		/**
+		 * Play one of the menu action sound effects
+		 */
+		function play_sound( sound )
+		{
+			if ( sounds[sound] !== null ) {
+				sounds[sound].play();
+			}
+		}
+
+		/**
+		 * Build the menu grid using [builder] to construct
+		 * and return entities to be placed into the [stage].
+		 */
+		function build_grid()
+		{
+			if ( typeof builder !== 'function' ) {
+				return;
+			}
+
+			stage.disposeChildren();
+
+			for ( var i = 0 ; i < total ; i++ ) {
+				stage.addChild( builder( i ) );
+			}
+		}
+
+		/**
+		 * Selects the closest grid item to the active
+		 * selection in a specific cardinal [direction]
+		 */
+		function select_nearest( direction )
+		{
+			var active = stage.getNthChild( selection ).find( Sprite );
+			var minimum_distance = Number.POSITIVE_INFINITY;
+			var closest = selection;
+			var index = 0;
+			var target, distance;
+
+			stage.forDirectChildren( function( child ) {
+				target = child.find( Sprite );
+
+				if ( target !== null && target !== active ) {
+					distance = Vec2.distance( active.x._, active.y._, target.x._, target.y._ );
+
+					if (
+						( distance < minimum_distance ) &&
+						(
+							( direction === 'up' && target.y._ < active.y._) ||
+							( direction === 'down' && target.y._ > active.y._) ||
+							( direction === 'left' && target.x._ < active.x._) ||
+							( direction === 'right' && target.x._ > active.x._)
+						)
+					) {
+						minimum_distance = distance;
+						closest = index;
+					}
+				}
+
+				index++;
+			});
+
+			if ( closest !== selection ) {
+				events.unfocus( stage.getNthChild( selection ), selection );
+				events.focus( stage.getNthChild( closest ), closest );
+				play_sound( 'cursor' );
+
+				selection = closest;
+			} else {
+				play_sound( 'invalid' );
+			}
+		}
 
 		// -- Public: --
+		this.owner = null;
+
 		this.update = function( dt ) {}
 
 		this.onAdded = function( entity )
 		{
-			owner = entity;
-			owner.addChild( stage );
+			_.owner = entity;
+			_.owner.addChild( stage );
+
+			build_grid();
+
+			if ( typeof events.focus === 'function' ) {
+				events.focus( stage.getNthChild( selection ), selection );
+			}
+		}
+
+		/**
+		 * Set the number of items in the grid
+		 */
+		this.setTotal = function( _total )
+		{
+			total = _total;
+			return _;
+		}
+
+		/**
+		 * Set the option [builder] function (see: build_grid())
+		 */
+		this.setBuilder = function( _builder )
+		{
+			builder = _builder;
+			return _;
+		}
+
+		/**
+		 * Set the menu action sound effects
+		 */
+		this.setSounds = function( object )
+		{
+			for ( var o in object ) {
+				if ( sounds.hasOwnProperty( o ) ) {
+					sounds[o] = object[o];
+				}
+			}
+
+			return _;
+		}
+
+		/**
+		 * Set up menu [event] handlers
+		 */
+		this.on = function( event, handler )
+		{
+			if ( events.hasOwnProperty( event ) ) {
+				events[event] = handler;
+			}
+
+			return _;
+		}
+
+		/**
+		 * Go up one grid item
+		 */
+		this.up = function()
+		{
+			select_nearest( 'up' );
+		}
+
+		/**
+		 * Go down one grid item
+		 */
+		this.down = function()
+		{
+			select_nearest( 'down' );
+		}
+
+		/**
+		 * Go left one grid item
+		 */
+		this.left = function()
+		{
+			select_nearest( 'left' );
+		}
+
+		/**
+		 * Go right one grid item
+		 */
+		this.right = function()
+		{
+			select_nearest( 'right' );
+		}
+
+		/**
+		 * Pick the active selection and trigger its callback
+		 */
+		this.select = function()
+		{
+			if ( events.select( stage.getNthChild( selection ), selection ) ) {
+				play_sound( 'select' );
+				return;
+			}
+
+			play_sound( 'invalid' );
 		}
 	}
 
@@ -45,7 +227,6 @@
 	{
 		// -- Private: --
 		var _ = this;
-		var owner = null;
 		var font = null;
 		var width = 0;
 		var options = [];
@@ -108,12 +289,14 @@
 		}
 
 		// -- Public: --
+		this.owner = null;
+
 		this.update = function( dt ) {}
 
 		this.onAdded = function( entity )
 		{
-			owner = entity;
-			owner.addChild( stage );
+			_.owner = entity;
+			_.owner.addChild( stage );
 
 			stage
 				.addChild( container )
@@ -271,7 +454,6 @@
 	{
 		// -- Private: --
 		var _ = this;
-		var owner = null;
 		var input = new InputHandler();
 		var stage = new Entity();
 		var menu = create_menu();
@@ -283,15 +465,36 @@
 		function default_attributes()
 		{
 			return {
-				// Font for the menu to use (ListMenu only)
+				// ListMenu: menu options as a list of key-value pairs. (Key: string; Value: callback)
+				// GridMenu: grid item generator function. Receives the item ID and returns an entity.
+				options: null,
+
+				// ListMenu parameters:
+				// Option font
 				font: null,
-				// Selection options as a list of key-value pairs. Key: string
-				// (ListMenu) or entity (GridMenu); Value: selection callback.
-				options: {},
-				// Menu text alignment (ListMenu only)
+				// Option text alignment
 				align: 'left',
-				// Menu text line height (ListMenu only)
+				// Option line height
 				lineHeight: 30,
+				// Cursor graphic
+				cursor: null,
+				// Cursor offset from selected item
+				cursorOffset: {
+					x: -50,
+					y: 0
+				},
+
+				// GridMenu parameters:
+				// Number of grid items to construct
+				items: 0,
+				// Handler for navigating to a menu option. Receives the grid item entity and its index as two arguments.
+				focus: null,
+				// Handler for leaving a menu option. Receives the grid item entity and its index as two arguments.
+				unfocus: null,
+				// Handler for selecting a menu option. Receives the grid item entity and its index as two arguments.
+				// This function should return true or false depending on whether the selection is 'valid'.
+				select: null,
+
 				// Menu action sound effects:
 				sounds: {
 					// SFX: Navigating between options
@@ -301,13 +504,6 @@
 					// SFX: Invalid selection (null callback)
 					invalid: null
 				},
-				// Cursor graphic
-				cursor: null,
-				// Cursor offset coordinates from selected item (ListMenu only)
-				cursorOffset: {
-					x: -50,
-					y: 0
-				}
 			};
 		}
 
@@ -336,21 +532,26 @@
 				input.on( 'DOWN', menu.next );
 			} else
 			if ( type === 'grid' ) {
-				// TODO: GridMenu navigation functions
+				input.on( 'UP', menu.up );
+				input.on( 'DOWN', menu.down );
+				input.on( 'LEFT', menu.left );
+				input.on( 'RIGHT', menu.right );
 			}
 
 			input.on( 'ENTER', menu.select );
 		}
 
 		// -- Public: --
+		this.owner = null;
+
 		this.update = function( dt ) {}
 
 		this.onAdded = function( entity )
 		{
-			owner = entity;
+			_.owner = entity;
 
 			if ( menu !== null ) {
-				owner.add( menu );
+				_.owner.add( menu );
 			}
 
 			input.listen();
@@ -367,13 +568,13 @@
 		 */
 		this.configure = function( props )
 		{
-			if ( menu instanceof ListMenu ) {
-				for ( var p in props ) {
-					if ( attributes.hasOwnProperty( p ) ) {
-						attributes[p] = props[p] || attributes[p];
-					}
+			for ( var p in props ) {
+				if ( attributes.hasOwnProperty( p ) ) {
+					attributes[p] = props[p] || attributes[p];
 				}
+			}
 
+			if ( menu instanceof ListMenu ) {
 				menu
 					.setFont( attributes.font )
 					.setMenuOptions( attributes.options )
@@ -391,7 +592,13 @@
 					);
 			} else
 			if ( menu instanceof GridMenu) {
-				// TODO: Grid Menu configuration
+				menu
+					.setTotal( attributes.items )
+					.setBuilder( attributes.options )
+					.setSounds( attributes.sounds )
+					.on( 'focus', attributes.focus )
+					.on( 'unfocus', attributes.unfocus )
+					.on( 'select', attributes.select );
 			}
 
 			return _;

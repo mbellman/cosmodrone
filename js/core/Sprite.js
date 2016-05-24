@@ -19,7 +19,6 @@ function Sprite( _source )
 {
 	// -- Private: --
 	var _ = this;
-	var owner = null;
 	var source = _source || null;          // Graphic to render (Image or HTMLCanvasElement)
 	var parent_offset = {x: 0, y: 0};      // Offset of the owner's parent entity Sprite (where applicable)
 	var offset = {x: 0, y: 0};             // A persistent offset as specified via Sprite.setOffset(x, y)
@@ -45,7 +44,7 @@ function Sprite( _source )
 	 */
 	function update_render_coordinates()
 	{
-		var parent = owner.getFromParents( Sprite );
+		var parent = _.owner.getFromParents( Sprite );
 
 		if ( parent !== null ) {
 			parent_offset = parent.getScreenCoordinates();
@@ -66,7 +65,7 @@ function Sprite( _source )
 	 */
 	function update_proper_alpha()
 	{
-		var parent = owner.getFromParents( Sprite );
+		var parent = _.owner.getFromParents( Sprite );
 
 		if ( parent !== null ) {
 			alpha = _.alpha._ * parent.getProperAlpha();
@@ -109,6 +108,8 @@ function Sprite( _source )
 	}
 
 	// -- Public: --
+	this.owner = null;
+
 	this.x = new Tweenable( 0 );
 	this.y = new Tweenable( 0 );
 	this.scale = new Tweenable( 1 );
@@ -144,7 +145,7 @@ function Sprite( _source )
 
 	this.onAdded = function( entity )
 	{
-		owner = entity;
+		_.owner = entity;
 
 		if (
 			source !== null &&

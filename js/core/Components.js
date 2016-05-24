@@ -18,7 +18,6 @@ function Flicker()
 {
 	// -- Private: --
 	var _ = this;
-	var owner = null;
 	var sprite;
 	var range = {
 		alpha: {low: 0, high: 1},
@@ -26,6 +25,8 @@ function Flicker()
 	};
 
 	// Public:
+	this.owner = null;
+
 	this.update = function( dt )
 	{
 		if ( !sprite.alpha.isTweening() ) {
@@ -40,8 +41,8 @@ function Flicker()
 
 	this.onAdded = function( entity )
 	{
-		owner = entity;
-		sprite = owner.get( Sprite );
+		_.owner = entity;
+		sprite = _.owner.get( Sprite );
 	}
 
 	/**
@@ -76,7 +77,6 @@ function Point()
 {
 	// -- Private: --
 	var _ = this;
-	var owner = null;
 	var position = new Vec2();
 	var velocity = new Vec2();
 
@@ -86,12 +86,14 @@ function Point()
 	 */
 	function update_sprite()
 	{
-		if ( owner !== null && owner.has( Sprite ) ) {
-			owner.get( Sprite ).setXY( position.x, position.y );
+		if ( _.owner !== null && _.owner.has( Sprite ) ) {
+			_.owner.get( Sprite ).setXY( position.x, position.y );
 		}
 	}
 
 	// -- Public: --
+	this.owner = null;
+
 	this.update = function( dt )
 	{
 		position.add( velocity, dt );
@@ -100,7 +102,7 @@ function Point()
 
 	this.onAdded = function( entity )
 	{
-		owner = entity;
+		_.owner = entity;
 	}
 
 	/**
@@ -170,7 +172,6 @@ function HardwarePart()
 {
 	// -- Private: --
 	var _ = this;
-	var owner = null;
 	var x = 0;
 	var y = 0;
 	var specs = {};
@@ -183,23 +184,20 @@ function HardwarePart()
 	 */
 	function update_coordinates()
 	{
-		if ( owner !== null && owner.parent !== null ) {
-			if ( owner.has( Sprite ) && owner.parent.has( Point ) ) {
-				// Get position of the parent station module
-				var position = owner.parent.get( Point ).getPosition();
+		if ( _.owner !== null && _.owner.parent !== null ) {
+			if ( _.owner.has( Sprite ) && _.owner.parent.has( Point ) ) {
+				var module = _.owner.parent.get( Point ).getPosition();
+				var sprite = _.owner.get( Sprite );
 
-				// Get base [x, y] coordinates of the
-				// owner Sprite in local (module) space
-				var sprite = owner.get( Sprite );
-
-				// Set the part coordinates as a sum of the two
-				x = sprite.x._ + position.x;
-				y = sprite.y._ + position.y;
+				x = module.x + sprite.x._;
+				y = module.y + sprite.y._;
 			}
 		}
 	}
 
 	// -- Public: --
+	this.owner = null;
+
 	this.update = function( dt )
 	{
 		if ( moving ) {
@@ -209,21 +207,12 @@ function HardwarePart()
 
 	this.onAdded = function( entity )
 	{
-		owner = entity;
+		_.owner = entity;
 	}
 
 	this.onOwnerAddedToParent = function()
 	{
 		update_coordinates();
-	}
-
-	/**
-	 * Return owner for Point component reference
-	 * (see: GameInstance.js, enter_docking_mode())
-	 */
-	this.getOwner = function()
-	{
-		return owner;
 	}
 
 	/**

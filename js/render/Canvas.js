@@ -343,7 +343,7 @@
 	 * Class: ImageData
 	 * ----------------
 	 *
-	 * Extensions to the default ImageData class
+	 * Extensions to the default ImageData prototype
 	 */
 
 	/**

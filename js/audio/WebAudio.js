@@ -25,7 +25,7 @@ WebAudio.load = function( file, handlers )
 	ajax.onload = function() {
 		WebAudio.ctx.decodeAudioData( ajax.response, function( data ) {
 			handlers.load( data );
-		}, handlers.fail);
+		}, handlers.fail );
 	}
 
 	ajax.send();

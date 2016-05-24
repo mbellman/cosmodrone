@@ -4,7 +4,7 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
-* Grid Menu implementation
+* Level selection interface
 * Loading bar/indicator of some kind
 * New drone sprite
 * Make sure hardware asset "light source" is adjusted based on the side of the module

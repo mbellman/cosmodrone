@@ -21,11 +21,9 @@ function Entity()
 	 */
 	function component_lookup( component, action )
 	{
-		if ( action === 'get' && searched_component instanceof component ) {
-			// If a component type specified by get()
-			// matches the saved reference, return
-			// it immediately without further lookups
-			return searched_component;
+		if ( searched_component instanceof component ) {
+			if ( action === 'get' ) return searched_component;
+			if ( action === 'has' ) return true;
 		}
 
 		for ( var c = 0 ; c < components.length ; c++ ) {
@@ -127,6 +125,27 @@ function Entity()
 	}
 
 	/**
+	 * Retrieves the first available component from
+	 * the entity or its children by instance name.
+	 */
+	this.find = function( component )
+	{
+		if ( _.has( component ) ) {
+			return _.get( component );
+		}
+
+		for ( var c = 0 ; c < children.length ; c++ ) {
+			var _component = children[c].find( component );
+
+			if ( _component !== null ) {
+				return _component;
+			}
+		}
+
+		return null;
+	}
+
+	/**
 	 * Retrieve a Component from parent entities by instance
 	 * name; returns null if no parents have the Component
 	 */
@@ -148,6 +167,14 @@ function Entity()
 		}
 
 		return null;
+	}
+
+	/**
+	 * Returns the [n]th child of the entity if one exists
+	 */
+	this.getNthChild = function( n )
+	{
+		return children[n] || null;
 	}
 
 	/**
@@ -206,6 +233,16 @@ function Entity()
 
 		for ( var c = 0 ; c < children.length ; c++ ) {
 			children[c].forAllComponentsOfType( component, handler );
+		}
+	}
+
+	/**
+	 * Run a [handler] operation on direct descendant child entities
+	 */
+	this.forDirectChildren = function( handler )
+	{
+		for ( var c = 0 ; c < children.length ; c++ ) {
+			handler( children[c] );
 		}
 	}
 }
