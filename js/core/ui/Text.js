@@ -1,5 +1,9 @@
 (function( scope ) {
 	/**
+	 * -------------
+	 * Object: Fonts
+	 * -------------
+	 *
 	 * Bitmap font clipping/placement coordinates
 	 */
 	var Fonts = {
@@ -95,14 +99,16 @@
 	};
 
 	/**
-	 * -----------------
-	 * Class: TextString
-	 * -----------------
+	 * ---------------------
+	 * Component: TextString
+	 * ---------------------
 	 *
 	 * A printed string of bitmap font characters
 	 */
 	function TextString( _font )
 	{
+		Component.call( this );
+
 		// -- Private: --
 		var _ = this;
 		var render = new Canvas();
@@ -253,20 +259,14 @@
 		}
 
 		// -- Public: --
-		this.owner = null;
-
-		this.update = function( dt ) {}
-
-		this.onAdded = function( entity )
+		this.onAdded = function()
 		{
-			_.owner = entity;
-
 			if ( !_.owner.has(Sprite) ) {
 				_.owner.add( new Sprite() );
 			}
 
 			_.owner.get( Sprite ).setSource( render.element );
-		}
+		};
 
 		/**
 		 * Get text area dimensions
@@ -277,7 +277,7 @@
 				width: size.width,
 				height: size.height
 			};
-		}
+		};
 
 		/**
 		 * Get local text coordinates
@@ -288,7 +288,7 @@
 				x: _.owner.get( Sprite ).x._,
 				y: _.owner.get( Sprite ).y._,
 			};
-		}
+		};
 
 		/**
 		 * Set the text [font]
@@ -299,7 +299,7 @@
 			bitmap = Assets.getImage( Fonts[font].file );
 			_.setString( string );
 			return _;
-		}
+		};
 
 		/**
 		 * Update the text [string]
@@ -310,7 +310,7 @@
 			set_canvas_size();
 			print_string();
 			return _;
-		}
+		};
 
 		/**
 		 * Update the text position via the owner Sprite
@@ -319,7 +319,7 @@
 		{
 			_.owner.get( Sprite ).setXY( x, y );
 			return _;
-		}
+		};
 
 		/**
 		 * Change text style [properties]
@@ -330,7 +330,7 @@
 			letter_spacing = properties.letterSpacing || 2;
 			space_size = properties.spaceSize || 10;
 			return _;
-		}
+		};
 	}
 
 	/**
@@ -342,6 +342,8 @@
 	 */
 	function TextPrinter( _font )
 	{
+		Component.call( this );
+
 		// -- Private: --
 		var _ = this;
 		var text = new TextString( _font );
@@ -406,8 +408,6 @@
 		}
 
 		// -- Public: --
-		this.owner = null;
-
 		this.update = function( dt )
 		{
 			if ( sound_queued ) {
@@ -427,13 +427,12 @@
 					finished = true;
 				}
 			}
-		}
+		};
 
-		this.onAdded = function( entity )
+		this.onAdded = function()
 		{
-			_.owner = entity;
 			_.owner.add( text );
-		}
+		};
 
 		/**
 		 * Configure the component to play one or
@@ -451,7 +450,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Set the delay between printed
@@ -461,7 +460,7 @@
 		{
 			delay.interval = ms;
 			return _;
-		}
+		};
 
 		/**
 		 * Set the internal TextString [font]
@@ -470,7 +469,7 @@
 		{
 			text.setFont( _font );
 			return _;
-		}
+		};
 
 		/**
 		 * Print a new [string]
@@ -480,7 +479,7 @@
 			string = _string;
 			reset_output_buffer();
 			return _;
-		}
+		};
 	}
 
 	scope.TextString = TextString;

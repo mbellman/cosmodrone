@@ -21,12 +21,18 @@
 		var node = null;
 
 		// -- Public: --
+		/**
+		 * Play sound
+		 */
 		this.play = function()
 		{
 			node = WebAudio.play( buffer );
 			return _;
-		}
+		};
 
+		/**
+		 * Stop sound
+		 */
 		this.stop = function()
 		{
 			if ( node !== null) {
@@ -34,7 +40,7 @@
 			}
 
 			return _;
-		}
+		};
 	}
 
 	/**
@@ -108,7 +114,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Set asset load handler
@@ -125,7 +131,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Set asset load failure handler
@@ -146,7 +152,7 @@
 			}
 
 			return _;
-		}
+		};
 	}
 
 	/**
@@ -192,7 +198,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Save Asset [asset] to [data] bank
@@ -204,7 +210,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Retrieve an image Asset by [file] name
@@ -216,7 +222,7 @@
 			} catch( e ) {
 				return asset_error( root.images, file );
 			}
-		}
+		};
 
 		/**
 		 * Retrieve an audio Asset by [file] name
@@ -228,7 +234,7 @@
 			} catch( e ) {
 				return asset_error( root.audio, file );
 			}
-		}
+		};
 
 		/**
 		 * Lock [data] bank from further writing
@@ -237,7 +243,7 @@
 		{
 			locked = true;
 			return _;
-		}
+		};
 	}
 
 	/**
@@ -314,7 +320,7 @@
 		{
 			root = _root;
 			return _;
-		}
+		};
 
 		/**
 		 * Save an Asset Manifest list to [assets]
@@ -323,7 +329,7 @@
 		{
 			assets = _assets;
 			return _;
-		}
+		};
 
 		/**
 		 * Set the asset load progress handler
@@ -332,7 +338,7 @@
 		{
 			onProgress = callback || onProgress;
 			return _;
-		}
+		};
 
 		/**
 		 * Set the asset load failure handler
@@ -341,7 +347,7 @@
 		{
 			onError = callback || onError;
 			return _;
-		}
+		};
 
 		/**
 		 * Set the asset list load completion
@@ -351,7 +357,7 @@
 		{
 			onComplete = callback || onComplete;
 			load_assets();
-		}
+		};
 	}
 
 	scope.Assets = {};

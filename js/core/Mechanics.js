@@ -1,21 +1,14 @@
 /**
- * --------------
- * DEPENDENCIES:
- *
- * core/Entity.js
- * core/Sprite.js
- * --------------
- */
-
-/**
- * --------------
- * Class: Flicker
- * --------------
+ * ------------------
+ * Component: Flicker
+ * ------------------
  *
  * An alpha-flickering effect for Sprites
  */
 function Flicker()
 {
+	Component.call( this );
+
 	// -- Private: --
 	var _ = this;
 	var sprite;
@@ -25,8 +18,6 @@ function Flicker()
 	};
 
 	// Public:
-	this.owner = null;
-
 	this.update = function( dt )
 	{
 		if ( !sprite.alpha.isTweening() ) {
@@ -37,13 +28,12 @@ function Flicker()
 				Ease.quad.inOut
 			);
 		}
-	}
+	};
 
-	this.onAdded = function( entity )
+	this.onAdded = function()
 	{
-		_.owner = entity;
 		sprite = _.owner.get( Sprite );
-	}
+	};
 
 	/**
 	 * Define the [low] and [high] of the flicker alpha range
@@ -53,7 +43,7 @@ function Flicker()
 		range.alpha.low = low;
 		range.alpha.high = high;
 		return _;
-	}
+	};
 
 	/**
 	 * Define the [low] and [high] of the flicker time range
@@ -63,18 +53,20 @@ function Flicker()
 		range.time.low = low;
 		range.time.high = high;
 		return _;
-	}
+	};
 }
 
 /**
- * ------------
- * Class: Point
- * ------------
+ * ----------------
+ * Component: Point
+ * ----------------
  *
  * A static or moving [x, y] coordinate
  */
 function Point()
 {
+	Component.call( this );
+
 	// -- Private: --
 	var _ = this;
 	var position = new Vec2();
@@ -92,18 +84,11 @@ function Point()
 	}
 
 	// -- Public: --
-	this.owner = null;
-
 	this.update = function( dt )
 	{
 		position.add( velocity, dt );
 		update_sprite();
-	}
-
-	this.onAdded = function( entity )
-	{
-		_.owner = entity;
-	}
+	};
 
 	/**
 	 * Get the position of the Point, optionally rounded
@@ -114,7 +99,7 @@ function Point()
 			x: ( !!is_rounded ? Math.floor( position.x ) : position.x ),
 			y: ( !!is_rounded ? Math.floor( position.y ) : position.y )
 		};
-	}
+	};
 
 	/**
 	 * Get the velocity of a moving Point
@@ -125,7 +110,7 @@ function Point()
 			x: velocity.x,
 			y: velocity.y
 		};
-	}
+	};
 
 	/**
 	 * Get the velocity's magnitude for a moving Point
@@ -133,7 +118,7 @@ function Point()
 	this.getAbsoluteVelocity = function()
 	{
 		return velocity.magnitude();
-	}
+	};
 
 	/**
 	 * Update the position of the Point, optionally
@@ -147,7 +132,7 @@ function Point()
 		update_sprite();
 
 		return _;
-	}
+	};
 
 	/**
 	 * Update the velocity vector of a moving Point,
@@ -158,18 +143,20 @@ function Point()
 		velocity.x = ( is_offset ? velocity.x + x : x );
 		velocity.y = ( is_offset ? velocity.y + y : y );
 		return _;
-	}
+	};
 }
 
 /**
- * -------------------
- * Class: HardwarePart
- * -------------------
+ * -----------------------
+ * Component: HardwarePart
+ * -----------------------
  *
  * A dockable hardware part unit fixed to space station modules
  */
 function HardwarePart()
 {
+	Component.call( this );
+
 	// -- Private: --
 	var _ = this;
 	var x = 0;
@@ -196,24 +183,17 @@ function HardwarePart()
 	}
 
 	// -- Public: --
-	this.owner = null;
-
 	this.update = function( dt )
 	{
 		if ( moving ) {
 			update_coordinates();
 		}
-	}
-
-	this.onAdded = function( entity )
-	{
-		_.owner = entity;
-	}
+	};
 
 	this.onOwnerAddedToParent = function()
 	{
 		update_coordinates();
-	}
+	};
 
 	/**
 	 * Return hardware part position
@@ -224,7 +204,7 @@ function HardwarePart()
 			x: x,
 			y: y
 		};
-	}
+	};
 
 	/**
 	 * Return specifications for this hardware part
@@ -232,7 +212,7 @@ function HardwarePart()
 	this.getSpecs = function()
 	{
 		return specs;
-	}
+	};
 
 	/**
 	 * Set hardware part specifications
@@ -241,7 +221,7 @@ function HardwarePart()
 	{
 		specs = _specs;
 		return _;
-	}
+	};
 
 	/**
 	 * Set whether or not this hardware
@@ -253,5 +233,5 @@ function HardwarePart()
 	{
 		moving = boolean;
 		return _;
-	}
+	};
 }

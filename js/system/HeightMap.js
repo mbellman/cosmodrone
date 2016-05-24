@@ -1,5 +1,9 @@
 /**
- * A class for generating a 3D topographical map with various parameters
+ * ----------------
+ * Class: HeightMap
+ * ----------------
+ *
+ * 2D topographical map generator
  */
 function HeightMap()
 {
@@ -75,8 +79,7 @@ function HeightMap()
 	 */
 	function set_point( y, x, value )
 	{
-		if ( map[y][x] === null )
-		{
+		if ( map[y][x] === null ) {
 			map[y][x] = clamp( value, 0, settings.elevation );
 		}
 	}
@@ -97,22 +100,20 @@ function HeightMap()
 	/**
 	 * Returns the average of an array of numbers
 	 */
-	function average( set )
+	function average( array )
 	{
 		var sum = 0, i = 0;
 
-		while ( typeof set[i] !== 'undefined' )
-		{
-			if ( set[i] === null )
-			{
-				set.splice( i, 1 );
+		while ( typeof array[i] !== 'undefined' ) {
+			if ( array[i] === null ) {
+				array.splice( i, 1 );
 				continue;
 			}
 
-			sum += set[i++];
+			sum += array[i++];
 		}
 
-		return Math.round( sum / set.length );
+		return Math.round( sum / array.length );
 	}
 
 	/**
@@ -182,21 +183,21 @@ function HeightMap()
 	 */
 	function empty_map( size )
 	{
-		var set = new Array( size );
-		for ( var i = 0 ; i < size ; i++ )
-		{
-			set[i] = new Array( size );
-			for ( var j = 0 ; j < size ; j++ )
-			{
-				set[i][j] = null;
+		var array = new Array( size );
+
+		for ( var i = 0 ; i < size ; i++ ) {
+			array[i] = new Array( size );
+
+			for ( var j = 0 ; j < size ; j++ ) {
+				array[i][j] = null;
 			}
 		}
 
-		return set;
+		return array;
 	}
 
 	/**
-	 * Returns a randomly generated 2D elevation line
+	 * Returns a randomly generated 2D elevation line as an array
 	 */
 	function random_line( start_height )
 	{
@@ -204,14 +205,12 @@ function HeightMap()
 		line[0] = start_height;
 		line[line.length - 1] = start_height;
 
-		for ( var step = 1 ; step <= settings.iterations ; step++ )
-		{
+		for ( var step = 1 ; step <= settings.iterations ; step++ ) {
 			var unit = Math.pow( 2, ( settings.iterations - step ) );
 			var unit2 = unit * 2;
 			var points = Math.pow( 2, ( step - 1 ) );
 
-			for ( var p = 0 ; p < points ; p++ )
-			{
+			for ( var p = 0 ; p < points ; p++ ) {
 				var point = unit + unit2*p;
 				var left = line[point - unit];
 				var right = line[point + unit];
@@ -234,14 +233,12 @@ function HeightMap()
 		var left_line = random_line( corner_height );
 		var size = map.length;
 
-		for ( var p = 0 ; p < top_line.length ; p++ )
-		{
+		for ( var p = 0 ; p < top_line.length ; p++ ) {
 			set_point( 0, p, top_line[p] );
 			set_point( size-1, p, top_line[p] + offset( settings.iterations - 1 ) );
 		}
 
-		for ( var p = 0 ; p < left_line.length ; p++ )
-		{
+		for ( var p = 0 ; p < left_line.length ; p++ ) {
 			set_point( p, 0, left_line[p] );
 			set_point( p, size - 1, left_line[p] + offset( settings.iterations - 1 ) );
 		}
@@ -260,6 +257,10 @@ function HeightMap()
 		this.y = y;
 		this.value = value;
 
+		/**
+		 * Determine whether or not the tile is
+		 * adjacent to one at or below [limit]
+		 */
 		this.justAbove = function( limit )
 		{
 			var neighbor = get_adjacents( _.y, _.x );
@@ -267,8 +268,12 @@ function HeightMap()
 				_.value > limit &&
 				( neighbor.top <= limit || neighbor.right <= limit || neighbor.bottom <= limit || neighbor.left <= limit )
 			);
-		}
+		};
 
+		/**
+		 * Determine whether or not the tile is
+		 * adjacent to one at or above [limit]
+		 */
 		this.justBelow = function( limit )
 		{
 			var neighbor = get_adjacents( _.y, _.x );
@@ -276,7 +281,7 @@ function HeightMap()
 				_.value < limit &&
 				( neighbor.top >= limit || neighbor.right >= limit || neighbor.bottom >= limit || neighbor.left >= limit )
 			);
-		}
+		};
 	}
 
 	// -- Public: --
@@ -284,17 +289,15 @@ function HeightMap()
 	{
 		Generator.seed( _seed );
 		return _;
-	}
+	};
 
 	this.generate = function( _settings )
 	{
 		// Determine/bound new parameters
 		_settings = _settings || {};
 
-		for ( var key in _settings )
-		{
-			if ( _settings.hasOwnProperty( key ) && key !== 'repeat' )
-			{
+		for ( var key in _settings ) {
+			if ( _settings.hasOwnProperty( key ) && key !== 'repeat' ) {
 				settings[key] = ( isNaN( _settings[key] ) ? settings[key] : _settings[key] );
 			}
 		}
@@ -309,35 +312,28 @@ function HeightMap()
 		height_skew = Math.max( mean, settings.elevation - mean );
 		map = empty_map( size );
 
-		if ( settings.repeat )
-		{
+		if ( settings.repeat ) {
 			wrap_edges( sample() );
-		}
-		else
-		{
+		} else {
 			set_point( 0, 0, sample() );
 			set_point( 0, size - 1, sample() );
 			set_point( size - 1, 0, sample() );
 			set_point( size - 1, size - 1, sample() );
 		}
 
-		for ( var step = 1 ; step <= settings.iterations ; step++ )
-		{
+		for ( var step = 1 ; step <= settings.iterations ; step++ ) {
 			// Get subdivided tile size for this iteration
 			var unit = Math.pow( 2, ( settings.iterations - step ) );
 			var unit2 = 2 * unit;
 			var tiles = Math.pow( 2, ( step - 1 ) );
 
 			// Diamond (center elevation)
-			for ( var y = 0 ; y < tiles ; y++ )
-			{
-				for ( var x = 0 ; x < tiles ; x++ )
-				{
+			for ( var y = 0 ; y < tiles ; y++ ) {
+				for ( var x = 0 ; x < tiles ; x++ ) {
 					var center = {y: unit + unit2 * y, x: unit + unit2 * x};
 					var center_height = corners( center, unit ) + ( step === settings.iterations ? 0 : offset( step ) );
 
-					if ( Generator.random() < 0.75 && step < Math.max( settings.iterations - 5, 4 ) )
-					{
+					if ( Generator.random() < 0.75 && step < Math.max( settings.iterations - 5, 4 ) ) {
 						// Try and force certain tiles toward the mean
 						center_height = sample();
 					}
@@ -347,10 +343,8 @@ function HeightMap()
 			}
 
 			// Square (sides' elevation)
-			for ( var y = 0 ; y < tiles ; y++ )
-			{
-				for ( var x = 0 ; x < tiles ; x++ )
-				{
+			for ( var y = 0 ; y < tiles ; y++ ) {
+				for ( var x = 0 ; x < tiles ; x++ ) {
 					var center = {y: unit + unit2 * y, x: unit + unit2 * x};
 					var top = {y: center.y - unit, x: center.x};
 					var right = {y: center.y, x: center.x + unit};
@@ -368,7 +362,7 @@ function HeightMap()
 		}
 
 		return _;
-	}
+	};
 
 	this.scan = function( handler, yrange, xrange )
 	{
@@ -376,39 +370,37 @@ function HeightMap()
 		xrange = xrange || {start: 0, end: size};
 		yrange = yrange || {start: 0, end: size};
 
-		for ( var y = yrange.start ; y < yrange.end ; y++ )
-		{
-			for ( var x = xrange.start ; x < xrange.end ; x++ )
-			{
+		for ( var y = yrange.start ; y < yrange.end ; y++ ) {
+			for ( var x = xrange.start ; x < xrange.end ; x++ ) {
 				handler( y, x, get_point( y, x ) );
 			}
 		}
 
 		return _;
-	}
+	};
 
 	this.changeTile = function( y, x, height )
 	{
 		map[y][x] = height;
-	}
+	};
 
 	this.data = function()
 	{
 		return map;
-	}
+	};
 
 	this.tile = function( y, x )
 	{
 		return new Tile( y, x, get_point( y, x ) );
-	}
+	};
 
 	this.getSize = function()
 	{
 		return map.length;
-	}
+	};
 
 	this.getHeightRange = function()
 	{
 		return settings.elevation;
-	}
+	};
 }

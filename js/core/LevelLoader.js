@@ -1,14 +1,3 @@
-/**
- * ------------------
- * DEPENDENCIES:
- *
- * core/Entity.js
- * core/Components.js
- * core/Sprite.js
- * station/Objects.js
- * ------------------
- */
-
 (function(scope){
 	/**
 	 * -----------------
@@ -351,7 +340,7 @@
 			build_module_recursive( y, x, 0, 0 );
 
 			return _;
-		}
+		};
 
 		/**
 		 * Retrieve the created entities after level construction
@@ -359,7 +348,7 @@
 		this.getEntities = function()
 		{
 			return entities;
-		}
+		};
 	}
 
 	scope.LevelLoader = LevelLoader;

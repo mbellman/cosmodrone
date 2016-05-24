@@ -1,13 +1,4 @@
 /**
- * ------------------
- * DEPENDENCIES:
- *
- * system/HeightMap.js
- * render/Canvas.js
- * ------------------
- */
-
-/**
  * --------------
  * Class: Terrain
  * --------------
@@ -785,7 +776,7 @@ function Terrain()
 		init = true;
 
 		return _;
-	}
+	};
 
 	/**
 	 * Set the terrain map tile size
@@ -801,7 +792,7 @@ function Terrain()
 		time_canvas.setSize( map_size * size, map_size * size );
 
 		return _;
-	}
+	};
 
 	/**
 	 * Set the terrain lighting angle
@@ -810,7 +801,7 @@ function Terrain()
 	{
 		light_angle = Math.PI_RAD * angle;
 		return _;
-	}
+	};
 
 	/**
 	 * Set the number of cities
@@ -819,7 +810,7 @@ function Terrain()
 	{
 		city_count = count;
 		return _;
-	}
+	};
 
 	/**
 	 * Set the maximum size for cities
@@ -828,7 +819,7 @@ function Terrain()
 	{
 		max_city_size = max;
 		return _;
-	}
+	};
 
 	/**
 	 * Re-render the scene at a new [hour] of the day
@@ -837,7 +828,7 @@ function Terrain()
 	{
 		composite_layers( hour );
 		return _;
-	}
+	};
 
 	/**
 	 * Get the size of the elevation map
@@ -845,7 +836,7 @@ function Terrain()
 	this.getSize = function()
 	{
 		return height_map.getSize();
-	}
+	};
 
 	/**
 	 * Get the rendered tile size
@@ -853,7 +844,7 @@ function Terrain()
 	this.getTileSize = function()
 	{
 		return tile_size;
-	}
+	};
 
 	/**
 	 * Start the render operation
@@ -866,5 +857,5 @@ function Terrain()
 
 		render();
 		return _;
-	}
+	};
 }

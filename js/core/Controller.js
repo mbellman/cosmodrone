@@ -1,4 +1,8 @@
 /**
+ * -----------------
+ * Class: Controller
+ * -----------------
+ *
  * Game screen state controller
  */
 function Controller()
@@ -14,7 +18,7 @@ function Controller()
 	{
 		var title = new TitleScene( _ );
 		_.scenes.setActiveScene( 'title', new Entity().add( title ) );
-	}
+	};
 
 	this.showGame = function()
 	{
@@ -26,7 +30,6 @@ function Controller()
 		var game = new GameScene( _ ).setLevel( level );
 
 		_.scenes.setActiveScene( 'game', new Entity().add( game ) );
-
 		game.debug( true ).init().start();
-	}
+	};
 }

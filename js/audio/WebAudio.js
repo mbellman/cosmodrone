@@ -29,7 +29,7 @@ WebAudio.load = function( file, handlers )
 	}
 
 	ajax.send();
-}
+};
 
 /**
  * Create an [audio] buffer source node
@@ -45,7 +45,7 @@ WebAudio.play = function( audio )
 	node.start( this.ctx.currentTime );
 
 	return node;
-}
+};
 
 /**
  * Stop an active audio buffer source [node]
@@ -53,4 +53,22 @@ WebAudio.play = function( audio )
 WebAudio.stop = function( node )
 {
 	node.stop( this.ctx.currentTime );
-}
+};
+
+/**
+ * Prevent Web Audio from occasionally stopping
+ */
+(function(){
+	var ct = WebAudio.ctx.currentTime;
+
+	setInterval( function() {
+		var new_ct = WebAudio.ctx.currentTime;
+
+		if ( new_ct === ct ) {
+			WebAudio.ctx.close();
+			WebAudio.ctx = new AudioContext();
+		}
+
+		ct = new_ct;
+	}, 1000 )
+})();

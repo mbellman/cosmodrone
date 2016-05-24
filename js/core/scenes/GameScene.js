@@ -1,28 +1,14 @@
 /**
- * ------------------
- * DEPENDENCIES:
- *
- * audio/WebAudio.js
- * core/Controller.js
- * core/Entity.js
- * core/Sprite.js
- * core/Components.js
- * core/Background.js
- * core/Drone.js
- * core/ui/HUD.js
- * core/ui/Text.js
- * ------------------
- */
-
-/**
- * ----------------
- * Class: GameScene
- * ----------------
+ * --------------------
+ * Component: GameScene
+ * --------------------
  *
  * Active Game object
  */
 function GameScene( controller )
 {
+	Component.call( this );
+
 	// -- Private: --
 	var _ = this;
 
@@ -70,7 +56,7 @@ function GameScene( controller )
 	/**
 	 * Debug-mode-specific cycle updates
 	 */
-	function DEBUG_update()
+	function DEBUG_run_update()
 	{
 		drone.get( Drone ).restoreEnergy();
 	}
@@ -229,7 +215,7 @@ function GameScene( controller )
 			}
 		});
 
-		if ( minimum_distance < 150 && drone.get( Point ).getAbsoluteVelocity() < 50 ) {
+		if ( minimum_distance < 200 && drone.get( Point ).getAbsoluteVelocity() < 50 ) {
 			drone.get( Drone ).dockWith( entity );
 		}
 	}
@@ -301,16 +287,11 @@ function GameScene( controller )
 	 */
 	function update_HUD()
 	{
-		// Clear [screen.HUD]
 		hud.clear();
-
-		// Update the drone system stats HUD
 		hud.updateDroneStats( drone.get( Drone ) );
 	}
 
 	// Public:
-	this.owner = null;
-
 	this.update = function( dt )
 	{
 		if ( initialized && running ) {
@@ -320,16 +301,15 @@ function GameScene( controller )
 
 			if ( DEBUG_MODE ) {
 				DEBUG_show_stats( dt );
-				DEBUG_update();
+				DEBUG_run_update();
 			}
 		}
-	}
+	};
 
-	this.onAdded = function( entity )
+	this.onAdded = function()
 	{
-		_.owner = entity;
 		_.owner.addChild( stage );
-	}
+	};
 
 	/**
 	 * Configure the game level
@@ -338,7 +318,7 @@ function GameScene( controller )
 	{
 		level = _level;
 		return _;
-	}
+	};
 
 	/**
 	 * Load game instance
@@ -356,7 +336,7 @@ function GameScene( controller )
 
 		add_background();
 		return _;
-	}
+	};
 
 	/**
 	 * Start/resume game
@@ -371,7 +351,7 @@ function GameScene( controller )
 		}
 
 		return _;
-	}
+	};
 
 	/**
 	 * Pause game
@@ -380,7 +360,7 @@ function GameScene( controller )
 	{
 		running = false;
 		return _;
-	}
+	};
 
 	/**
 	 * Stop game and dereference objects for garbage collection
@@ -398,7 +378,7 @@ function GameScene( controller )
 		stage.disposeChildren();
 
 		return _;
-	}
+	};
 
 	/**
 	 * Check to see whether the game is loaded
@@ -406,7 +386,7 @@ function GameScene( controller )
 	this.isLoaded = function()
 	{
 		return initialized;
-	}
+	};
 
 	/**
 	 * Set debug mode
@@ -415,5 +395,5 @@ function GameScene( controller )
 	{
 		DEBUG_MODE = bool;
 		return _;
-	}
+	};
 }

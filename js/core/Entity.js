@@ -41,6 +41,20 @@ function Entity()
 		if ( action === 'has' ) return false;
 	}
 
+	/**
+	 * Test an object's status as a Component
+	 */
+	function is_component( component )
+	{
+		return (
+			typeof component.owner !== 'undefined' &&
+			typeof component.update === 'function' &&
+			typeof component.onAdded === 'function' &&
+			typeof component.onOwnerAddedToParent === 'function' &&
+			typeof component.onRemoved === 'function'
+		);
+	}
+
 	// -- Public: --
 	this.parent = null;
 
@@ -56,7 +70,7 @@ function Entity()
 		for ( var c = 0 ; c < children.length ; c++ ) {
 			children[c].update(dt);
 		}
-	}
+	};
 
 	/**
 	 * Called when this Entity gets
@@ -67,37 +81,35 @@ function Entity()
 		_.parent = entity;
 
 		for ( var c = 0 ; c < components.length ; c++ ) {
-			var _component = components[c];
-
-			if (typeof _component.onOwnerAddedToParent === 'function') {
-				_component.onOwnerAddedToParent();
-			}
+			components[c].onOwnerAddedToParent();
 		}
-	}
+	};
 
 	/**
-	 * Add a Component to the Entity by instance
+	 * Add a component to the entity by instance
 	 */
 	this.add = function( component )
 	{
-		components.push( component );
-
-		if ( typeof component.onAdded === 'function' ) {
-			component.onAdded(_);
+		if ( !is_component( component ) ) {
+			console.warn('Entity: attempted to add a non-Component instance to entity');
+			return;
 		}
 
+		component.owner = _;
+		component.onAdded();
+		components.push( component );
 		return _;
-	}
+	};
 
 	/**
-	 * Add a child Entity to the Entity
+	 * Add a child sub-entity to this entity
 	 */
 	this.addChild = function( entity )
 	{
 		entity.onAddedToParent( _ );
 		children.push( entity );
 		return _;
-	}
+	};
 
 	/**
 	 * Get rid of child entities
@@ -106,15 +118,13 @@ function Entity()
 	{
 		for ( var c = 0 ; c < children.length ; c++ ) {
 			children[c].forAllComponents( function( component ) {
-				if ( typeof component.onRemoved === 'function' ) {
-					component.onRemoved();
-				}
+				component.onRemoved();
 			});
 		}
 
 		children.length = 0;
 		return _;
-	}
+	};
 
 	/**
 	 * Retrieve a Component by instance name
@@ -122,7 +132,7 @@ function Entity()
 	this.get = function( component )
 	{
 		return component_lookup( component, 'get' );
-	}
+	};
 
 	/**
 	 * Retrieves the first available component from
@@ -135,15 +145,15 @@ function Entity()
 		}
 
 		for ( var c = 0 ; c < children.length ; c++ ) {
-			var _component = children[c].find( component );
+			var search = children[c].find( component );
 
-			if ( _component !== null ) {
-				return _component;
+			if ( search !== null ) {
+				return search;
 			}
 		}
 
 		return null;
-	}
+	};
 
 	/**
 	 * Retrieve a Component from parent entities by instance
@@ -167,7 +177,7 @@ function Entity()
 		}
 
 		return null;
-	}
+	};
 
 	/**
 	 * Returns the [n]th child of the entity if one exists
@@ -175,7 +185,7 @@ function Entity()
 	this.getNthChild = function( n )
 	{
 		return children[n] || null;
-	}
+	};
 
 	/**
 	 * Verify that this Entity has a Component by instance name
@@ -183,7 +193,7 @@ function Entity()
 	this.has = function( component )
 	{
 		return component_lookup( component, 'has' );
-	}
+	};
 
 	/**
 	 * Remove a Component from this Entity by instance name
@@ -191,20 +201,15 @@ function Entity()
 	this.remove = function( component )
 	{
 		for ( var c = 0 ; c < components.length ; c++ ) {
-			var _component = components[c];
-
-			if ( _component instanceof component ) {
-				if ( typeof _component.onRemoved === 'function' ) {
-					_component.onRemoved();
-				}
-
+			if ( components[c] instanceof component ) {
+				components[c].onRemoved();
 				components.splice( c, 1 );
 				break;
 			}
 		}
 
 		return _;
-	}
+	};
 
 	/**
 	 * Run a [handler] operation on all Components of this
@@ -220,7 +225,7 @@ function Entity()
 		for ( var c = 0 ; c < children.length ; c++ ) {
 			children[c].forAllComponents( handler );
 		}
-	}
+	};
 
 	/**
 	 * Component-selective variant of forAllComponents()
@@ -234,7 +239,7 @@ function Entity()
 		for ( var c = 0 ; c < children.length ; c++ ) {
 			children[c].forAllComponentsOfType( component, handler );
 		}
-	}
+	};
 
 	/**
 	 * Run a [handler] operation on direct descendant child entities
@@ -244,5 +249,5 @@ function Entity()
 		for ( var c = 0 ; c < children.length ; c++ ) {
 			handler( children[c] );
 		}
-	}
+	};
 }

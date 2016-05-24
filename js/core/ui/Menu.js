@@ -1,24 +1,15 @@
-/**
- * ---------------
- * DEPENDENCIES:
- *
- * system/Input.js
- * core/Entity.js
- * core/Sprite.js
- * core/ui/Text.js
- * ---------------
- */
-
 (function( scope ) {
 	/**
-	 * ---------------
-	 * Class: GridMenu
-	 * ---------------
+	 * -------------------
+	 * Component: GridMenu
+	 * -------------------
 	 *
 	 * A grid of selectable options
 	 */
 	function GridMenu()
 	{
+		Component.call( this );
+
 		// -- Private: --
 		var _ = this;
 		var stage = new Entity();
@@ -110,13 +101,10 @@
 		}
 
 		// -- Public: --
-		this.owner = null;
+		this.update = function( dt ) {};
 
-		this.update = function( dt ) {}
-
-		this.onAdded = function( entity )
+		this.onAdded = function()
 		{
-			_.owner = entity;
 			_.owner.addChild( stage );
 
 			build_grid();
@@ -124,7 +112,7 @@
 			if ( typeof events.focus === 'function' ) {
 				events.focus( stage.getNthChild( selection ), selection );
 			}
-		}
+		};
 
 		/**
 		 * Set the number of items in the grid
@@ -133,7 +121,7 @@
 		{
 			total = _total;
 			return _;
-		}
+		};
 
 		/**
 		 * Set the option [builder] function (see: build_grid())
@@ -142,7 +130,7 @@
 		{
 			builder = _builder;
 			return _;
-		}
+		};
 
 		/**
 		 * Set the menu action sound effects
@@ -156,7 +144,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Set up menu [event] handlers
@@ -168,7 +156,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Go up one grid item
@@ -176,7 +164,7 @@
 		this.up = function()
 		{
 			select_nearest( 'up' );
-		}
+		};
 
 		/**
 		 * Go down one grid item
@@ -184,7 +172,7 @@
 		this.down = function()
 		{
 			select_nearest( 'down' );
-		}
+		};
 
 		/**
 		 * Go left one grid item
@@ -192,7 +180,7 @@
 		this.left = function()
 		{
 			select_nearest( 'left' );
-		}
+		};
 
 		/**
 		 * Go right one grid item
@@ -200,7 +188,7 @@
 		this.right = function()
 		{
 			select_nearest( 'right' );
-		}
+		};
 
 		/**
 		 * Pick the active selection and trigger its callback
@@ -213,7 +201,7 @@
 			}
 
 			play_sound( 'invalid' );
-		}
+		};
 	}
 
 	/**
@@ -225,6 +213,8 @@
 	 */
 	function ListMenu()
 	{
+		Component.call( this );
+
 		// -- Private: --
 		var _ = this;
 		var font = null;
@@ -289,19 +279,14 @@
 		}
 
 		// -- Public: --
-		this.owner = null;
-
-		this.update = function( dt ) {}
-
-		this.onAdded = function( entity )
+		this.onAdded = function()
 		{
-			_.owner = entity;
 			_.owner.addChild( stage );
 
 			stage
 				.addChild( container )
 				.addChild( new Entity().add( cursor ) );
-		}
+		};
 
 		/**
 		 * Set the menu [font] (required before setting options)
@@ -320,7 +305,7 @@
 			align_cursor();
 
 			return _;
-		}
+		};
 
 		/**
 		 * Set the menu option strings/callbacks
@@ -355,7 +340,7 @@
 			align_cursor();
 
 			return _;
-		}
+		};
 
 		/**
 		 * Set the menu selection cursor graphic
@@ -365,7 +350,7 @@
 			cursor.setSource( asset );
 			align_cursor();
 			return _;
-		}
+		};
 
 		/**
 		 * Set the menu action sound effects
@@ -379,7 +364,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Set various style attributes for the menu
@@ -395,7 +380,7 @@
 			align_list();
 			align_cursor();
 			return _;
-		}
+		};
 
 		/**
 		 * Cycle to the previous option
@@ -408,7 +393,7 @@
 
 			play_sound( 'cursor' );
 			align_cursor();
-		}
+		};
 
 		/**
 		 * Cycle to the next option
@@ -421,7 +406,7 @@
 
 			play_sound( 'cursor' );
 			align_cursor();
-		}
+		};
 
 		/**
 		 * Pick the active selection and trigger its callback
@@ -437,7 +422,7 @@
 			}
 
 			play_sound( 'invalid' );
-		}
+		};
 	}
 
 	/**
@@ -452,6 +437,8 @@
 	 */
 	function Menu( type )
 	{
+		Component.call( this );
+
 		// -- Private: --
 		var _ = this;
 		var input = new InputHandler();
@@ -542,26 +529,20 @@
 		}
 
 		// -- Public: --
-		this.owner = null;
-
-		this.update = function( dt ) {}
-
-		this.onAdded = function( entity )
+		this.onAdded = function()
 		{
-			_.owner = entity;
-
 			if ( menu !== null ) {
 				_.owner.add( menu );
 			}
 
 			input.listen();
 			bind_input_handlers();
-		}
+		};
 
 		this.onRemoved = function()
 		{
 			input.unlisten();
-		}
+		};
 
 		/**
 		 * Configure the attributes and behavior of the [menu]
@@ -602,7 +583,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Prevent any [menu] input
@@ -611,7 +592,7 @@
 		{
 			input.disable();
 			return _;
-		}
+		};
 
 		/**
 		 * Enable [menu] input
@@ -620,7 +601,7 @@
 		{
 			input.enable();
 			return _;
-		}
+		};
 	}
 
 	scope.Menu = Menu;

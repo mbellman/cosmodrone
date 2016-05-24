@@ -1,5 +1,9 @@
 /**
- * "Unit" easing functions
+ * ------------
+ * Object: Ease
+ * ------------
+ *
+ * Unit easing functions
  *
  * Inputs should be between 0 and 1. Any
  * additional scaling/mapping should be
@@ -27,6 +31,10 @@ var Ease = {
 }
 
 /**
+ * ----------------
+ * Class: Tweenable
+ * ----------------
+ *
  * A number value with built-in tweening operations
  */
 function Tweenable( value )
@@ -70,7 +78,7 @@ function Tweenable( value )
 			var ease = tween.ease( t ) * ( tween.end - tween.start );
 			_._ = tween.start + ease;
 		}
-	}
+	};
 
 	/**
 	 * Start a tween to [value] over [seconds] using [easing]
@@ -83,7 +91,7 @@ function Tweenable( value )
 		tween.running_time = 0;
 		tween.complete_time = seconds * 1000;
 		tween.ease = easing;
-	}
+	};
 
 	/**
 	 * Delay a specific number of [seconds] before tweening
@@ -93,7 +101,7 @@ function Tweenable( value )
 		delay = seconds;
 		delay_counter = 0;
 		return _;
-	}
+	};
 
 	/**
 	 * Stop tweening
@@ -101,7 +109,7 @@ function Tweenable( value )
 	this.stop = function()
 	{
 		tween.on = false;
-	}
+	};
 
 	/**
 	 * Determine whether or not a tween is active
@@ -109,5 +117,5 @@ function Tweenable( value )
 	this.isTweening = function()
 	{
 		return tween.on;
-	}
+	};
 }

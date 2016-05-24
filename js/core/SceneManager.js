@@ -1,15 +1,20 @@
 /**
- * Manager for the various game scenes
+ * -------------------
+ * Class: SceneManager
+ * -------------------
+ *
+ * Resource for switching/updating the various game scenes
  */
 function SceneManager()
 {
 	// -- Private: --
 	var _ = this;
 	var time;
-	var max_dt = Math.round( 1000 / 60 ) / 1000;
+	var MAX_DT = Math.round( 1000 / 60 ) / 1000;
 	var scenes = {};
 	var active_scene = null;
 	var running = false;
+	var frame;
 
 	/**
 	 * Iterate over all Sprites in the active scene and
@@ -59,14 +64,14 @@ function SceneManager()
 	{
 		if ( running ) {
 			var new_time = Date.now();
-			var dt = Math.min( ( new_time - time ) / 1000, max_dt );
+			var dt = Math.min( ( new_time - time ) / 1000, MAX_DT );
 
 			time = Date.now();
 
 			clear_sprites();
 			scenes[active_scene].update( dt );
 
-			requestAnimationFrame( loop );
+			frame = requestAnimationFrame( loop );
 		}
 	}
 
@@ -78,7 +83,7 @@ function SceneManager()
 	{
 		scenes[name] = entity;
 		return _;
-	}
+	};
 
 	/**
 	 * Determine whether a scene exists by [name]
@@ -86,7 +91,7 @@ function SceneManager()
 	this.hasScene = function( name )
 	{
 		return scenes.hasOwnProperty( name );
-	}
+	};
 
 	/**
 	 * Retrieve a scene by [name]
@@ -94,7 +99,7 @@ function SceneManager()
 	this.getScene = function( name )
 	{
 		return scenes[name];
-	}
+	};
 
 	/**
 	 * Remove a scene by [name]
@@ -103,7 +108,7 @@ function SceneManager()
 	{
 		delete scenes[name];
 		return _;
-	}
+	};
 
 	/**
 	 * Set the active scene by [name],
@@ -125,7 +130,7 @@ function SceneManager()
 		}
 
 		return _;
-	}
+	};
 
 	/**
 	 * Pause the update loop
@@ -133,8 +138,9 @@ function SceneManager()
 	this.pause = function()
 	{
 		running = false;
+		cancelAnimationFrame( frame );
 		return _;
-	}
+	};
 
 	/**
 	 * Resume the update loop
@@ -150,5 +156,5 @@ function SceneManager()
 
 		loop();
 		return _;
-	}
+	};
 }

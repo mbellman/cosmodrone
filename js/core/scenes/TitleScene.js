@@ -1,23 +1,14 @@
 /**
- * ------------------
- * DEPENDENCIES:
+ * ---------------------
+ * Component: TitleScene
+ * ---------------------
  *
- * core/Entity.js
- * core/Sprite.js
- * core/Components.js
- * core/ui/Menu.js
- * ------------------
- */
-
-/**
- * -----------------
- * Class: TitleScene
- * -----------------
- *
- * Component which sets up the game's title scene
+ * Sets up the game's title scene
  */
 function TitleScene( controller )
 {
+	Component.call( this );
+
 	// Private:
 	var _ = this;
 	var menu = 1;
@@ -80,7 +71,7 @@ function TitleScene( controller )
 	 */
 	function add_backdrop()
 	{
-		stage.add(
+		stage.addChild(
 			new Entity().add(
 				new FillSprite( '#000', Viewport.width, Viewport.height )
 			)
@@ -185,7 +176,7 @@ function TitleScene( controller )
 						{
 							font: 'Monitor',
 							options: {
-								'NEW GAME': view_level_select,
+								'LEVEL SELECT': view_level_select,
 								'STATION BUILDER': null,
 								'CREDITS': null
 							},
@@ -331,8 +322,8 @@ function TitleScene( controller )
 		props.nova.add( new Flicker().setAlphaRange( 0.8, 1.0 ) );
 		props.nova2.add( new Flicker().setAlphaRange( 0.8, 1.0 ) );
 
-		props.TITLE_MENU.get( Menu ).disable();
 		props.LEVEL_MENU.get( Menu ).enable();
+		props.TITLE_MENU.get( Menu ).disable();
 
 		run_transition_tweens();
 	}
@@ -354,14 +345,8 @@ function TitleScene( controller )
 	}
 
 	// -- Public: --
-	this.owner = null;
-
-	this.update = function( dt ) {}
-
-	this.onAdded = function( entity )
+	this.onAdded = function()
 	{
-		_.owner = entity;
-
 		add_backdrop();
 		add_title();
 		add_title_menu();
@@ -370,5 +355,5 @@ function TitleScene( controller )
 
 		props.LEVEL_MENU.get( Menu ).disable();
 		_.owner.addChild( stage );
-	}
+	};
 }

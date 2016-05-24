@@ -1,14 +1,3 @@
-/**
- * ------------------
- * DEPENDENCIES:
- *
- * core/Entity.js
- * core/Components.js
- * core/Sprite.js
- * core/Terrain.js
- * ------------------
- */
-
 (function( scope ) {
 	/**
 	 * -------------------
@@ -158,14 +147,16 @@
 	}
 
 	/**
-	 * ------------
-	 * Class: Cloud
-	 * ------------
+	 * ----------------
+	 * Component: Cloud
+	 * ----------------
 	 *
 	 * Clouds above the terrain layer
 	 */
 	function Cloud()
 	{
+		Component.call( this );
+
 		// -- Private: --
 		var _ = this;
 		var image;
@@ -173,8 +164,6 @@
 		var type;
 
 		// -- Public: --
-		this.update = function( dt ) {}
-
 		this.getImage = function()
 		{
 			return image;
@@ -210,14 +199,16 @@
 	}
 
 	/**
-	 * -----------------
-	 * Class: Background
-	 * -----------------
+	 * ---------------------
+	 * Component: Background
+	 * ---------------------
 	 *
 	 * A drifting planetary background layer beneath the game scene
 	 */
 	function Background()
 	{
+		Component.call( this );
+
 		// -- Private: --
 		var _ = this;
 
@@ -1024,7 +1015,7 @@
 				// clouds can continue generating
 				cloud_cooldown -= camera.getAbsoluteVelocity() * dt;
 			}
-		}
+		};
 
 		/**
 		 * Set configuration options
@@ -1041,7 +1032,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Generate the Background with progress/completion [handlers]
@@ -1099,7 +1090,7 @@
 			);
 
 			return _;
-		}
+		};
 
 		/**
 		 * Stop time transition cycle and set as not loaded
@@ -1108,7 +1099,7 @@
 		{
 			stop_bg_cycle();
 			loaded = false;
-		}
+		};
 	}
 
 	scope.Background = Background;

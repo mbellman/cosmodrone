@@ -63,7 +63,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Save scripts load completion callback and start loading
@@ -72,7 +72,7 @@
 		{
 			events.complete = callback || events.complete;
 			load_scripts();
-		}
+		};
 	}
 
 	/**

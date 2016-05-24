@@ -1,5 +1,9 @@
 (function( scope ) {
 	/**
+	 * ----------------
+	 * Object: KeyCodes
+	 * ----------------
+	 *
 	 * Key code -> Key name map
 	 */
 	var KeyCodes = {
@@ -25,7 +29,8 @@
 	{
 		// -- Private: --
 		var _ = this;
-		var namespace = Date.now();
+		var timestamp = Date.now();
+		var enable_time = timestamp;
 		var bound = false;
 		var disabled = false;
 		var events = {};
@@ -35,15 +40,15 @@
 		 */
 		function get_namespaced_event( event )
 		{
-			return event + '.InputHandler-' + namespace;
+			return event + '.InputHandler-' + timestamp;
 		}
 
 		/**
-		 * Check key input and dispatch appropriate events
+		 * Check key input and dispatch appropriate handlers
 		 */
 		function handle_input( event )
 		{
-			if ( disabled ) {
+			if ( disabled || Date.now() - enable_time < 150 ) {
 				return;
 			}
 
@@ -82,7 +87,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Bind a key input handler
@@ -99,7 +104,7 @@
 
 			events[key].push( handler );
 			return _;
-		}
+		};
 
 		/**
 		 * Remove a key input handler
@@ -109,7 +114,7 @@
 			if ( events.hasOwnProperty( key ) ) {
 				delete events[key];
 			}
-		}
+		};
 
 		/**
 		 * Remove all key input handlers
@@ -124,7 +129,7 @@
 
 			events = {};
 			return _;
-		}
+		};
 
 		/**
 		 * Internally disable input callbacks
@@ -134,16 +139,17 @@
 		{
 			disabled = true;
 			return _;
-		}
+		};
 
 		/**
 		 * Re-enable the disabled listener state
 		 */
 		this.enable = function()
 		{
+			enable_time = Date.now();
 			disabled = false;
 			return _;
-		}
+		};
 	}
 
 	/**
@@ -157,7 +163,7 @@
 	{
 		// -- Private: --
 		var _ = this;
-		var namespace = Date.now();
+		var timestamp = Date.now();
 		var bound = false;
 		var listener = new InputHandler();
 		var state = {
@@ -173,15 +179,15 @@
 		};
 
 		/**
-		 * Returns any number of space-separated [event]
-		 * values as a string of namespaced events
+		 * Returns any number of space-separated [events]
+		 * values as a new string of namespaced events
 		 */
 		function get_namespaced_events( events )
 		{
 			events = events.split( ' ' );
 
 			for ( var e = 0 ; e < events.length ; e++ ) {
-				events[e] += '.Keys-' + namespace;
+				events[e] += '.Keys-' + timestamp;
 			}
 
 			return events.join( ' ' );
@@ -217,7 +223,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Stop listening for inputs
@@ -230,7 +236,7 @@
 			}
 
 			return _;
-		}
+		};
 
 		/**
 		 * Check to see if [key] is being held
@@ -238,7 +244,7 @@
 		this.holding = function( key )
 		{
 			return !!state[key];
-		}
+		};
 
 		/**
 		 * Set all key held states to false
@@ -252,7 +258,7 @@
 			}
 
 			return _;
-		}
+		};
 	}
 
 	scope.InputHandler = InputHandler;

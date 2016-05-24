@@ -1,22 +1,14 @@
 /**
  * -----------------
- * DEPENDENCIES:
- *
- * render/Canvas.js
- * core/Entity.js
- * core/Tweenable.js
+ * Component: Sprite
  * -----------------
- */
-
-/**
- * -------------
- * Class: Sprite
- * -------------
  *
  * A sprite to be rendered onto [screen.game]
  */
 function Sprite( _source )
 {
+	Component.call( this );
+
 	// -- Private: --
 	var _ = this;
 	var source = _source || null;          // Graphic to render (Image or HTMLCanvasElement)
@@ -108,8 +100,6 @@ function Sprite( _source )
 	}
 
 	// -- Public: --
-	this.owner = null;
-
 	this.x = new Tweenable( 0 );
 	this.y = new Tweenable( 0 );
 	this.scale = new Tweenable( 1 );
@@ -141,12 +131,10 @@ function Sprite( _source )
 		);
 
 		if ( has_effects() ) screen.game.restore();
-	}
+	};
 
-	this.onAdded = function( entity )
+	this.onAdded = function()
 	{
-		_.owner = entity;
-
 		if (
 			source !== null &&
 			!( source instanceof Image ) &&
@@ -154,7 +142,7 @@ function Sprite( _source )
 		) {
 			console.warn( 'Sprite: ' + source + ' is not an Image or HTMLCanvasElement object!' );
 		}
-	}
+	};
 
 	/**
 	 * Returns the global (on-screen) coordinates of the Sprite
@@ -165,7 +153,7 @@ function Sprite( _source )
 			x: render.x,
 			y: render.y
 		};
-	}
+	};
 
 	/**
 	 * Returns the adjusted parent-influenced [alpha] of the Sprite
@@ -173,7 +161,7 @@ function Sprite( _source )
 	this.getProperAlpha = function()
 	{
 		return alpha;
-	}
+	};
 
 	/**
 	 * Returns the width of the Sprite
@@ -181,7 +169,7 @@ function Sprite( _source )
 	this.getWidth = function()
 	{
 		return source.width;
-	}
+	};
 
 	/**
 	 * Returns the height of the Sprite
@@ -189,7 +177,7 @@ function Sprite( _source )
 	this.getHeight = function()
 	{
 		return source.height;
-	}
+	};
 
 	/**
 	 * Sets the Sprite's [x, y] coordinates
@@ -199,7 +187,7 @@ function Sprite( _source )
 		_.x._ = x;
 		_.y._ = y;
 		return _;
-	}
+	};
 
 	/**
 	 * Set the Sprite's [source] asset/texture
@@ -208,7 +196,7 @@ function Sprite( _source )
 	{
 		source = _source;
 		return _;
-	}
+	};
 
 	/**
 	 * Set the Sprite's origin
@@ -218,7 +206,7 @@ function Sprite( _source )
 		origin.x = x;
 		origin.y = y;
 		return _;
-	}
+	};
 
 	/**
 	 * Set the Sprite's alpha value
@@ -227,7 +215,7 @@ function Sprite( _source )
 	{
 		_.alpha._ = _alpha;
 		return _;
-	}
+	};
 
 	/**
 	 * Set the Sprite's [rotation] angle
@@ -236,7 +224,7 @@ function Sprite( _source )
 	{
 		_.rotation._ = mod( rotation, 360 );
 		return _;
-	}
+	};
 
 	/**
 	 * Define a (moving) Point for the Sprite
@@ -246,7 +234,7 @@ function Sprite( _source )
 	{
 		pivot = _pivot;
 		return _;
-	}
+	};
 
 	/**
 	 * Set a constant rendering offset for the Sprite
@@ -256,7 +244,7 @@ function Sprite( _source )
 		offset.x = x;
 		offset.y = y;
 		return _;
-	}
+	};
 
 	/**
 	 * Automatically set the Sprite's origin to its center
@@ -265,7 +253,7 @@ function Sprite( _source )
 	{
 		_.setOrigin( source.width / 2, source.height / 2 );
 		return _;
-	}
+	};
 
 	/**
 	 * Halt any Sprite property tweens
@@ -278,7 +266,7 @@ function Sprite( _source )
 		_.rotation.stop();
 		_.alpha.stop();
 		return _;
-	}
+	};
 
 	/**
 	 * Determine whether the Sprite's rendering area is on-screen
@@ -289,7 +277,7 @@ function Sprite( _source )
 			( render.x < Viewport.width && render.x + ( source.width * _.scale._ ) > 0) &&
 			( render.y < Viewport.height && render.y + ( source.height * _.scale._ ) > 0)
 		);
-	}
+	};
 
 	/**
 	 * Determine whether or not this Sprite lacks a [source] graphic
@@ -297,13 +285,13 @@ function Sprite( _source )
 	this.isBlankSprite = function()
 	{
 		return ( source === null );
-	}
+	};
 }
 
 /**
- * -----------------
- * Class: FillSprite
- * -----------------
+ * ---------------------
+ * Component: FillSprite
+ * ---------------------
  *
  * A solid-color Sprite variant which
  * inherits Sprite's functionality

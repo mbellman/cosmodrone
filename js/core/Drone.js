@@ -1,22 +1,14 @@
 /**
- * ------------------
- * DEPENDENCIES:
+ * ----------------
+ * Component: Drone
+ * ----------------
  *
- * core/Entity.js
- * core/Components.js
- * core/Sprite.js
- * ------------------
- */
-
-/**
- * ------------
- * Class: Drone
- * ------------
- *
- * The player drone
+ * The player drone instance
  */
 function Drone()
 {
+	Component.call( this );
+
 	// -- Private: --
 	var _ = this;
 
@@ -480,8 +472,6 @@ function Drone()
 	}
 
 	// -- Public: --
-	this.owner = null;
-
 	this.update = function( dt )
 	{
 		if ( docking.on && !out_of_power && !out_of_fuel ) {
@@ -499,12 +489,7 @@ function Drone()
 		if ( stabilizing ) {
 			consume_fuel( dt );
 		}
-	}
-
-	this.onAdded = function( entity )
-	{
-		_.owner = entity;
-	}
+	};
 
 	/**
 	 * Return the drone's maximum instantaneous thrust speed
@@ -512,7 +497,7 @@ function Drone()
 	this.getMaxSpeed = function()
 	{
 		return MAX_SPEED;
-	}
+	};
 
 	/**
 	 * Get a report on the drone's standing
@@ -532,7 +517,7 @@ function Drone()
 			MAX_HEALTH: MAX_HEALTH,
 			MAX_HARDWARE: MAX_HARDWARE
 		};
-	}
+	};
 
 	/**
 	 * Reduce fuel amount
@@ -541,7 +526,7 @@ function Drone()
 	{
 		consume_fuel( dt );
 		return _;
-	}
+	};
 
 	/**
 	 * Restore power and fuel back to full capacity
@@ -550,7 +535,7 @@ function Drone()
 	{
 		power = MAX_POWER;
 		fuel = MAX_FUEL;
-	}
+	};
 
 	/**
 	 * Thrust forward by [amount]
@@ -568,7 +553,7 @@ function Drone()
 		);
 
 		return _;
-	}
+	};
 
 	/**
 	 * Angular thrust by [amount]
@@ -578,7 +563,7 @@ function Drone()
 		spin += amount;
 		stabilizing = false;
 		return _;
-	}
+	};
 
 	/**
 	 * Turn on spin stabilization
@@ -590,7 +575,7 @@ function Drone()
 		}
 
 		return _;
-	}
+	};
 
 	/**
 	 * Begin docking to [target]
@@ -599,7 +584,7 @@ function Drone()
 	{
 		launch_docking_procedure( target );
 		return _;
-	}
+	};
 
 	/**
 	 * Stop docking procedure
@@ -608,7 +593,7 @@ function Drone()
 	{
 		docking.on = false;
 		return _;
-	}
+	};
 
 	/**
 	 * Check to see whether Drone can be controlled
@@ -616,7 +601,7 @@ function Drone()
 	this.isControllable = function()
 	{
 		return ( !out_of_power && !out_of_fuel && !docking.on );
-	}
+	};
 
 	/**
 	 * Check to see if Drone is docking
@@ -624,5 +609,5 @@ function Drone()
 	this.isDocking = function()
 	{
 		return docking.on;
-	}
+	};
 }

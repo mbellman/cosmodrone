@@ -1,4 +1,8 @@
 /**
+ * ----------
+ * Class: RNG
+ * ----------
+ *
  * A seedable, deterministic pseudo-random number generator
  */
 function RNG()
@@ -22,8 +26,7 @@ function RNG()
 
 		// Build a list of the input's character codes
 		// and sum up the values with a minimum of 1
-		for ( var c = 0 ; c < len; c++ )
-		{
+		for ( var c = 0 ; c < len; c++ ) {
 			var v = value.charCodeAt( c );
 			code[c] = v;
 			sum += ( v + 1 );
@@ -34,8 +37,7 @@ function RNG()
 		
 		// Crunch numbers on the sum a little bit and
 		// append the value, as a string, to [output]
-		for ( var c = 0 ; c < len ; c++ )
-		{
+		for ( var c = 0 ; c < len ; c++ ) {
 			var v = code[c];
 			output += ( ( sum % v ) ^ v ) % v;
 		}
@@ -65,7 +67,7 @@ function RNG()
 	function prng()
 	{
 		seed = rehash_number( seed );
-		return seed / Number.MAX_SAFE_INTEGER;
+		return ( seed / Number.MAX_SAFE_INTEGER );
 	}
 
 	// -- Public: --
@@ -76,18 +78,17 @@ function RNG()
 	{
 		seed = hash_code( _seed );
 		return _;
-	}
+	};
 
 	/**
 	 * Obtain a random value from the PRNG
 	 */
 	this.random = function( low, high )
 	{
-		if ( arguments.length < 2 )
-		{
+		if ( arguments.length < 2 ) {
 			return prng();
 		}
 
 		return low + Math.floor( prng() * ( high - low + 1 ) );
-	}
+	};
 }

@@ -5,8 +5,10 @@ A game about space station maintenance!
 
 ##### GAME
 * Level selection interface
+* Text coloring
 * Loading bar/indicator of some kind
 * New drone sprite
+* Print debug text using Text component
 * Make sure hardware asset "light source" is adjusted based on the side of the module
 * Collisions/drone damage
 * Hardware/part maintenance interface
@@ -29,9 +31,5 @@ A game about space station maintenance!
 * Rivers
 
 ##### CODE
-* Text coloring
-* List script dependencies in comments at the top of each file where applicable
-* Change curly brace line break convention across files (only inside functions)
-* Add Class/Object/Constructor/Etc. labels to major items
-* Base "Component" class inherited by all components
+* Consolidate major framework elements (Canvas, WebAudio, AssetLoader, Entity/Component, Sprite, Text, etc.)
 * Background, Terrain, and HeightMap classes need some tidying

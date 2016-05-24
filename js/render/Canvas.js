@@ -23,7 +23,7 @@
 
 		this.ctx.fill();
 		return this;
-	}
+	};
 
 	/**
 	 * Set Canvas context stroke color/
@@ -41,7 +41,7 @@
 
 		this.ctx.stroke();
 		return this;
-	}
+	};
 
 	/**
 	 * --------------------
@@ -64,7 +64,7 @@
 		this.ctx.beginPath();
 		this.ctx.arc( x, y, radius, 0, 2 * Math.PI );
 		return new Shape( this.ctx );
-	}
+	};
 
 	/**
 	 * Draw a rectangle to [ctx]
@@ -74,7 +74,7 @@
 		this.ctx.beginPath();
 		this.ctx.rect( x, y, width, height );
 		return new Shape( this.ctx );
-	}
+	};
 
 	/**
 	 * Draw an image to [ctx]
@@ -106,7 +106,7 @@
 			// [height2]: draw height
 			this.ctx.drawImage( source, x1, y1, width1, height1, x2, y2, width2, height2 );
 		}
-	}
+	};
 
 	/**
 	 * -------------------------
@@ -130,7 +130,7 @@
 		width = width || this.element.width;
 		height = height || this.element.height;
 		return this.ctx.createImageData( width, height );
-	}
+	};
 
 	/**
 	 * Return the pixel buffer for this [ctx]
@@ -142,7 +142,7 @@
 		width = width || this.element.width;
 		height = height || this.element.height;
 		return this.ctx.getImageData( x, y, width, height );
-	}
+	};
 
 	/**
 	 * Place data back into the pixel buffer
@@ -152,7 +152,7 @@
 		x = x || 0;
 		y = y || 0;
 		this.ctx.putImageData( data, x, y );
-	}
+	};
 
 	/**
 	 * -------------
@@ -215,7 +215,7 @@
 		this.ctx.clearRect( x, y, width, height );
 
 		return this;
-	}
+	};
 
 	/**
 	 * Scale up Canvas image data without interpolation
@@ -260,7 +260,7 @@
 		this.data.put( self );
 
 		return this;
-	}
+	};
 
 	/**
 	 * Get Canvas dimensions
@@ -271,7 +271,7 @@
 			width: this.element.width,
 			height: this.element.height
 		};
-	}
+	};
 
 	/**
 	 * Change Canvas dimensions
@@ -281,7 +281,7 @@
 		this.element.width = width;
 		this.element.height = height;
 		return this;
-	}
+	};
 
 	/**
 	 * Set global Canvas compositing mode
@@ -290,7 +290,7 @@
 	{
 		this.ctx.globalCompositeOperation = type;
 		return this;
-	}
+	};
 
 	/**
 	 * Set global Canvas rendering alpha
@@ -299,7 +299,7 @@
 	{
 		this.ctx.globalAlpha = alpha;
 		return this;
-	}
+	};
 
 	/**
 	 * Translate Canvas origin to [x, y]
@@ -308,7 +308,7 @@
 	{
 		this.ctx.translate( x, y );
 		return this;
-	}
+	};
 
 	/**
 	 * Set Canvas rendering rotation angle in [radians]
@@ -317,7 +317,7 @@
 	{
 		this.ctx.rotate( radians );
 		return this;
-	}
+	};
 
 	/**
 	 * Save the Canvas context state
@@ -326,7 +326,7 @@
 	{
 		this.ctx.save();
 		return this;
-	}
+	};
 
 	/**
 	 * Restore the Canvas context state to
@@ -336,7 +336,7 @@
 	{
 		this.ctx.restore();
 		return this;
-	}
+	};
 
 	/**
 	 * ----------------
@@ -352,7 +352,7 @@
 	ImageData.prototype.getPixelIndex = function( x, y )
 	{
 		return 4 * ( y * this.width + x );
-	}
+	};
 
 	/**
 	 * Get the [x, y] coordinate for a pixel data array index
@@ -365,7 +365,7 @@
 			x: pixel % this.width,
 			y: Math.floor( pixel / this.width )
 		};
-	}
+	};
 
 	/**
 	 * Get the RGBA at a specified [pixel] index
@@ -378,7 +378,7 @@
 			blue: this.data[pixel + 2],
 			alpha: this.data[pixel + 3]
 		};
-	}
+	};
 
 	/**
 	 * Set the RGBA at a specified [pixel] index
@@ -389,7 +389,7 @@
 		this.data[pixel + 1] = color.green;
 		this.data[pixel + 2] = color.blue;
 		this.data[pixel + 3] = color.alpha;
-	}
+	};
 
 	scope.Canvas = Canvas;
 })( window );

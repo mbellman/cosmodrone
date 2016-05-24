@@ -1,5 +1,9 @@
 /**
- * An instance of the game's HUD
+ * ----------
+ * Class: HUD
+ * ----------
+ *
+ * An instance of the game's HUD interface
  */
 function HUD()
 {
@@ -126,7 +130,7 @@ function HUD()
 	this.clear = function()
 	{
 		clear_HUD();
-	}
+	};
 
 	/**
 	 * Rerender drone stats to HUD
@@ -134,5 +138,5 @@ function HUD()
 	this.updateDroneStats = function( drone )
 	{
 		redraw_drone_HUD( drone.getSystem() );
-	}
+	};
 }
