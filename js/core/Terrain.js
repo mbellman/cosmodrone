@@ -11,6 +11,7 @@ function Terrain()
 	var _ = this;
 	var Generator = new RNG();                // Deterministic PRNG
 	var height_map;                           // Terrain elevation map
+	var map_size = 0;                         // Size of the terrain map (in length of sides)
 	var temp_map;                             // Terrain temperature map
 	var terrain_canvas;                       // Default terrain rendering
 	var city_canvas;                          // City layer rendering
@@ -128,7 +129,7 @@ function Terrain()
 	/**
 	 * Return coordinates for adjacent tiles
 	 */
-	function adjacent_coordinates( y, x, map_size )
+	function adjacent_coordinates( y, x )
 	{
 		return {
 			top: {
@@ -223,7 +224,7 @@ function Terrain()
 	 * Returns an array of square chunks
 	 * representing regions of a heightmap
 	 */
-	function map_to_chunks( map_size, chunk_size )
+	function map_to_chunks( chunk_size )
 	{
 		var size = Math.ceil( map_size / chunk_size );
 		var chunks = new Array( size );
@@ -245,7 +246,6 @@ function Terrain()
 	function tile_is_lit( data, y, x )
 	{
 		var elevation = data[y][x];
-		var map_size = data.length;
 
 		for ( var i = 0 ; i < 3 ; i++ ) {
 			var ty = Math.round( y - Math.sin( light_angle ) * ( i + 1 ) );
@@ -289,33 +289,28 @@ function Terrain()
 	}
 
 	/**
-	 * Returns the closest distance between two cities
+	 * Returns the closest x and y distance between two cities
 	 */
-	function proper_distance( city1, city2 )
+	function get_city_distance_vector( city1, city2 )
 	{
-		var map_size = height_map.data().length;
+		return {
+			x: Math.min( city2.x - city1.x, ( map_size - city2.x ) + city1.x ),
+			y: Math.min( city2.y - city1.y, ( map_size - city2.y ) + city1.y )
+		};
+	}
 
-		// Direct coordinate distance
-		var dx1 = city2.x - city1.x;
-		var dy1 = city2.y - city1.y;
-		var dist1 = Math.sqrt( dx1 * dx1 + dy1 * dy1 );
+	/**
+	 * Returns the closest x, y, and proper distance between two cities
+	 */
+	function get_city_distance( city1, city2 )
+	{
+		var vector = get_city_distance_vector( city1, city2 );
 
-		// Distance from wrapping across x
-		var dx2 = ( map_size - city2.x ) + city1.x;
-		var dy2 = dy1;
-		var dist2 = Math.sqrt( dx2 * dx2 + dy2 * dy2 );
-
-		// Distance from wrapping across y
-		var dx3 = dx1;
-		var dy3 = ( map_size - city2.y ) + city1.y;
-		var dist3 = Math.sqrt( dx3 * dx3 + dy3 * dy3 );
-
-		// Distance from wrapping across x and y
-		var dx4 = dx2;
-		var dy4 = dy3;
-		var dist4 = Math.sqrt( dx4 * dx4 + dy4 * dy4 );
-
-		return minimum( dist1, dist2, dist3, dist4 );
+		return {
+			x: vector.x,
+			y: vector.y,
+			value: Math.sqrt( vector.x * vector.x + vector.y * vector.y )
+		};
 	}
 
 	/**
@@ -367,14 +362,13 @@ function Terrain()
 	 */
 	function generate_cities( sea_level, tree_level )
 	{
-		var height_data = height_map.data();
-		var map_size = height_data.length;
+		var map = height_map.data();
 		var total = 0;
 		var chunk_size = 100;
 
-		city_chunks = map_to_chunks( map_size, chunk_size );
+		city_chunks = map_to_chunks( chunk_size );
 
-		while ( total++ <= city_count ) {
+		while ( total <= city_count ) {
 			// Pick a random spot for the city
 			var location = {
 				y: Generator.random( 0, map_size - 1 ),
@@ -383,7 +377,7 @@ function Terrain()
 
 			// Skew more cities toward the coastal regions
 			var is_last_quarter = ( total > Math.max( Math.round( city_count * 0.75), 5 ) );
-			var elevation = height_data[location.y][location.x];
+			var elevation = map[location.y][location.x];
 			var min_elevation = ( is_last_quarter ? sea_level + 8 : sea_level + 2 );
 			var max_elevation = ( is_last_quarter ? tree_level - 20 : sea_level + 6 );
 			var max_size = ( is_last_quarter ? Math.min( max_city_size, 5 ) : max_city_size );
@@ -403,9 +397,8 @@ function Terrain()
 			// Get elevation at the center point of the city
 			var center_y = mod( location.y + city_radius, map_size );
 			var center_x = mod( location.x + city_radius, map_size );
-			var city_elevation = height_data[center_y][center_x];
+			var city_elevation = map[center_y][center_x];
 
-			// Draw the layout directly onto terrain_canvas
 			city_size = city_layout.length;
 
 			for ( var y = 0 ; y < city_size ; y++ ) {
@@ -417,7 +410,7 @@ function Terrain()
 
 					// Regardless of the overall city layout,
 					// only draw on tiles above sea level
-					if ( height_data[tile.y][tile.x] >= sea_level ) {
+					if ( map[tile.y][tile.x] >= sea_level ) {
 						// Find density value for this tile, ranging from 0-5
 						var density = city_layout[y][x];
 						var color_reduction = 6 * ( 5 - density );
@@ -431,7 +424,7 @@ function Terrain()
 						// Only draw tiles above a certain density
 						if ( density > 0 ) {
 							// Flatten terrain beneath the city
-							height_data[tile.y][tile.x] = city_elevation;
+							map[tile.y][tile.x] = city_elevation;
 							// Draw city tile
 							city_canvas.draw.rectangle( tile.x, tile.y, 1, 1 ).fill( rgb( hue.r, hue.g, hue.b ) );
 
@@ -467,58 +460,50 @@ function Terrain()
 					size: city_size
 				}
 			);
+
+			total++;
 		}
 	}
 
 	/**
 	 * Draws a highway between two cities
 	 */
-	function generate_road_between( city1, city2, distance, height_data, sea_level )
+	function generate_road_between( city1, city2, distance, map, sea_level )
 	{
-		var map_size = height_data.length;
-
-		// Road construction direction
-		var shift = {
+		var direction = {
 			x: ( ( city2.x - city1.x ) < ( map_size - city2.x + city1.x ) ? 1 : -1 ),
 			y: ( ( city2.y - city1.y ) < ( map_size - city2.y + city1.y ) ? 1 : -1 )
 		};
 
-		var dx = Math.min( city2.x - city1.x, ( map_size - city2.x ) + city1.x );
-		var dy = Math.min( city2.y - city1.y, ( map_size - city2.y ) + city1.y );
-
-		var offset = {
+		var deviation = {
 			y: Generator.random( -1, 1 ),
 			x: Generator.random( -1, 1 )
 		};
 
-		var d = 0;
+		var d = 0, ratio, remoteness, tile = {}, color_reduction, hue = {};
 
-		while( d < distance ) {
-			var ratio = d / distance;
-			var remoteness = Math.sin( Math.PI * ratio );
-			var tile = {
-				y: mod( city1.y + Math.round( shift.y * dy * ratio ) + offset.y, map_size ),
-				x: mod( city1.x + Math.round( shift.x * dx * ratio ) + offset.x, map_size )
-			};
+		while( d < distance.value ) {
+			ratio = d / distance.value;
+			remoteness = Math.sin( Math.PI * ratio );
 
-			// Only draw road tiles above sea level
-			if ( height_data[tile.y][tile.x] > sea_level ) {
-				var color_reduction = Math.round( 25 * remoteness );
-				var hue = {
-					r: color.presets.city.r - color_reduction,
-					g: color.presets.city.g - color_reduction,
-					b: color.presets.city.b - color_reduction
-				};
+			tile.x = mod( city1.y + Math.round( direction.y * distance.y * ratio ) + deviation.y, map_size );
+			tile.y = mod( city1.x + Math.round( direction.x * distance.x * ratio ) + deviation.x, map_size );
 
-				city_canvas.draw.rectangle( tile.x, tile.y, 1, 1 ).fill( rgb( hue.r, hue.g, hue.b ) );
+			if ( map[tile.y][tile.x] > sea_level ) {
+				color_reduction = Math.round( 25 * remoteness );
+
+				hue.red = color.presets.city.r - color_reduction;
+				hue.green = color.presets.city.g - color_reduction;
+				hue.blue = color.presets.city.b - color_reduction;
+
+				city_canvas.draw.rectangle( tile.x, tile.y, 1, 1 ).fill( rgb( hue.red, hue.green, hue.blue ) );
 			}
 
-			// Increase distance proportionally to remoteness
+			// Advance road more quickly in remote areas (yielding sparser lighting)
 			d += 1 + Math.floor( 3 * remoteness );
 
-			// Randomly update deviation
-			offset.y += Generator.random( -1, 1 );
-			offset.x += Generator.random( -1, 1 );
+			deviation.y += Generator.random( -1, 1 );
+			deviation.x += Generator.random( -1, 1 );
 		}
 	}
 
@@ -549,21 +534,21 @@ function Terrain()
 						// Iterate over all cities from a neighbor chunk
 						for ( var c2 = 0 ; c2 < neighbor_cities.length ; c2++ ) {
 							var city2 = neighbor_cities[c2];
-							var city_distance = proper_distance( city1, city2 );
+							var distance = get_city_distance( city1, city2 );
 
 							if (
 								// Check to make sure cities are close
-								city_distance < 100 &&
+								distance.value < 120 &&
 								// Only draw roads one way
 								city2.x > city1.x &&
 								(
-									// Make sure cities are similar in size
+									// Cities must also be close in relative size...
 									Math.abs( city2.size - city1.size ) < 10 ||
-									// Or let the RNG take care of the job
+									// ...80% of the time
 									Generator.random() < 0.2
 								)
 							) {
-								generate_road_between( city1, city2, city_distance, height_data, sea_level );
+								generate_road_between( city1, city2, distance, height_data, sea_level );
 							}
 						}
 					}
@@ -575,7 +560,7 @@ function Terrain()
 	/**
 	 * Render terrain with appropriate coloration and lighting
 	 */
-	function render()
+	function render_landscape()
 	{
 		var terrain_IMG = terrain_canvas.data.create();
 		var height = {
@@ -588,11 +573,9 @@ function Terrain()
 			size: temp_map.getSize()
 		};
 
-		// Used to map the heightmap's elevation range to [0-100]
-		var ratio = 100 / height.range;
-		// Sea line + tree line in heightmap's terms
-		var sea_level = Math.round( sea_line / ratio );
-		var tree_level = Math.round( tree_line / ratio );
+		var normalizer = 100 / height.range;
+		var sea_level = Math.round( sea_line / normalizer );
+		var tree_level = Math.round( tree_line / normalizer );
 
 		// Generate random city centers and
 		// roads separately before the heightmap
@@ -601,7 +584,7 @@ function Terrain()
 
 		height_map.scan( function( y, x, elevation ) {
 			// Scale [elevation] to [0 - 100] for use by the tile coloration formulas
-			elevation = Math.round( elevation * ratio );
+			elevation = Math.round( elevation * normalizer );
 
 			var temp_x = y % climate.size;
 			var temp_y = x % climate.size;
@@ -670,11 +653,9 @@ function Terrain()
 
 		hour = clamp(hour, 0, 24);
 
-		var map_size = height_map.getSize();
-		var composite = time_canvas.data.get();
-
 		var terrain_IMG = terrain_canvas.data.get();
 		var city_IMG = city_canvas.data.get();
+		var composite_IMG = time_canvas.data.get();
 
 		var light_level = 12 - Math.abs( 12 - hour );
 		var city_light_reduction = 30 * ( mod( hour - 8, 24 ) - 16 );
@@ -731,21 +712,21 @@ function Terrain()
 			}
 
 			var T_pixel = terrain_IMG.getPixelXY( p );
-			var C_pixel = composite.getPixelIndex( T_pixel.x * tile_size, T_pixel.y * tile_size );
+			var C_pixel = composite_IMG.getPixelIndex( T_pixel.x * tile_size, T_pixel.y * tile_size );
 
 			for ( var py = 0 ; py < tile_size ; py++ ) {
 				for ( var px = 0 ; px < tile_size ; px++ ) {
 					var pixel = C_pixel + ( 4 * px ) + ( 4 * py * map_size * tile_size );
-					composite.write( pixel, composite_RGB );
+					composite_IMG.write( pixel, composite_RGB );
 				}
 			}
 		}
 
-		time_canvas.data.put( composite );
+		time_canvas.data.put( composite_IMG );
 	}
 
 	// -- Public: --
-	this.canvas;
+	this.canvas;         // Public render of the terrain map at the most recent specified hour
 
 	/**
 	 * Generate base elevation and temperature maps with custom [settings]
@@ -753,10 +734,10 @@ function Terrain()
 	this.build = function( settings )
 	{
 		height_map = new HeightMap();
-		height_map.seed( 'seedy' ).generate( settings );
+		height_map.seed( 'height' ).generate( settings );
 
 		temp_map = new HeightMap();
-		temp_map.seed( 'seedy' ).generate(
+		temp_map.seed( 'height' ).generate(
 			{
 				iterations: Math.min( settings.iterations - 1, 10 ),
 				elevation: 100,
@@ -766,13 +747,14 @@ function Terrain()
 			}
 		);
 
+		Generator.seed( 'height' );
+
 		terrain_canvas = new Canvas();
 		city_canvas = new Canvas();
 		time_canvas = new Canvas();
 
 		_.canvas = time_canvas.element;
-
-		Generator.seed( 'seedy' );
+		map_size = height_map.getSize();
 		init = true;
 
 		return _;
@@ -784,8 +766,6 @@ function Terrain()
 	this.setTileSize = function( size )
 	{
 		tile_size = size;
-
-		var map_size = height_map.getSize();
 
 		terrain_canvas.setSize( map_size, map_size );
 		city_canvas.setSize( map_size, map_size );
@@ -847,15 +827,16 @@ function Terrain()
 	};
 
 	/**
-	 * Start the render operation
+	 * Start the render operation (renders the
+	 * terrain and generates/renders cities)
 	 */
-	this.render = function()
+	this.renderLandscape = function()
 	{
 		if ( !init ) {
 			return;
 		}
 
-		render();
+		render_landscape();
 		return _;
 	};
 }

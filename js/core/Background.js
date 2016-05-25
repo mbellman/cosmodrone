@@ -1067,7 +1067,7 @@
 				.setCityCount( configuration.cities )
 				.setMaxCitySize( configuration.maxCitySize )
 				.setTileSize( configuration.tileSize )
-				.render();
+				.renderLandscape();
 
 			// Scale all [cloud_bank] cloud/shadow assets proportionally with
 			// [configuration.tileSize] and store them as Canvas instances

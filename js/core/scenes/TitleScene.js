@@ -37,7 +37,7 @@ function TitleScene( controller )
 			nova: {tween: 'y', to: 0, time: slide, ease: Ease.quad.inOut},
 			nova2: {tween: 'y', to: 0, time: slide, ease: Ease.quad.inOut},
 			stars: {tween: 'alpha', to: 1, time: slide, ease: Ease.quad.out},
-			ground: {tween: 'y', to: Viewport.height * 2, time: slide, ease: Ease.quad.inOut},
+			ground: {tween: 'y', to: 2 * Viewport.height, time: slide, ease: Ease.quad.inOut},
 			logo: {tween: 'alpha', to: 0, time: slide, ease: Ease.quad.out},
 			starlogo: {tween: 'alpha', to: 0, time: slide, ease: Ease.quad.in},
 			TITLE_MENU: {tween: 'alpha', to: 0, time: ( slide / 2 ), ease: Ease.quad.out},
