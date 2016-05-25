@@ -596,7 +596,7 @@ function Terrain()
 					( elevation < sea_line+6 || tile_is_lit( height.map, y, x ) )
 			);
 
-			var hue = {
+			var tile_RGB = {
 				red: color.elevation.red( elevation ) + color.temperature.red( temperature, elevation ) + ( is_sunny ? 0 : -20 ),
 				green: color.elevation.green( elevation ) + color.temperature.green( temperature, elevation ) + ( is_sunny ? 0 : -20 ),
 				blue: color.elevation.blue( elevation ) + color.temperature.blue( temperature, elevation ),
@@ -606,36 +606,29 @@ function Terrain()
 			// Special coloration for shoreline tiles
 			if ( elevation > sea_line - 6 && elevation < sea_line + 6 ) {
 				if ( tile_just_above( height.map, y, x, sea_level - 1 ) ) {
-					hue.red += 20;
-					hue.green += 20;
+					tile_RGB.red += 20;
+					tile_RGB.green += 20;
 				} else
 				if ( tile_just_below( height.map, y, x, sea_level ) ) {
-					hue.green += 50;
-					hue.blue += 40;
+					tile_RGB.green += 50;
+					tile_RGB.blue += 40;
 				}
 			}
 
 			// Render coastal roads to [city_canvas]
 			if ( elevation > sea_line + 2 && elevation < sea_line + 6 && Generator.random() < 0.1 ) {
 				var light_reduction = Generator.random( 0, 20 ) + ( elevation !== sea_line + 4 ? 20 : 0 );
-				var road_hue = {
+				var road_RGB = {
 					red: color.presets.city.r - light_reduction,
 					green: color.presets.city.g - light_reduction,
 					blue: color.presets.city.b - light_reduction
 				};
 
-				city_canvas.draw.rectangle( x, y, 1, 1 ).fill( rgb( road_hue.red, road_hue.green, road_hue.blue ) );
+				city_canvas.draw.rectangle( x, y, 1, 1 ).fill( rgb( road_RGB.red, road_RGB.green, road_RGB.blue ) );
 			}
 
-			var pixel = terrain_IMG.getPixelIndex( x, y );//4 * ( y * height.size + x );
-			terrain_IMG.write( pixel, hue );
-
-			/*
-			terrain_IMG.data[pixel] = hue.r;
-			terrain_IMG.data[pixel + 1] = hue.g;
-			terrain_IMG.data[pixel + 2] = hue.b;
-			terrain_IMG.data[pixel + 3] = 255;
-			*/
+			var pixel = terrain_IMG.getPixelIndex( x, y );
+			terrain_IMG.write( pixel, tile_RGB );
 		});
 
 		terrain_canvas.data.put( terrain_IMG );
