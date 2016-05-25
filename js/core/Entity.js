@@ -102,12 +102,25 @@ function Entity()
 	};
 
 	/**
-	 * Add a child sub-entity to this entity
+	 * Add one or multiple child sub-entities to this entity
 	 */
-	this.addChild = function( entity )
+	this.addChild = function()
 	{
-		entity.onAddedToParent( _ );
-		children.push( entity );
+		for ( var e = 0 ; e < arguments.length ; e++ ) {
+			var entity = arguments[e];
+			entity.onAddedToParent( _ );
+			children.push( entity );
+		}
+
+		return _;
+	};
+
+	/**
+	 * Add this entity to a parent entity
+	 */
+	this.addToParent = function( parent )
+	{
+		parent.addChild( _ );
 		return _;
 	};
 
@@ -182,7 +195,7 @@ function Entity()
 	/**
 	 * Returns the [n]th child of the entity if one exists
 	 */
-	this.getNthChild = function( n )
+	this.child = function( n )
 	{
 		return children[n] || null;
 	};

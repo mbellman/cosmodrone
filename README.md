@@ -4,11 +4,13 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
-* Level selection interface
+* Stop level selection text from printing upon viewing title screen
+* Get better menu/text sounds
 * Text coloring
 * Loading bar/indicator of some kind
 * New drone sprite
 * Print debug text using Text component
+* Configure level select to use 3D spinning models of celestial bodies
 * Make sure hardware asset "light source" is adjusted based on the side of the module
 * Collisions/drone damage
 * Hardware/part maintenance interface

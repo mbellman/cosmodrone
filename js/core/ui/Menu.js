@@ -17,9 +17,9 @@
 		var builder;
 		var selection = 0;
 		var events = {
-			focus: null,
-			unfocus: null,
-			select: null
+			focus: function() {},
+			unfocus: function() {},
+			select: function() {}
 		};
 		var sounds = {
 			cursor: null,
@@ -60,7 +60,7 @@
 		 */
 		function select_nearest( direction )
 		{
-			var active = stage.getNthChild( selection ).find( Sprite );
+			var active = stage.child( selection ).find( Sprite );
 			var minimum_distance = Number.POSITIVE_INFINITY;
 			var closest = selection;
 			var index = 0;
@@ -90,8 +90,8 @@
 			});
 
 			if ( closest !== selection ) {
-				events.unfocus( stage.getNthChild( selection ), selection );
-				events.focus( stage.getNthChild( closest ), closest );
+				events.unfocus( stage.child( selection ), selection );
+				events.focus( stage.child( closest ), closest );
 				play_sound( 'cursor' );
 
 				selection = closest;
@@ -110,7 +110,7 @@
 			build_grid();
 
 			if ( typeof events.focus === 'function' ) {
-				events.focus( stage.getNthChild( selection ), selection );
+				events.focus( stage.child( selection ), selection );
 			}
 		};
 
@@ -151,7 +151,7 @@
 		 */
 		this.on = function( event, handler )
 		{
-			if ( events.hasOwnProperty( event ) ) {
+			if ( events.hasOwnProperty( event ) && typeof handler === 'function' ) {
 				events[event] = handler;
 			}
 
@@ -195,7 +195,7 @@
 		 */
 		this.select = function()
 		{
-			if ( events.select( stage.getNthChild( selection ), selection ) ) {
+			if ( events.select( stage.child( selection ), selection ) ) {
 				play_sound( 'select' );
 				return;
 			}
@@ -475,12 +475,12 @@
 				// Number of grid items to construct
 				items: 0,
 				// Handler for navigating to a menu option. Receives the grid item entity and its index as two arguments.
-				focus: null,
+				onFocus: null,
 				// Handler for leaving a menu option. Receives the grid item entity and its index as two arguments.
-				unfocus: null,
+				onUnFocus: null,
 				// Handler for selecting a menu option. Receives the grid item entity and its index as two arguments.
 				// This function should return true or false depending on whether the selection is 'valid'.
-				select: null,
+				onSelect: null,
 
 				// Menu action sound effects:
 				sounds: {
@@ -577,9 +577,9 @@
 					.setTotal( attributes.items )
 					.setBuilder( attributes.options )
 					.setSounds( attributes.sounds )
-					.on( 'focus', attributes.focus )
-					.on( 'unfocus', attributes.unfocus )
-					.on( 'select', attributes.select );
+					.on( 'focus', attributes.onFocus )
+					.on( 'unfocus', attributes.onUnFocus )
+					.on( 'select', attributes.onSelect );
 			}
 
 			return _;
