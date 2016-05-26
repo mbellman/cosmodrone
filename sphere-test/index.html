@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Draw a sphere</title>
+<script>
+// -----------------------------------------------------
+// Adapted from:
+//
+// https://rosettacode.org/wiki/Draw_a_sphere#JavaScript
+// https://en.wikipedia.org/wiki/UV_mapping
+// -----------------------------------------------------
+
+var loaded = false;
+var earth = new Image(), earth_canvas, earth_ctx, earth_pixels, earthW, earthH;
+earth.src = 'earth.png';
+earth.onload = function(){
+	earth_canvas = document.createElement('canvas');
+	earth_canvas.width = earthW = earth.width;
+	earth_canvas.height = earthH = earth.height;
+
+	earth_ctx = earth_canvas.getContext('2d');
+	earth_ctx.drawImage(earth, 0, 0);
+
+	earth_pixels = earth_ctx.getImageData(0, 0, earth.width, earth.height);
+	document.body.appendChild(earth_canvas);
+	loaded = true;
+};
+
+var light=[300,10,-50],R,k,ambient;
+var UV_map = [];
+var color_map = [];
+var rotation = 30;
+var rot_ratio = rotation/360;
+var resolution = 1;
+ 
+function getUV(x,y,z) {
+	return {
+		u: 0.5 + (Math.atan2(z,x) / (2*Math.PI)),
+		v: 0.5 - (Math.asin(y) / Math.PI)
+	};
+}
+
+function build_UV_map() {
+	UV_map.length = 0;
+
+	for(var x=-R;x<=R;x++){
+		UV_map[R+x] = [];
+
+		for(var y=-R;y<=R;y++){
+			if(x*x+y*y<=R*R){
+				vec=[-x,-y,Math.sqrt(R*R-x*x-y*y)];
+				vec=normalize(vec);
+
+				UV_map[R+x][R+y] = getUV(vec[0], vec[1], vec[2]);
+			}
+		}
+	}
+}
+
+function build_color_map() {
+	color_map.length = 0;
+
+	for (var x = 0 ; x < earth.width ; x++) {
+		color_map[x] = [];
+		for (var y = 0 ; y < earth.height ; y++) {
+			color_map[x][y] = getEarthColor(x, y);
+		}
+	}
+}
+
+function build_maps() {
+	build_UV_map();
+	build_color_map();
+}
+
+function getEarthColor(x, y) {
+	var width = earth.width;
+
+	x = (Math.floor(x + rot_ratio * width)) % width;
+	y = Math.floor(y);
+
+	var p = 4 * ( y * width + x );
+	var color = {
+		red: earth_pixels.data[p++],
+		green: earth_pixels.data[p++],
+		blue: earth_pixels.data[p++]
+	};
+	return color;
+}
+
+function normalize(v){
+	var len=Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]);
+	v[0]/=len;
+	v[1]/=len;
+	v[2]/=len;
+	return v;
+}
+ 
+function dot(x,y){
+	var d=x[0]*y[0]+x[1]*y[1]+x[2]*y[2];
+	return d<0?-d:0;
+}
+
+var cvs, ctx, imgdata;
+function create_img_data() {
+	cvs = document.getElementById('c');
+	cvs.width=cvs.height=2*R + 1;
+	ctx = cvs.getContext('2d');
+	imgdata = ctx.createImageData(2*R+1, 2*R+1);
+}
+
+function draw_sphere(){
+	if (!loaded) {
+		setTimeout(draw_sphere, 100);
+	}
+
+	var intensity,b,vec,idx, x, y, x2, y2, R2 = R*R;
+	ctx.clearRect(0, 0, cvs.width, cvs.height);
+	idx=0;
+	for(var i=-R;i<=R;i+=resolution){
+		x = Math.floor(i / resolution) * resolution;
+		x2 = x*x;
+		for(var j=-R;j<=R;j+=resolution){
+			y = Math.floor(j / resolution) * resolution;
+			idx = 4 * ( (R+j) * cvs.width + (R+i) );
+			y2 = y*y;
+			if(x2+y2<=R2){
+				vec=[x,y,Math.sqrt(R2-x2-y2)];
+				vec=normalize(vec);
+				if (k === 0) k = 0.0001;
+				b=Math.pow(dot(light,vec),k)+ambient;
+				intensity=(1-b)*150;
+				if(intensity<0)intensity=0;
+				if(intensity>=256)intensity=255;
+				intensity = ~~intensity;
+				var uv = UV_map[R+x][R+y];
+				var cx = (Math.floor(uv.u * earthW + rot_ratio * earthW)) % color_map.length;
+				var cy = Math.floor(uv.v * earthH) % color_map[0].length;
+				var color = color_map[cx][cy];
+
+				for (var px = 0 ; px < resolution && (R+i+px) < cvs.width ; px++) {
+					for (var py = 0 ; py < resolution && (R+j+py) < cvs.height ; py++) {
+						var _idx = idx + 4 * px + 4 * py * cvs.width;
+
+						imgdata.data[_idx]=color.red-3*intensity; // R
+						imgdata.data[_idx+1]=color.green-3*intensity; // G
+						imgdata.data[_idx+2]=color.blue-intensity; // B
+						imgdata.data[_idx+3]=255; //A
+					}
+				}
+			} else {
+				imgdata.data[idx++]=imgdata.data[idx++]=imgdata.data[idx++]=0; //RGB...
+				imgdata.data[idx] = 100; // A!
+			}
+		}
+	}
+	ctx.putImageData(imgdata,0,0);
+
+	rotation++;
+	rot_ratio = rotation / 360;
+	requestAnimationFrame(draw_sphere);
+}
+ 
+light=normalize(light);
+</script>
+</head>
+<body onload="R=200;k=.75;ambient=.75;create_img_data();build_maps();draw_sphere();">
+Resolution=<input type="range" id="res" name="res" min="1" max="10" value="1" step="1" onchange="document.getElementById('res-l').innerHTML=resolution=Math.round(this.value);create_img_data();">
+<label for="res" id="res-l">1</label><br>
+Radius=<input type="range" id="R" name="R" min="5" max="500" value="200" step="5" onchange="document.getElementById('lR').innerHTML=R=Math.round(this.value);create_img_data();build_maps();">
+<label for="R" id="lR">200</label><br>
+Light diffusion=<input type="range" id="k" name="k" min="0" max="10" value="4" step=".25" onchange="document.getElementById('lk').innerHTML=k=parseFloat(this.value);">
+<label for="k" id="lk">4</label><br>
+Ambient light=<input type="range" id="ambient" name="ambient" min="0" max="1" value=".75" step=".05" onchange="document.getElementById('lambient').innerHTML=ambient=parseFloat(this.value);">
+<label for="ambient" id="lambient">0.75</label><br>
+<canvas id="c">Unsupportive browser...</canvas><br>
+</body>
+</html>

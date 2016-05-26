@@ -350,9 +350,9 @@
 		var string = '';
 		var output = '';
 		var buffer = 0;
-		var finished = false;
 		var sounds = [];
 		var sound_queued = false;
+		var muted = false;
 		var instructions = [' ', '[br]'];
 		var delay = {
 			interval: 50,
@@ -367,7 +367,6 @@
 			output = '';
 			buffer = 0;
 			delay.counter = 0;
-			finished = false;
 		}
 
 		/**
@@ -375,7 +374,7 @@
 		 */
 		function play_sound()
 		{
-			if ( sounds.length > 0 ) {
+			if ( !muted && sounds.length > 0 ) {
 				var sound = random( 0, sounds.length - 1 );
 				sounds[sound].play();
 			}
@@ -402,7 +401,7 @@
 			output += string.charAt( buffer++ );
 			text.setString( output );
 
-			// Queue sound to play on next update cycle,
+			// Queue sound to play on next update cycle
 			// once Sprite has updated with new character
 			sound_queued = true;
 		}
@@ -414,7 +413,7 @@
 				play_sound();
 			}
 
-			if ( !finished ) {
+			if ( buffer < string.length ) {
 				if ( delay.counter < delay.interval ) {
 					delay.counter += ( dt * 1000 );
 					return;
@@ -422,10 +421,6 @@
 
 				delay.counter = 0;
 				print_next_character();
-
-				if ( buffer >= string.length ) {
-					finished = true;
-				}
 			}
 		};
 
@@ -480,6 +475,24 @@
 			reset_output_buffer();
 			return _;
 		};
+
+		/**
+		 * Disable text sound effects
+		 */
+		this.mute = function()
+		{
+			muted = true;
+			return _;
+		};
+
+		/**
+		 * Re-enable text sound effects
+		 */
+		this.unmute = function()
+		{
+			muted = false;
+			return _;
+		}
 	}
 
 	scope.TextString = TextString;

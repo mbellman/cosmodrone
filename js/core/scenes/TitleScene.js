@@ -289,7 +289,7 @@ function TitleScene( controller )
 		for ( var s = 0 ; s < stations.length ; s++ ) {
 			space_stations.addChild(
 				new Entity().add(
-					new Sprite( STATION_ICON ).setXY( stations[s].x, stations[s].y )
+					new Sprite( STATION_ICON ).setXY( stations[s].x, stations[s].y ).centerOrigin()
 				)
 			);
 		}
@@ -316,7 +316,7 @@ function TitleScene( controller )
 							);
 						},
 						onFocus: function( entity, i ) {
-							space_stations.child( i ).get( Sprite ).setSource( STATION_ICON_SELECTED );
+							space_stations.child( i ).get( Sprite ).setSource( STATION_ICON_SELECTED ).centerOrigin();
 							text.find( TextPrinter ).print( level_text[i] );
 
 							if ( zones[++i] !== level_zone ) {
@@ -325,7 +325,7 @@ function TitleScene( controller )
 							}
 						},
 						onUnFocus: function( entity, i ) {
-							space_stations.child( i ).get( Sprite ).setSource( STATION_ICON );
+							space_stations.child( i ).get( Sprite ).setSource( STATION_ICON ).centerOrigin();
 						},
 						onSelect: function( entity, i ) {
 							if ( i < 1 ) {
@@ -389,11 +389,12 @@ function TitleScene( controller )
 	{
 		menu = 2;
 
-		props.nova.add( new Flicker().setAlphaRange( 0.5, 1.0 ) );
-		props.nova2.add( new Flicker().setAlphaRange( 0.5, 1.0 ) );
+		props.nova.add( new Flicker().setAlphaRange( 0.7, 1.0 ) );
+		props.nova2.add( new Flicker().setAlphaRange( 0.7, 1.0 ) );
 
 		props.TITLE_MENU.get( Menu ).disable();
 		props.LEVEL_MENU.find( Menu ).enable();
+		props.LEVEL_MENU.find( TextPrinter ).unmute();
 
 		run_transition_tweens();
 	}
@@ -426,6 +427,8 @@ function TitleScene( controller )
 		stage_all_props();
 
 		props.LEVEL_MENU.find( Menu ).disable();
+		props.LEVEL_MENU.find( TextPrinter ).mute();
+
 		_.owner.addChild( stage );
 	};
 }

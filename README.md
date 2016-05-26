@@ -4,8 +4,8 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
-* Stop level selection text from printing upon viewing title screen
 * Get better menu/text sounds
+* Momentum panning on level select screen
 * Text coloring
 * Loading bar/indicator of some kind
 * New drone sprite
