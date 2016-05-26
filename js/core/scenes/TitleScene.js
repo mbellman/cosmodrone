@@ -268,18 +268,45 @@ function TitleScene( controller )
 		var STATION_ICON = Assets.getImage( 'title/level-select/station-icon.png' );
 		var STATION_ICON_SELECTED = Assets.getImage( 'title/level-select/station-icon-selected.png' );
 
+		var EARTH_TEXTURE = Assets.getImage( 'title/level-select/earth.png' );
+		var MOON_TEXTURE = Assets.getImage( 'title/level-select/moon.png' );
+		var MARS_TEXTURE = Assets.getImage( 'title/level-select/mars.png' );
+
 		// Planet entities
 		var space = new Entity()
 			.add( new Sprite() )
 			.addChild(
 				new Entity().add(
-					new Sprite( Assets.getImage( 'title/level-select/earth.png' ) ).setXY( 350, 80 )
+					new Sphere()
+						.setRadius( 250 )
+						.setTexture( EARTH_TEXTURE )
+						.setAmbientLight( 0.6 )
+						.setRotationSpeed( -20 )
+						.setResolution( 2 )
+						.setXY( 350, 80 )
+						.render()
 				),
 				new Entity().add(
-					new Sprite( Assets.getImage( 'title/level-select/moon.png' ) ).setXY( 2000, 200 )
+					new Sphere()
+						.setRadius( 100 )
+						.setTexture( MOON_TEXTURE )
+						.setAmbientLight( 0.1 )
+						.setLightDiffusion( 0.1 )
+						.setRotationSpeed( -20 )
+						.setResolution( 2 )
+						.setXY( 2000, 200 )
+						.render()
 				),
 				new Entity().add(
-					new Sprite( Assets.getImage( 'title/level-select/mars.png' ) ).setXY( 5500, 200 )
+					new Sphere()
+						.setRadius( 180 )
+						.setTexture( MARS_TEXTURE )
+						.setAmbientLight( 0.4 )
+						.setLightDiffusion( 0.4 )
+						.setRotationSpeed( -20 )
+						.setResolution( 2 )
+						.setXY( 5450, 150 )
+						.render()
 				)
 			);
 

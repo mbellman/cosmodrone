@@ -115,17 +115,20 @@ function draw_sphere(){
 		setTimeout(draw_sphere, 100);
 	}
 
-	var intensity,b,vec,idx, x, y, x2, y2, R2 = R*R;
-	ctx.clearRect(0, 0, cvs.width, cvs.height);
+	var intensity,b,vec,idx, x, y, x2, y2, rI, rJ, R2 = R*R;
+	var cvw = cvs.width;
+	ctx.clearRect(0, 0, cvw, cvs.height);
 	idx=0;
 	for(var i=-R;i<=R;i+=resolution){
 		x = Math.floor(i / resolution) * resolution;
 		x2 = x*x;
+		rI = R+i;
 		for(var j=-R;j<=R;j+=resolution){
 			y = Math.floor(j / resolution) * resolution;
-			idx = 4 * ( (R+j) * cvs.width + (R+i) );
+			idx = 4 * ( (R+j) * cvw + rI );
 			y2 = y*y;
 			if(x2+y2<=R2){
+				/*
 				vec=[x,y,Math.sqrt(R2-x2-y2)];
 				vec=normalize(vec);
 				if (k === 0) k = 0.0001;
@@ -134,6 +137,9 @@ function draw_sphere(){
 				if(intensity<0)intensity=0;
 				if(intensity>=256)intensity=255;
 				intensity = ~~intensity;
+				*/
+				intensity = 50 * (1-ambient);
+
 				var uv = UV_map[R+x][R+y];
 				var cx = (Math.floor(uv.u * earthW + rot_ratio * earthW)) % color_map.length;
 				var cy = Math.floor(uv.v * earthH) % color_map[0].length;

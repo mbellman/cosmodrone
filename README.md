@@ -5,12 +5,12 @@ A game about space station maintenance!
 
 ##### GAME
 * Get better menu/text sounds
-* Momentum panning on level select screen
+* Momentum panning on level select screen (?)
+* Have level select space stations move around/show paths (?)
 * Text coloring
-* Loading bar/indicator of some kind
+* Loading bar/indicator of some kind (connect level menu with gameplay!!!)
 * New drone sprite
 * Print debug text using Text component
-* Configure level select to use 3D spinning models of celestial bodies
 * Make sure hardware asset "light source" is adjusted based on the side of the module
 * Collisions/drone damage
 * Hardware/part maintenance interface

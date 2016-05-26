@@ -24,8 +24,7 @@ Vec2.prototype.magnitude = function()
  */
 Vec2.prototype.normalize = function( norm )
 {
-	var magnitude = this.magnitude();
-	var ratio = magnitude / norm;
+	var normalizer = norm / this.magnitude();
 	this.x *= r;
 	this.y *= r;
 	return this;
@@ -54,7 +53,7 @@ Vec2.prototype.reset = function()
 };
 
 /**
- * 'Static' method for finding the difference
+ * Static method for finding the difference
  * between two [x, y] vector coordinates
  */
 Vec2.distance = function( x1, y1, x2, y2 )
@@ -62,4 +61,84 @@ Vec2.distance = function( x1, y1, x2, y2 )
 	var dx = x2 - x1;
 	var dy = y2 - y1;
 	return Math.sqrt( dx * dx + dy * dy );
+};
+
+/**
+ * -------------
+ * Class: Vector
+ * -------------
+ *
+ * An n-dimensional vector with extended functionality
+ */
+function Vector()
+{
+	/**
+	 * The list of components of the vector
+	 */
+	this.n = [];
+
+	/**
+	 * Set [coordinates] based on constructor arguments
+	 */
+	for ( var i = 0 ; i < arguments.length ; i++ ) {
+		this.n.push( arguments[i] );
+	}
+}
+
+/**
+ * Copy another [vector]'s components into this one
+ */
+Vector.prototype.copy = function( vector )
+{
+	for ( var v = 0 ; v < vector.length ; v++ ) {
+		this.n[v] = vector.n[v];
+	}
+
+	return this;
+};
+
+/**
+ * Get the magnitude of the vector
+ */
+Vector.prototype.magnitude = function()
+{
+	var sum = 0;
+
+	for ( var v = 0 ; v < this.n.length ; v++ ) {
+		sum += ( this.n[v] * this.n[v] );
+	}
+
+	return Math.sqrt( sum );
+};
+
+/**
+ * Set the vector's magnitude to [norm]
+ */
+Vector.prototype.normalize = function( norm )
+{
+	var normalizer = norm / this.magnitude();
+
+	for ( var v = 0 ; v < this.n.length ; v++ ) {
+		this.n[v] *= normalizer;
+	}
+
+	return this;
+};
+
+/**
+ * Static method for getting the dot product of two vectors
+ */
+Vector.dotProduct = function( vector1, vector2 )
+{
+	var sum = 0;
+
+	if ( vector1.n.length !== vector2.n.length ) {
+		return sum;
+	}
+
+	for ( var v = 0 ; v < vector1.n.length ; v++ ) {
+		sum += ( vector1.n[v] * vector2.n[v] );
+	}
+
+	return sum;
 };
