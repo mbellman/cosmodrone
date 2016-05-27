@@ -10,7 +10,8 @@ function SceneManager()
 	// -- Private: --
 	var _ = this;
 	var time;
-	var MAX_DT = Math.round( 1000 / 60 ) / 1000;
+	var FRAME_TIME = 1000 / 60;
+	var MAX_DT = FRAME_TIME / 1000;
 	var scenes = {};
 	var active_scene = null;
 	var running = false;
@@ -63,10 +64,12 @@ function SceneManager()
 	function loop()
 	{
 		if ( running ) {
-			var new_time = Date.now();
-			var dt = Math.min( ( new_time - time ) / 1000, MAX_DT );
+			var now = Date.now();
+			var dt = ( now - time );
 
-			time = Date.now();
+			time = now - ( dt % FRAME_TIME );
+			dt /= 1000;
+			dt = Math.min( dt, MAX_DT );
 
 			clear_sprites();
 			scenes[active_scene].update( dt );

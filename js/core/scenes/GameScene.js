@@ -39,8 +39,8 @@ function GameScene( controller )
 		if ( ++DEBUG_stats_cycle > 2 ) {
 			DEBUG_stats_cycle = 0;
 
-			var dt_ratio = ( 1/60 ) / dt;
-			var fps = Math.round( 60 * dt_ratio );
+			var DT_RATIO = ( 1 / 60 ) / dt;
+			var fps = Math.round( 60 * DT_RATIO );
 			var player = drone.get( Point ).getPosition( true );
 
 			var data = [

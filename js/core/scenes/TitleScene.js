@@ -36,7 +36,7 @@ function TitleScene( controller )
 		earth: {
 			x: 600,
 			y: 325,
-			radius: 230
+			radius: 225
 		},
 		moon: {
 			x: 2100,
