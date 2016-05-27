@@ -54,7 +54,7 @@ function SceneManager()
 				// area, so no need to clear any more sprites
 				cleared = true;
 			}
-		});
+		} );
 	}
 
 	/**

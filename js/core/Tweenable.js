@@ -58,18 +58,15 @@ function Tweenable( value )
 
 	this.update = function( dt )
 	{
-		if ( tween.on )
-		{
-			if ( delay_counter < delay )
-			{
+		if ( tween.on ) {
+			if ( delay_counter < delay ) {
 				delay_counter += dt;
 				return;
 			}
 
 			tween.running_time += ( dt * 1000 );
 
-			if ( tween.running_time >= tween.complete_time )
-			{
+			if ( tween.running_time >= tween.complete_time ) {
 				_._ = tween.end;
 				_.stop();
 				tween.onComplete();

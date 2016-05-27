@@ -1,4 +1,4 @@
-(function( scope ) {
+( function( scope ) {
 	/**
 	 * ------------
 	 * Class: Shape
@@ -392,4 +392,4 @@
 	};
 
 	scope.Canvas = Canvas;
-})( window );
+} )( window );

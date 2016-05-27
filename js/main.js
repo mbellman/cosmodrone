@@ -111,11 +111,11 @@ function loadGame()
 	.load( AssetManifest )
 	.progress( function( percent ) {
 		console.log( 'Loading...' + percent + '%' );
-	})
+	} )
 	.then( function() {
 		var controller = new Controller();
 		controller.showTitle();
-	});
+	} );
 }
 
 /**

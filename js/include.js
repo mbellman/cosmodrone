@@ -1,4 +1,4 @@
-(function( scope ) {
+( function( scope ) {
 	/**
 	 * ---------------------
 	 * Class: IncludeManager
@@ -84,4 +84,4 @@
 	}
 
 	scope.include = include;
-})( window );
+} )( window );

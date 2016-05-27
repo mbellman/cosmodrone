@@ -58,7 +58,7 @@ WebAudio.stop = function( node )
 /**
  * Prevent Web Audio from occasionally stopping
  */
-(function(){
+( function(){
 	var ct = WebAudio.ctx.currentTime;
 
 	setInterval( function() {
@@ -71,4 +71,4 @@ WebAudio.stop = function( node )
 
 		ct = new_ct;
 	}, 1000 )
-})();
+} )();

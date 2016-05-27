@@ -149,22 +149,22 @@ function Sphere()
 
 		var rotation_ratio = ( rotation.angle / 360 );
 		var rotation_shift = rotation_ratio * TEXTURE_W;
-		var i, j, pixel, UV_ROW, SHADOW_ROW, UV, TEXTURE = {}, hue = {}, shadow;
+		var i, j, pixel, UV_MAP_ROW, SHADOW_MAP_ROW, UV, TEXTURE = {}, hue = {}, shadow;
 
 		hue.alpha = 255;
 
 		for ( var y = 0 ; y < render.element.height ; y += resolution ) {
 			j = Math.pow( y - radius, 2 );
 
-			UV_ROW = maps.UV[y];
-			SHADOW_ROW = maps.shadow[y];
+			UV_MAP_ROW = maps.UV[y];
+			SHADOW_MAP_ROW = maps.shadow[y];
 
 			for ( var x = 0 ; x < render.element.width ; x += resolution ) {
 				i = Math.pow( x - radius, 2 );
 
 				if ( Math.sqrt( i + j ) < radius ) {
-					UV = UV_ROW[x];
-					shadow = SHADOW_ROW[x];
+					UV = UV_MAP_ROW[x];
+					shadow = SHADOW_MAP_ROW[x];
 
 					TEXTURE.x = Math.floor( UV.u + rotation_shift ) % TEXTURE_W;
 					TEXTURE.RGB = maps.color[UV.v][TEXTURE.x];
@@ -189,7 +189,11 @@ function Sphere()
 	this.onAdded = function()
 	{
 		if ( !_.owner.has( Sprite ) ) {
-			_.owner.add( new Sprite( render.element ) .setXY( position.x, position.y ) );
+			_.owner.add(
+				new Sprite( render.element )
+					.setXY( position.x, position.y )
+					.centerOrigin()
+			);
 		}
 	};
 
@@ -287,14 +291,18 @@ function Sphere()
 	};
 
 	/**
-	 * Rebuild the various transformation maps
-	 * so the scene's appearance can update
+	 * Rebuild render maps
 	 */
 	this.render = function()
 	{
 		build_color_map();
 		build_UV_map();
 		build_light_map();
+
+		if ( _.owner !== null && _.owner.has( Sprite ) ) {
+			_.owner.get( Sprite ).centerOrigin();
+		}
+
 		return _;
 	};
 

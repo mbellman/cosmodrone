@@ -17,7 +17,6 @@ A game about space station maintenance!
 * Handler for drone running out of power/fuel
 * Ability to move drone above or below the station
 * Momentum panning on level select screen (?)
-* Have level select space stations move around/show paths (?)
 * Moving docking targets (later-stage development) (?)
 * Scene zoom-out when speeding up (?)
 * Replace jQuery with vanilla JS (?)
@@ -33,5 +32,8 @@ A game about space station maintenance!
 * Rivers
 
 ##### CODE
+* ShapeSprite for drawing arbitrary vector shapes
+* See if sphere rendering can be optimized just a little more
 * Consolidate major framework elements (Canvas, WebAudio, AssetLoader, Entity/Component, Sprite, Text, etc.)
 * Background, Terrain, and HeightMap classes need some tidying
+* Child Sprite coordinate system transformations (rotation, scaling, etc.)

@@ -1,4 +1,4 @@
-(function(scope){
+( function( scope ) {
 	/**
 	 * -----------------
 	 * Object: LevelData
@@ -352,4 +352,4 @@
 	}
 
 	scope.LevelLoader = LevelLoader;
-})(window);
+} )( window );

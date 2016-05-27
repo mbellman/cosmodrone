@@ -132,7 +132,7 @@ function Entity()
 		for ( var c = 0 ; c < children.length ; c++ ) {
 			children[c].forAllComponents( function( component ) {
 				component.onRemoved();
-			});
+			} );
 		}
 
 		children.length = 0;

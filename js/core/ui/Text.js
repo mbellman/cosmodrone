@@ -1,4 +1,4 @@
-(function( scope ) {
+( function( scope ) {
 	/**
 	 * -------------
 	 * Object: Fonts
@@ -497,4 +497,4 @@
 
 	scope.TextString = TextString;
 	scope.TextPrinter = TextPrinter;
-})( window );
+} )( window );

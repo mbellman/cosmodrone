@@ -12,10 +12,11 @@ function Sprite( _source )
 	// -- Private: --
 	var _ = this;
 	var source = _source || null;          // Graphic to render (Image or HTMLCanvasElement)
-	var parent_offset = {x: 0, y: 0};      // Offset of the owner's parent entity Sprite (where applicable)
+	var parent_offset = {x: 0, y: 0};      // Offset of the owner's parent/ancestor entity Sprite (where applicable)
 	var offset = {x: 0, y: 0};             // A persistent offset as specified via Sprite.setOffset(x, y)
 	var origin = {x: 0, y: 0};             // Origin point of the Sprite (for positioning, rotations, scaling, etc.)
 	var render = {x: 0, y: 0};             // On-screen coordinates of the Sprite (updated internally)
+	var parent = null;                     // Parent or ancestor entity Sprite
 	var pivot;                             // Target Point for movement pivoting (motion opposite to)
 	var alpha = 1;                         // Proper Sprite alpha, influenced by parent Sprite alpha (update internally)
 
@@ -32,11 +33,21 @@ function Sprite( _source )
 	}
 
 	/**
+	 * Search for a parent/ancestor entity Sprite and save one if found
+	 */
+	function check_parent()
+	{
+		if ( parent === null ) {
+			parent = _.owner.getFromParents( Sprite );
+		}
+	}
+
+	/**
 	 * Recalculate the Sprite's global (on-screen) coordinates
 	 */
 	function update_render_coordinates()
 	{
-		var parent = _.owner.getFromParents( Sprite );
+		check_parent();
 
 		if ( parent !== null ) {
 			parent_offset = parent.getScreenCoordinates();
@@ -57,7 +68,7 @@ function Sprite( _source )
 	 */
 	function update_proper_alpha()
 	{
-		var parent = _.owner.getFromParents( Sprite );
+		check_parent();
 
 		if ( parent !== null ) {
 			alpha = _.alpha._ * parent.getProperAlpha();
@@ -142,6 +153,13 @@ function Sprite( _source )
 		) {
 			console.warn( 'Sprite: ' + source + ' is not an Image or HTMLCanvasElement object!' );
 		}
+	};
+
+	this.onRemoved = function()
+	{
+		_.owner.forAllComponentsOfType( Sprite, function( sprite ) {
+			sprite.deleteParent();
+		} );
 	};
 
 	/**
@@ -265,6 +283,15 @@ function Sprite( _source )
 		_.scale.stop();
 		_.rotation.stop();
 		_.alpha.stop();
+		return _;
+	};
+
+	/**
+	 * Reset parent/ancestor Sprite reference
+	 */
+	this.deleteParent = function()
+	{
+		parent = null;
 		return _;
 	};
 

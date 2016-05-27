@@ -213,7 +213,7 @@ function GameScene( controller )
 				entity = part.owner;
 				minimum_distance = distance;
 			}
-		});
+		} );
 
 		if ( minimum_distance < 200 && drone.get( Point ).getAbsoluteVelocity() < 50 ) {
 			drone.get( Drone ).dockWith( entity );
@@ -252,7 +252,7 @@ function GameScene( controller )
 		// Spin stabilization
 		input.on( 'S', function() {
 			drone.get( Drone ).stabilize();
-		});
+		} );
 
 		// Docking mode
 		input.on( 'D', function() {
@@ -261,7 +261,7 @@ function GameScene( controller )
 			} else {
 				drone.get( Drone ).abortDocking();
 			}
-		});
+		} );
 	}
 
 	// --------------------------------------- //

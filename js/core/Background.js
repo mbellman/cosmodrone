@@ -1,4 +1,4 @@
-(function( scope ) {
+( function( scope ) {
 	/**
 	 * -------------------
 	 * Class: TextureCache
@@ -1103,4 +1103,4 @@
 	}
 
 	scope.Background = Background;
-})(window);
+} )( window );

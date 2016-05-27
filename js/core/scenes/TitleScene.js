@@ -32,6 +32,24 @@ function TitleScene( controller )
 		6: 3, 7: 3,
 		8: 4, 9: 4, 10: 4, 11: 4, 12: 4, 13: 4, 14: 4, 15: 4, 16: 4
 	};
+	var planets = {
+		earth: {
+			x: 600,
+			y: 325,
+			radius: 230
+		},
+		moon: {
+			x: 2100,
+			y: 325,
+			radius: 100
+		},
+		mars: {
+			x: 5600,
+			y: 325,
+			radius: 180
+		}
+	};
+	// TODO: Remove this once stations are automatically set
 	var stations = [
 		// Earth
 		{x: 200, y: 200},
@@ -88,7 +106,7 @@ function TitleScene( controller )
 			logo: {tween: 'alpha', to: 1, time: slide, ease: Ease.quad.in},
 			starlogo: {tween: 'alpha', to: 1, time: slide, ease: Ease.quad.in},
 			TITLE_MENU: {tween: 'alpha', to: 1, time: slide, ease: Ease.quad.out},
-			LEVEL_MENU: {tween: 'alpha', to: 0, time: slide, ease: Ease.quad.out}
+			LEVEL_MENU: {tween: 'y', to: -Viewport.height, time: slide, ease: Ease.quad.inOut }
 		},
 		// To level select
 		2: {
@@ -100,7 +118,7 @@ function TitleScene( controller )
 			logo: {tween: 'alpha', to: 0, time: slide, ease: Ease.quad.out},
 			starlogo: {tween: 'alpha', to: 0, time: slide, ease: Ease.quad.in},
 			TITLE_MENU: {tween: 'alpha', to: 0, time: ( slide / 2 ), ease: Ease.quad.out},
-			LEVEL_MENU: {tween: 'alpha', to: 1, time: slide, ease: Ease.quad.in}
+			LEVEL_MENU: {tween: 'y', to: 0, time: slide, ease: Ease.quad.inOut }
 		}
 	};
 
@@ -271,39 +289,6 @@ function TitleScene( controller )
 		var MOON_TEXTURE = Assets.getImage( 'title/level-select/moon.png' );
 		var MARS_TEXTURE = Assets.getImage( 'title/level-select/mars.png' );
 
-		var orbits = {
-			earth: [{x: 315, y: 150, inclination: 23}]
-		};
-
-		// Orbital paths
-		var orbits_BG = new Entity();
-		var orbits_FG = new Entity();
-		var orbit, PATH_BG, PATH_BG;
-
-		for ( var planet in orbits ) {
-			if ( orbits.hasOwnProperty( planet ) ) {
-				orbit = orbits[planet];
-
-				for ( var o = 0 ; o < orbit.length ; o++ ) {
-					PATH_BG = Assets.getImage( 'title/level-select/orbits/' + planet + '-' + ( o + 1 ) + '-bg.png' );
-					PATH_FG = Assets.getImage( 'title/level-select/orbits/' + planet + '-' + ( o + 1 ) + '-fg.png' );
-
-					orbits_BG.addChild( new Entity().add(
-						new Sprite( PATH_BG )
-							.setXY( orbit[o].x, orbit[o].y )
-							.setRotation( orbit[o].inclination )
-							.setAlpha( 0.2 )
-					) );
-					orbits_FG.addChild( new Entity().add(
-						new Sprite( PATH_FG ).setXY( orbit[o].x, orbit[o].y )
-							.setOrigin( 0, -PATH_BG.height )
-							.setRotation( orbit[o].inclination )
-							.setAlpha( 0.2 )
-					) );
-				}
-			}
-		}
-
 		/**
 		 * Change the [alpha] of an orbital line path by [index]
 		 */
@@ -318,48 +303,8 @@ function TitleScene( controller )
 			}
 		}
 
-		// Planet entities
-		var space = new Entity()
-			.add( new Sprite() )
-			.addChild( orbits_BG )
-			.addChild(
-				new Entity().add(
-					new Sphere()
-						.setRadius( 225 )
-						.setTexture( EARTH_TEXTURE )
-						.setAmbientLight( 0.4 )
-						.setRotationSpeed( -10 )
-						.setResolution( 2 )
-						.setXY( 362, 92 )
-						.render()
-				),
-				new Entity().add(
-					new Sphere()
-						.setRadius( 100 )
-						.setTexture( MOON_TEXTURE )
-						.setAmbientLight( 0.1 )
-						.setLightDiffusion( 0.1 )
-						.setRotationSpeed( -2 )
-						.setResolution( 2 )
-						.setXY( 2000, 200 )
-						.render()
-				),
-				new Entity().add(
-					new Sphere()
-						.setRadius( 180 )
-						.setTexture( MARS_TEXTURE )
-						.setAmbientLight( 0.6 )
-						.setLightDiffusion( 0.5 )
-						.setRotationSpeed( -8 )
-						.setResolution( 2 )
-						.setXY( 5425, 150 )
-						.render()
-				)
-			)
-			.addChild( orbits_FG );
-
-		// Space station icon entities
-		var space_stations = new Entity().addToParent( space );
+		// Space station icons
+		var space_stations = new Entity();
 
 		for ( var s = 0 ; s < stations.length ; s++ ) {
 			space_stations.addChild(
@@ -368,6 +313,104 @@ function TitleScene( controller )
 				)
 			);
 		}
+
+		// Orbital path outlines
+		var orbit_types = {
+			earth: {
+				1: {width: 595, height: 100}
+			}
+		};
+
+		var orbits = {
+			earth: [
+				{type: 1, period: 9, inclination: 23, station: 1},
+				{type: 1, period: 9, inclination: -37, station: 2},
+				{type: 1, period: 9, inclination: 48, station: 3},
+				{type: 1, period: 9, inclination: -17, station: 4}
+			]
+		};
+
+		var orbits_BG = new Entity();
+		var orbits_FG = new Entity();
+		var P_orbits, orbit, PLANET_COORDS, ORBIT_PATH, PATH_BG, PATH_BG;
+
+		for ( var planet in orbits ) {
+			if ( orbits.hasOwnProperty( planet ) ) {
+				P_orbits = orbits[planet];
+
+				for ( var o = 0 ; o < P_orbits.length ; o++ ) {
+					orbit = P_orbits[o];
+					PLANET_COORDS = planets[planet];
+					ORBIT_PATH = orbit_types[planet][orbit.type];
+					PATH_BG = Assets.getImage( 'title/level-select/orbits/' + planet + '-' + orbit.type + '-bg.png' );
+					PATH_FG = Assets.getImage( 'title/level-select/orbits/' + planet + '-' + orbit.type + '-fg.png' );
+
+					orbits_BG.addChild( new Entity().add(
+						new Sprite( PATH_BG )
+							.setXY( PLANET_COORDS.x, PLANET_COORDS.y )
+							.setOrigin( PATH_BG.width / 2, PATH_BG.height )
+							.setRotation( orbit.inclination )
+							.setAlpha( 0.2 )
+					) );
+
+					orbits_FG.addChild( new Entity().add(
+						new Sprite( PATH_FG )
+							.setXY( PLANET_COORDS.x, PLANET_COORDS.y )
+							.setOrigin( PATH_FG.width / 2, 0 )
+							.setRotation( orbit.inclination )
+							.setAlpha( 0.2 )
+					) );
+
+					space_stations.child( orbit.station - 1 ).add(
+						new Oscillation( ORBIT_PATH.width, ORBIT_PATH.height )
+							.setAnchor( planets[planet].x, planets[planet].y )
+							.setPeriod( orbit.period )
+							.setRotation( orbit.inclination )
+					);
+				}
+			}
+		}
+
+		// Planets/moons/etc.
+		var space = new Entity()
+			.add( new Sprite() )
+			.addChild( orbits_BG )
+			.addChild(
+				new Entity().add(
+					new Sphere()
+						.setRadius( planets.earth.radius )
+						.setTexture( EARTH_TEXTURE )
+						.setAmbientLight( 0.4 )
+						.setRotationSpeed( -10 )
+						.setResolution( 2 )
+						.setXY( planets.earth.x, planets.earth.y )
+						.render()
+				),
+				new Entity().add(
+					new Sphere()
+						.setRadius( planets.moon.radius )
+						.setTexture( MOON_TEXTURE )
+						.setAmbientLight( 0.1 )
+						.setLightDiffusion( 0.1 )
+						.setRotationSpeed( -2 )
+						.setResolution( 2 )
+						.setXY( planets.moon.x, planets.moon.y )
+						.render()
+				),
+				new Entity().add(
+					new Sphere()
+						.setRadius( planets.mars.radius )
+						.setTexture( MARS_TEXTURE )
+						.setAmbientLight( 0.6 )
+						.setLightDiffusion( 0.5 )
+						.setRotationSpeed( -8 )
+						.setResolution( 2 )
+						.setXY( planets.mars.x, planets.mars.y )
+						.render()
+				)
+			)
+			.addChild( orbits_FG )
+			.addChild( space_stations );
 
 		// Level description text
 		var text = new Entity().add(
@@ -422,7 +465,7 @@ function TitleScene( controller )
 		);
 
 		props.LEVEL_MENU = new Entity()
-			.add( new Sprite().setAlpha( 0 ) )
+			.add( new Sprite().setXY( 0, -Viewport.height ) )
 			.addChild( space, text, menu );
 	}
 
@@ -433,7 +476,7 @@ function TitleScene( controller )
 	{
 		props.LEVEL_MENU.forAllComponentsOfType( Sphere, function( sphere ) {
 			sphere.pause();
-		});
+		} );
 	}
 
 	/**
@@ -443,7 +486,7 @@ function TitleScene( controller )
 	{
 		props.LEVEL_MENU.forAllComponentsOfType( Sphere, function( sphere ) {
 			sphere.resume();
-		});
+		} );
 	}
 
 	// -------------------------------------------- //

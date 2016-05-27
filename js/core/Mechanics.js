@@ -147,6 +147,93 @@ function Point()
 }
 
 /**
+ * ----------------------
+ * Component: Oscillation
+ * ----------------------
+ *
+ * Oscillates a Sprite by having it trace
+ * out a parameterized elliptical path
+ */
+function Oscillation( width, height )
+{
+	Component.call( this );
+
+	// -- Private: --
+	var _ = this;
+	var sprite = null;
+	var period = 0;
+	var t = 0;
+	var angle = {
+		sine: 0,
+		cosine: 1
+	};
+	var anchor = {
+		x: null,
+		y: null
+	};
+	var radius = {
+		x: ( width / 2 ),
+		y: ( height / 2 )
+	};
+
+	// -- Public: --
+	this.update = function( dt )
+	{
+		t += ( dt / period );
+
+		var COS_t = Math.cos( t );
+		var SIN_t = Math.sin( t );
+
+		if ( sprite !== null ) {
+			sprite.x._ = anchor.x + ( radius.x * COS_t * angle.cosine ) - ( radius.y * SIN_t * angle.sine );
+			sprite.y._ = anchor.y + ( radius.y * SIN_t * angle.cosine ) + ( radius.x * COS_t * angle.sine );
+		}
+	};
+
+	this.onAdded = function()
+	{
+		if ( _.owner.has( Sprite ) ) {
+			sprite = _.owner.get( Sprite );
+		}
+
+		if ( anchor.x === null && anchor.y === null ) {
+			anchor.x = sprite.x._;
+			anchor.y = sprite.y._;
+		}
+	};
+
+	/**
+	 * Set the anchor point for the revolution
+	 */
+	this.setAnchor = function( _x, _y )
+	{
+		anchor.x = _x;
+		anchor.y = _y;
+		return _;
+	};
+
+	/**
+	 * Set the oscillation period (time to complete a full revolution)
+	 */
+	this.setPeriod = function( seconds )
+	{
+		period = ( seconds / Math.PI );
+		return _;
+	};
+
+	/**
+	 * Set the rotate of the ellipse path
+	 */
+	this.setRotation = function( _angle )
+	{
+		_angle = mod( _angle, 360 ) * Math.PI_RAD;
+		angle.sine = Math.sin( _angle );
+		angle.cosine = Math.cos( _angle );
+		return _;
+	};
+}
+
+/**
  * -----------------------
  * Component: HardwarePart
  * -----------------------

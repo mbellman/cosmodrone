@@ -629,7 +629,7 @@ function Terrain()
 
 			var pixel = terrain_IMG.getPixelIndex( x, y );
 			terrain_IMG.write( pixel, tile_RGB );
-		});
+		} );
 
 		terrain_canvas.data.put( terrain_IMG );
 		time_canvas.data.put( terrain_canvas.data.get() );

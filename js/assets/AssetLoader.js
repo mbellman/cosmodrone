@@ -6,7 +6,7 @@
  * -----------------
  */
 
-(function( scope ) {
+( function( scope ) {
 	/**
 	 * ------------------
 	 * Class: AudioBuffer
@@ -72,7 +72,7 @@
 					_.media = -1;
 					onError( _.path );
 				}
-			});
+			} );
 		}
 
 		/**
@@ -302,14 +302,14 @@
 					.from( _root + assets.images.folder + '/' + file )
 					.loaded( INTERNAL_load_progress )
 					.fail( onError );
-			});
+			} );
 
 			audio.forEach( function( file ) {
 				new Asset( 'audio' )
 					.from( _root + assets.audio.folder + '/' + file )
 					.loaded( INTERNAL_load_progress )
 					.fail( onError );
-			});
+			} );
 		}
 
 		// -- Public: --
@@ -362,4 +362,4 @@
 
 	scope.Assets = {};
 	scope.AssetLoader = AssetLoader;
-})( window );
+} )( window );

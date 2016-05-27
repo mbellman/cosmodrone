@@ -1,4 +1,4 @@
-(function( scope ) {
+( function( scope ) {
 	/**
 	 * -------------------
 	 * Component: GridMenu
@@ -87,7 +87,7 @@
 				}
 
 				index++;
-			});
+			} );
 
 			if ( closest !== selection ) {
 				events.unfocus( stage.child( selection ), selection );
@@ -605,4 +605,4 @@
 	}
 
 	scope.Menu = Menu;
-})( window );
+} )( window );

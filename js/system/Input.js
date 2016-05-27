@@ -1,4 +1,4 @@
-(function( scope ) {
+( function( scope ) {
 	/**
 	 * ----------------
 	 * Object: KeyCodes
@@ -263,4 +263,4 @@
 
 	scope.InputHandler = InputHandler;
 	scope.Keys = Keys;
-})( window );
+} )( window );
