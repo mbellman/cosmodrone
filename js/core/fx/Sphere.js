@@ -14,11 +14,14 @@ function Sphere()
 	var render = new Canvas();
 	var render_IMG;
 	var texture = new Canvas();
+	var TEXTURE_W = 0;
+	var TEXTURE_H = 0;
 	var light = new Vector( -100, 10, -100 ).normalize( 1 );
 	var ambience = 0.75;
 	var diffusion = 0.75;
 	var radius = 0;
 	var resolution = 1;
+	var paused = false;
 	var position = {
 		x: 0,
 		y: 0
@@ -30,7 +33,7 @@ function Sphere()
 	var maps = {
 		UV: [],
 		color: [],
-		light: []
+		shadow: []
 	};
 
 	/**
@@ -65,8 +68,6 @@ function Sphere()
 	{
 		maps.color.length = 0;
 		var image = texture.data.get();
-		var TEXTURE_W = texture.element.width;
-		var TEXTURE_H = texture.element.height;
 
 		for ( var y = 0 ; y < TEXTURE_H ; y++ ) {
 			maps.color[TEXTURE_H - y - 1] = [];
@@ -84,9 +85,6 @@ function Sphere()
 	function build_UV_map()
 	{
 		maps.UV.length = 0;
-
-		var TEXTURE_W = texture.element.width;
-		var TEXTURE_H = texture.element.height;
 		var surface, UV;
 
 		for ( var y = -radius ; y < radius ; y++ ) {
@@ -94,11 +92,10 @@ function Sphere()
 
 			for ( var x = -radius ; x < radius ; x++ ) {
 				if ( Math.sqrt( x * x + y * y ) < radius ) {
-					n = false;
 					surface = get_sphere_coordinates( x, y ).normalize( 1 );
 					UV = get_UV_coordinates( surface.n[0], surface.n[1], surface.n[2] );
 					UV.u = UV.u * TEXTURE_W;
-					UV.v = Math.floor( UV.v * TEXTURE_H );
+					UV.v = Math.floor( UV.v * TEXTURE_H ) % TEXTURE_H;
 					maps.UV[y + radius][x + radius] = UV;
 				}
 			}
@@ -106,15 +103,15 @@ function Sphere()
 	}
 
 	/**
-	 * Cache the light map based on the [light_source] vector
+	 * Cache the shadow map based on the [light_source] vector
 	 */
 	function build_light_map()
 	{
-		maps.light.length = 0;
-		var surface, dot, exponent, luminosity;
+		maps.shadow.length = 0;
+		var surface, dot, exponent, shadow;
 
 		for ( var y = -radius ; y < radius ; y++ ) {
-			maps.light[y + radius] = [];
+			maps.shadow[y + radius] = [];
 
 			for ( var x = -radius ; x < radius ; x++ ) {
 				if ( Math.sqrt( x * x + y * y ) < radius ) {
@@ -122,53 +119,59 @@ function Sphere()
 					dot = Vector.dotProduct( light, surface );
 					dot = ( dot < 0 ? -dot : 0 );
 					exponent = Math.pow( dot, diffusion ) + ambience;
-					luminosity = clamp( ( 1 - exponent ) * 255, 0, 255 );
-					maps.light[y + radius][x + radius] = Math.floor( luminosity );
+					shadow = clamp( ( 1 - exponent ) * 255, 0, 255 );
+					maps.shadow[y + radius][x + radius] = Math.floor( shadow );
 				}
 			}
 		}
 	}
 
 	// -- Public: --
-	this.update = function( dt )
+	this.update = function( dt, force_render )
 	{
+		if ( paused ) return;
+
 		rotation.angle += ( rotation.speed * dt );
 		rotation.angle = mod( rotation.angle, 360 );
 
 		if (
-			radius <= 0 ||
-			!_.owner.get( Sprite ).isOnScreen() ||
-			_.owner.get( Sprite ).getProperAlpha() === 0
+			!force_render &&
+			(
+				radius <= 0 ||
+				!_.owner.get( Sprite ).isOnScreen() ||
+				_.owner.get( Sprite ).getProperAlpha() === 0
+			)
 		) {
 			return;
 		}
 
 		render.clear();
 
-		var TEXTURE_W = texture.element.width
-		var TEXTURE_H = texture.element.height;
 		var rotation_ratio = ( rotation.angle / 360 );
 		var rotation_shift = rotation_ratio * TEXTURE_W;
-		var i, j, pixel, UV, TEXTURE = {}, hue = {}, luminosity;
+		var i, j, pixel, UV_ROW, SHADOW_ROW, UV, TEXTURE = {}, hue = {}, shadow;
+
+		hue.alpha = 255;
 
 		for ( var y = 0 ; y < render.element.height ; y += resolution ) {
 			j = Math.pow( y - radius, 2 );
+
+			UV_ROW = maps.UV[y];
+			SHADOW_ROW = maps.shadow[y];
 
 			for ( var x = 0 ; x < render.element.width ; x += resolution ) {
 				i = Math.pow( x - radius, 2 );
 
 				if ( Math.sqrt( i + j ) < radius ) {
-					UV = maps.UV[y][x];
-					luminosity = maps.light[y][x];
+					UV = UV_ROW[x];
+					shadow = SHADOW_ROW[x];
 
 					TEXTURE.x = Math.floor( UV.u + rotation_shift ) % TEXTURE_W;
-					TEXTURE.y = UV.v;
-					TEXTURE.RGB = maps.color[TEXTURE.y][TEXTURE.x];
+					TEXTURE.RGB = maps.color[UV.v][TEXTURE.x];
 
-					hue.red = TEXTURE.RGB.red - 2 * luminosity;
-					hue.green = TEXTURE.RGB.green - 2 * luminosity;
-					hue.blue = TEXTURE.RGB.blue - luminosity;
-					hue.alpha = 255;
+					hue.red = TEXTURE.RGB.red - 2 * shadow;
+					hue.green = TEXTURE.RGB.green - 2 * shadow;
+					hue.blue = TEXTURE.RGB.blue - shadow;
 
 					for ( var py = 0 ; py < resolution ; py++ ) {
 						for ( var px = 0 ; px < resolution ; px++ ) {
@@ -208,6 +211,8 @@ function Sphere()
 	{
 		texture.setSize( asset.width, asset.height );
 		texture.draw.image( asset );
+		TEXTURE_W = texture.element.width;
+		TEXTURE_H = texture.element.height;
 		return _;
 	};
 
@@ -290,6 +295,28 @@ function Sphere()
 		build_color_map();
 		build_UV_map();
 		build_light_map();
+		return _;
+	};
+
+	/**
+	 * Stop update cycle
+	 */
+	this.pause = function()
+	{
+		paused = false;
+		// Force one render update to
+		// ensure the sphere is shown
+		_.update( 0.016, true );
+		paused = true;
+		return _;
+	};
+
+	/**
+	 * Resume update cycle
+	 */
+	this.resume = function()
+	{
+		paused = false;
 		return _;
 	};
 }

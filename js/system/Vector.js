@@ -90,7 +90,7 @@ function Vector()
  */
 Vector.prototype.copy = function( vector )
 {
-	for ( var v = 0 ; v < vector.length ; v++ ) {
+	for ( var v = 0 ; v < vector.n.length ; v++ ) {
 		this.n[v] = vector.n[v];
 	}
 

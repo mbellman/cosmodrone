@@ -47,6 +47,7 @@ function Tweenable( value )
 		end: 0,
 		running_time: 0,
 		complete_time: 0,
+		onComplete: function() {},
 		ease: null
 	};
 	var delay = 0;
@@ -71,6 +72,7 @@ function Tweenable( value )
 			{
 				_._ = tween.end;
 				_.stop();
+				tween.onComplete();
 				return;
 			}
 
@@ -83,13 +85,14 @@ function Tweenable( value )
 	/**
 	 * Start a tween to [value] over [seconds] using [easing]
 	 */
-	this.tweenTo = function( value, seconds, easing )
+	this.tweenTo = function( value, seconds, easing, callback )
 	{
 		tween.on = true;
 		tween.start = _._;
 		tween.end = value;
 		tween.running_time = 0;
 		tween.complete_time = seconds * 1000;
+		tween.onComplete = callback || tween.onComplete;
 		tween.ease = easing;
 	};
 

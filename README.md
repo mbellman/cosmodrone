@@ -5,8 +5,6 @@ A game about space station maintenance!
 
 ##### GAME
 * Get better menu/text sounds
-* Momentum panning on level select screen (?)
-* Have level select space stations move around/show paths (?)
 * Text coloring
 * Loading bar/indicator of some kind (connect level menu with gameplay!!!)
 * New drone sprite
@@ -18,6 +16,8 @@ A game about space station maintenance!
 * Alerts screen with ability to select hardware maintenance jobs
 * Handler for drone running out of power/fuel
 * Ability to move drone above or below the station
+* Momentum panning on level select screen (?)
+* Have level select space stations move around/show paths (?)
 * Moving docking targets (later-stage development) (?)
 * Scene zoom-out when speeding up (?)
 * Replace jQuery with vanilla JS (?)

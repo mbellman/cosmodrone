@@ -193,14 +193,6 @@ function Entity()
 	};
 
 	/**
-	 * Returns the [n]th child of the entity if one exists
-	 */
-	this.child = function( n )
-	{
-		return children[n] || null;
-	};
-
-	/**
 	 * Verify that this Entity has a Component by instance name
 	 */
 	this.has = function( component )
@@ -262,5 +254,13 @@ function Entity()
 		for ( var c = 0 ; c < children.length ; c++ ) {
 			handler( children[c] );
 		}
+	};
+
+	/**
+	 * Returns the [n]th child of the entity if one exists
+	 */
+	this.child = function( n )
+	{
+		return children[n] || null;
 	};
 }
