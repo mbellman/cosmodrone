@@ -70,14 +70,13 @@
 	 */
 	DrawOperation.prototype.ellipse = function( x, y, a, b )
 	{
-		var cy = ( b / 0.75 ) / 2;
-		var a2 = a / 2;
-		var b2 = b / 2;
+		var control_Y = ( b / 0.75 ) / 2;
+		var half_A = a / 2;
 
 		this.ctx.beginPath();
-		this.ctx.moveTo( x - a2, y );
-		this.ctx.bezierCurveTo( x - a2, y + cy, x + a2, y + cy, x + a2, y );
-		this.ctx.bezierCurveTo( x + a2, y - cy, x - a2, y - cy, x - a2, y );
+		this.ctx.moveTo( x - half_A, y );
+		this.ctx.bezierCurveTo( x - half_A, y + control_Y, x + half_A, y + control_Y, x + half_A, y );
+		this.ctx.bezierCurveTo( x + half_A, y - control_Y, x - half_A, y - control_Y, x - half_A, y );
 		this.ctx.stroke();
 
 		return this.shape;

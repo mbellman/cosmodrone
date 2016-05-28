@@ -231,14 +231,14 @@ function TitleScene( controller )
 						{
 							font: 'Monitor',
 							options: {
-								'LEVEL SELECT': view_level_select,
+								'STATION SELECT': view_level_select,
 								'STATION BUILDER': null,
 								'CREDITS': null
 							},
 							sounds: {
-								cursor: Assets.getAudio( 'ui/blip2.wav' ),
-								select: Assets.getAudio( 'ui/blip2.wav' ),
-								invalid: Assets.getAudio( 'ui/blip1.wav' )
+								cursor: Assets.getAudio( 'ui/chime1.wav' ),
+								select: Assets.getAudio( 'ui/select.wav' ),
+								invalid: Assets.getAudio( 'ui/error1.wav' )
 							},
 							cursor: Assets.getImage( 'ui/drone-cursor.png' ),
 							cursorOffset: {
@@ -373,11 +373,11 @@ function TitleScene( controller )
 		var orbits_BG = new Entity();
 		var orbits_FG = new Entity();
 		var space_stations = new Entity();
-		var TOTAL_STATIONS = 0;
+		var station_total = 0;
 
 		for ( var station in station_orbits ) {
 			if ( station_orbits.hasOwnProperty( station ) ) {
-				TOTAL_STATIONS++;
+				station_total++;
 
 				space_stations.addChild(
 					new Entity().add(
@@ -436,7 +436,7 @@ function TitleScene( controller )
 		)
 		.add(
 			new TextPrinter( 'Monitor' )
-				.setSound( Assets.getAudio( 'ui/blip1.wav' ) )
+				.setSound( Assets.getAudio( 'ui/blip1.wav' ), Assets.getAudio( 'ui/blip2.wav' ) )
 				.setInterval( 25 )
 		);
 
@@ -445,7 +445,7 @@ function TitleScene( controller )
 			new Menu( 'grid' )
 				.configure(
 					{
-						items: TOTAL_STATIONS,
+						items: station_total,
 						options: function( i ) {
 							return new Entity().add(
 								new Sprite().setXY( 20 * i, 0 )
@@ -456,9 +456,8 @@ function TitleScene( controller )
 								.setSource( STATION_ICON_SELECTED )
 								.centerOrigin();
 
-							text.find( TextPrinter ).print( level_text[++i] );
-
 							INTERNAL_set_orbit_alpha( i, 1 );
+							text.find( TextPrinter ).print( level_text[++i] );
 
 							if ( station_orbits[i].zone !== mission_zone ) {
 								mission_zone = station_orbits[i].zone;
@@ -484,9 +483,9 @@ function TitleScene( controller )
 							return false;
 						},
 						sounds: {
-							cursor: Assets.getAudio( 'ui/blip2.wav' ),
-							select: Assets.getAudio( 'ui/blip2.wav' ),
-							invalid: Assets.getAudio( 'ui/blip1.wav' )
+							cursor: Assets.getAudio( 'ui/chime1.wav' ),
+							select: Assets.getAudio( 'ui/select.wav' ),
+							invalid: Assets.getAudio( 'ui/error1.wav' )
 						}
 					}
 				)

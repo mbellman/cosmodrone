@@ -316,6 +316,17 @@ function Sprite( _source )
 }
 
 /**
+ * Static method for determining whether a bounding box is on-screen
+ */
+Sprite.isOnScreen = function( x, y, width, height )
+{
+	return (
+		( x < Viewport.width && x + width > 0 ) &&
+		( y < Viewport.height && y + height > 0 )
+	);
+};
+
+/**
  * ---------------------
  * Component: FillSprite
  * ---------------------

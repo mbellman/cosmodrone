@@ -91,6 +91,9 @@ var AssetManifest =
 		[
 			'ui/blip1.wav',
 			'ui/blip2.wav',
+			'ui/chime1.wav',
+			'ui/error1.wav',
+			'ui/select.wav',
 		],
 	}
 };

@@ -11,9 +11,19 @@
 	{
 		// -- Private: --
 		var _ = this;
-		var T_size = {};
+		var TEXTURE_W = 0;
+		var TEXTURE_H = 0;
 		var divisions = 1;
 		var chunks = [];
+		var CHUNK_W = TEXTURE_W / divisions;
+		var CHUNK_H = TEXTURE_H / divisions;
+
+		// Reusable Objects for tiling loop
+		var pixel = {};
+		var T_coord = {};
+		var chunk = {};
+		var draw = {};
+		var clip = {};
 
 		/**
 		 * Set up texture [chunks] array
@@ -37,29 +47,29 @@
 			divisions = _divisions;
 			create_chunks();
 
-			// Save original [texture] size
-			T_size.width = texture.width;
-			T_size.height = texture.height;
+			TEXTURE_W = texture.width;
+			TEXTURE_H = texture.height;
 
-			var chunk_W = texture.width / divisions;
-			var chunk_H = texture.height / divisions;
+			CHUNK_W = TEXTURE_W / divisions;
+			CHUNK_H = TEXTURE_H / divisions;
+
 			var clip, chunk;
 
 			for ( var y = 0 ; y < divisions ; y++ ) {
 				for ( var x = 0 ; x < divisions ; x++ ) {
 					clip = {
-						x: ( x * chunk_W ),
-						y: ( y * chunk_H ),
-						width: chunk_W,
-						height: chunk_H
+						x: ( x * CHUNK_W ),
+						y: ( y * CHUNK_H ),
+						width: CHUNK_W,
+						height: CHUNK_H
 					};
 
-					chunk = new Canvas().setSize( chunk_W, chunk_H );
+					chunk = new Canvas().setSize( CHUNK_W, CHUNK_H );
 
 					chunk.draw.image(
 						texture,
 						clip.x, clip.y, clip.width, clip.height,
-						0, 0, chunk_W, chunk_H
+						0, 0, CHUNK_W, CHUNK_H
 					);
 
 					chunks[y][x] = chunk.element;
@@ -71,26 +81,22 @@
 
 		/**
 		 * Draw the texture [chunks] onto a target [canvas],
-		 * beginning at clip position [startX, startY] and
+		 * beginning at clip position [clip_X, clip_Y] and
 		 * tiling over the region [x, y, region_W, region_H]
 		 */
-		this.tileOnto = function( canvas, startX, startY, x, y, region_W, region_H )
+		this.tileOnto = function( canvas, clip_X, clip_Y, x, y, region_W, region_H )
 		{
-			startX = startX || 0;
-			startY = startY || 0;
+			clip_X = clip_X || 0;
+			clip_Y = clip_Y || 0;
 			x = x || 0;
 			y = y || 0;
 			region_W = region_W || canvas.getSize().width;
 			region_H = region_H || canvas.getSize().height;
 
-			var pixel = {
-				x: x,
-				y: y
-			};
+			pixel.x = x;
+			pixel.y = y;
 
-			var chunk_W = T_size.width / divisions;
-			var chunk_H = T_size.height / divisions;
-			var T_coord = {}, chunk = {}, draw = {}, clip = {}, loops = 0;
+			var loops = 0;
 
 			// Steps:
 			// -----
@@ -109,23 +115,23 @@
 					break;
 				}
 
-				T_coord.x = mod( pixel.x + startX, T_size.width );
-				T_coord.y = mod( pixel.y + startY, T_size.height );
+				T_coord.x = mod( pixel.x + clip_X, TEXTURE_W );
+				T_coord.y = mod( pixel.y + clip_Y, TEXTURE_H );
 
-				chunk.x = Math.floor( T_coord.x / chunk_W );
-				chunk.y = Math.floor( T_coord.y / chunk_H );
+				chunk.x = Math.floor( T_coord.x / CHUNK_W );
+				chunk.y = Math.floor( T_coord.y / CHUNK_H );
 				chunk.texture = chunks[chunk.y][chunk.x];
 
-				clip.x = T_coord.x % chunk_W;
-				clip.y = T_coord.y % chunk_H;
+				clip.x = T_coord.x % CHUNK_W;
+				clip.y = T_coord.y % CHUNK_H;
 
 				draw.x = x + pixel.x,
 				draw.y = y + pixel.y;
 
 				// Clip width/height should stop either at the edge
 				// of the chunk or the edge of the draw region
-				clip.width = Math.min( chunk_W - clip.x, region_W - draw.x );
-				clip.height = Math.min( chunk_H - clip.y, region_H - draw.y );
+				clip.width = Math.min( CHUNK_W - clip.x, region_W - draw.x );
+				clip.height = Math.min( CHUNK_H - clip.y, region_H - draw.y );
 
 				canvas.draw.image(
 					chunk.texture,
@@ -157,45 +163,20 @@
 	{
 		Component.call( this );
 
-		// -- Private: --
-		var _ = this;
-		var image;
-		var shadow;
-		var type;
+		/**
+		 * Source asset
+		 */
+		this.image;
 
-		// -- Public: --
-		this.getImage = function()
-		{
-			return image;
-		}
+		/**
+		 * Shadow asset
+		 */
+		this.shadow;
 
-		this.getShadow = function()
-		{
-			return shadow;
-		}
-
-		this.getType = function()
-		{
-			return type;
-		}
-
-		this.setImage = function( _image )
-		{
-			image = _image;
-			return _;
-		}
-
-		this.setShadow = function( _shadow )
-		{
-			shadow = _shadow;
-			return _;
-		}
-
-		this.setType = function( _type )
-		{
-			type = _type;
-			return _;
-		}
+		/**
+		 * Cloud type by name
+		 */
+		this.type;
 	}
 
 	/**
@@ -219,7 +200,7 @@
 		var shadow_renders = [];                           // Prerendered cloud shadows, scaled based on [configuration.tileSize]
 		var cloud_stage;                                   // Clouds are drawn here before being composited onto [screen.clouds]
 		var clouds = [];                                   // Active cloud objects on screen
-		var shadow_offset = {};                            // Offset for cloud shadows; determined via [configuration.lightAngle]
+		var SHADOW_OFFSET = {};                            // Offset for cloud shadows; determined via [configuration.lightAngle]
 		var camera;                                        // The scrolling background camera instance
 		var front_bg = 0;                                  // Binary; represents the current front screen of the background cycle
 		var active_terrain = 0;                            // Current time-of-day terrain prerender being shown
@@ -379,7 +360,7 @@
 		 */
 		function set_shadow_offset()
 		{
-			shadow_offset = {
+			SHADOW_OFFSET = {
 				x: configuration.tileSize * 8 * Math.cos( configuration.lightAngle * Math.PI_RAD ) * -1,
 				y: configuration.tileSize * 8 * Math.sin( configuration.lightAngle * Math.PI_RAD )
 			};
@@ -587,8 +568,8 @@
 		{
 			var type = cloud_bank[index].type;
 			var is_cirrus = ( type === 'cirrus' );
-			var cloud_image = cloud_renders[index].element;
-			var shadow_image = ( is_cirrus ? null : shadow_renders[index].element );
+			var cloud_IMG = cloud_renders[index].element;
+			var shadow_IMG = ( is_cirrus ? null : shadow_renders[index].element );
 			
 			var velocity = {
 				x: configuration.scrollSpeed.x,
@@ -599,10 +580,10 @@
 				.setVelocity( velocity.x, velocity.y )
 				.setPosition( x, y );
 
-			var cloud = new Cloud()
-				.setImage( cloud_image )
-				.setShadow( shadow_image )
-				.setType( type );
+			var cloud = new Cloud();
+			cloud.image = cloud_IMG;
+			cloud.shadow = shadow_IMG;
+			cloud.type = type;
 
 			clouds.push(
 				new Entity()
@@ -796,7 +777,7 @@
 			var point = cloud.get( Point );
 			var position = point.getPosition();
 			var velocity = point.getVelocity();
-			var image = cloud.get( Cloud ).getImage();
+			var image = cloud.get( Cloud ).image;
 
 			if ( velocity.x < 0 && position.x + image.width < 0 ) {
 				// Cloud scrolling left and off left edge
@@ -914,37 +895,36 @@
 			screen.clouds.clear();
 
 			// Light level color rendering
-			var color = get_time_color();
-			screen.clouds.setCompositing( 'source-over' ).setAlpha( 0.7 );
-			screen.clouds.draw
-				.rectangle( 0, 0, Viewport.width, Viewport.height )
-				.fill( rgb( color.red, color.green, color.blue ) );
+			var light = get_time_color();
+
+			screen.clouds
+				.setCompositing( 'source-over' )
+				.setAlpha( 0.7 )
+				.draw.rectangle( 0, 0, Viewport.width, Viewport.height )
+				.fill( rgb( light.red, light.green, light.blue ) );
 
 			// Cloud/shadow rendering
-			var viewport_W2 = Viewport.width / 2;
-			var viewport_H2 = Viewport.height / 2;
-			var cirrus_offset = ( 40 / viewport_W2 );
-			var normal_offset = ( 15 / viewport_H2 );
-			var cloud, position, instance, sprite, shadow, offset_factor, offset, draw;
+			var VIEWPORT_HALF_W = Viewport.width / 2;
+			var VIEWPORT_HALF_H = Viewport.height / 2;
+			var CIRRUS_PARALLAX = ( 40 / VIEWPORT_HALF_W );
+			var NORMAL_PARALLAX = ( 15 / VIEWPORT_HALF_H );
+			var cloud, position, image, shadow, parallax, offset, draw = {};
 
 			for ( var c = 0 ; c < clouds.length ; c++ ) {
 				cloud = clouds[c];
 				position = cloud.get( Point ).getPosition( configuration.pixelSnapping );
-				instance = cloud.get( Cloud );
-				sprite = instance.getImage();
-				shadow = instance.getShadow();
-				offset_factor = ( instance.getType() === 'cirrus' ? cirrus_offset : normal_offset );
+				cloud = cloud.get( Cloud );
+				image = cloud.image;
+				shadow = cloud.shadow;
+				parallax = ( cloud.type === 'cirrus' ? CIRRUS_PARALLAX : NORMAL_PARALLAX );
 
 				if ( shadow !== null ) {
 					draw = {
-						x: position.x + shadow_offset.x,
-						y: position.y + shadow_offset.y
+						x: position.x + SHADOW_OFFSET.x,
+						y: position.y + SHADOW_OFFSET.y
 					};
 
-					if (
-						( draw.x < Viewport.width && draw.x + shadow.width > 0 ) &&
-						( draw.y < Viewport.height && draw.y + shadow.height > 0 )
-					) {
+					if ( Sprite.isOnScreen( draw.x, draw.y, shadow.width, shadow.height ) ) {
 						screen.bg0.draw.image( shadow, draw.x, draw.y );
 
 						if ( time_transition ) {
@@ -956,10 +936,10 @@
 
 				// Calculate new cloud position by taking its
 				// midpoint offset from the center of the game
-				// screen and multiplying it by [offset_factor]
+				// screen and multiplying it by [parallax]
 				offset = {
-					x: ( position.x + sprite.width / 2 - viewport_W2 ) * offset_factor,
-					y: ( position.y + sprite.height / 2 - viewport_H2 ) * offset_factor
+					x: ( position.x + image.width / 2 - VIEWPORT_HALF_W ) * parallax,
+					y: ( position.y + image.height / 2 - VIEWPORT_HALF_H ) * parallax
 				};
 
 				draw = {
@@ -967,11 +947,8 @@
 					y: position.y + offset.y
 				};
 
-				if (
-					( draw.x < Viewport.width && draw.x + sprite.width > 0 ) &&
-					( draw.y < Viewport.height && draw.y + sprite.height > 0 )
-				) {
-					cloud_stage.draw.image( sprite, draw.x, draw.y );
+				if ( Sprite.isOnScreen( draw.x, draw.y, image.width, image.height ) ) {
+					cloud_stage.draw.image( image, draw.x, draw.y );
 				}
 			}
 

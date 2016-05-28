@@ -4,7 +4,6 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
-* Get better menu/text sounds
 * Text coloring
 * Loading bar/indicator of some kind (connect level menu with gameplay!!!)
 * New drone sprite

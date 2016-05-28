@@ -59,16 +59,16 @@ WebAudio.stop = function( node )
  * Prevent Web Audio from occasionally stopping
  */
 ( function(){
-	var CURRENT_TIME = WebAudio.ctx.currentTime;
+	var time = WebAudio.ctx.currentTime;
 
 	setInterval( function() {
-		var ct = WebAudio.ctx.currentTime;
+		var new_time = WebAudio.ctx.currentTime;
 
-		if ( ct === CURRENT_TIME ) {
+		if ( new_time === time ) {
 			WebAudio.ctx.close();
 			WebAudio.ctx = new AudioContext();
 		}
 
-		CURRENT_TIME = ct;
+		time = new_time;
 	}, 1000 )
 } )();
