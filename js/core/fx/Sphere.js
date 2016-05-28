@@ -70,10 +70,8 @@ function Sphere()
 		var image = texture.data.get();
 
 		for ( var y = 0 ; y < TEXTURE_H ; y++ ) {
-			maps.color[TEXTURE_H - y - 1] = [];
-
 			for ( var x = 0 ; x < TEXTURE_W ; x++ ) {
-				maps.color[TEXTURE_H - y - 1][x] = image.read( image.getPixelIndex( x, y ) );
+				maps.color.push( image.read( image.getPixelIndex( x, ( TEXTURE_H - y - 1 ) ) ) );
 			}
 		}
 	}
@@ -87,16 +85,14 @@ function Sphere()
 		maps.UV.length = 0;
 		var surface, UV;
 
-		for ( var y = -radius ; y < radius ; y++ ) {
-			maps.UV[y + radius] = [];
-
-			for ( var x = -radius ; x < radius ; x++ ) {
+		for ( var y = -radius ; y < radius ; y += resolution ) {
+			for ( var x = -radius ; x < radius ; x += resolution ) {
 				if ( Math.sqrt( x * x + y * y ) < radius ) {
 					surface = get_sphere_coordinates( x, y ).normalize( 1 );
 					UV = get_UV_coordinates( surface.n[0], surface.n[1], surface.n[2] );
 					UV.u = UV.u * TEXTURE_W;
 					UV.v = Math.floor( UV.v * TEXTURE_H ) % TEXTURE_H;
-					maps.UV[y + radius][x + radius] = UV;
+					maps.UV.push( UV );
 				}
 			}
 		}
@@ -105,22 +101,20 @@ function Sphere()
 	/**
 	 * Cache the shadow map based on the [light_source] vector
 	 */
-	function build_light_map()
+	function build_shadow_map()
 	{
 		maps.shadow.length = 0;
-		var surface, dot, exponent, shadow;
+		var surface, intensity, exponent, shadow;
 
-		for ( var y = -radius ; y < radius ; y++ ) {
-			maps.shadow[y + radius] = [];
-
-			for ( var x = -radius ; x < radius ; x++ ) {
+		for ( var y = -radius ; y < radius ; y += resolution ) {
+			for ( var x = -radius ; x < radius ; x += resolution ) {
 				if ( Math.sqrt( x * x + y * y ) < radius ) {
 					surface = get_sphere_coordinates( x, y ).normalize( 1 );
-					dot = Vector.dotProduct( light, surface );
-					dot = ( dot < 0 ? -dot : 0 );
-					exponent = Math.pow( dot, diffusion ) + ambience;
+					intensity = Vector.dotProduct( light, surface );
+					intensity = ( intensity < 0 ? -intensity : 0 );
+					exponent = Math.pow( intensity, diffusion ) + ambience;
 					shadow = clamp( ( 1 - exponent ) * 255, 0, 255 );
-					maps.shadow[y + radius][x + radius] = Math.floor( shadow );
+					maps.shadow.push( Math.floor( shadow ) );
 				}
 			}
 		}
@@ -149,29 +143,28 @@ function Sphere()
 
 		var rotation_ratio = ( rotation.angle / 360 );
 		var rotation_shift = rotation_ratio * TEXTURE_W;
-		var i, j, pixel, UV_MAP_ROW, SHADOW_MAP_ROW, UV, TEXTURE = {}, hue = {}, shadow;
-
-		hue.alpha = 255;
+		var i, j, m = 0, UV, shadow, TEXTURE = {}, T_index, hue = {}, pixel;
 
 		for ( var y = 0 ; y < render.element.height ; y += resolution ) {
 			j = Math.pow( y - radius, 2 );
-
-			UV_MAP_ROW = maps.UV[y];
-			SHADOW_MAP_ROW = maps.shadow[y];
 
 			for ( var x = 0 ; x < render.element.width ; x += resolution ) {
 				i = Math.pow( x - radius, 2 );
 
 				if ( Math.sqrt( i + j ) < radius ) {
-					UV = UV_MAP_ROW[x];
-					shadow = SHADOW_MAP_ROW[x];
+					UV = maps.UV[m];
+					shadow = maps.shadow[m];
 
 					TEXTURE.x = Math.floor( UV.u + rotation_shift ) % TEXTURE_W;
-					TEXTURE.RGB = maps.color[UV.v][TEXTURE.x];
+					TEXTURE.y = UV.v;
+
+					T_index = ( TEXTURE.x + TEXTURE.y * TEXTURE_W );
+					TEXTURE.RGB = maps.color[T_index];
 
 					hue.red = TEXTURE.RGB.red - 2 * shadow;
 					hue.green = TEXTURE.RGB.green - 2 * shadow;
 					hue.blue = TEXTURE.RGB.blue - shadow;
+					hue.alpha = TEXTURE.RGB.alpha;
 
 					for ( var py = 0 ; py < resolution ; py++ ) {
 						for ( var px = 0 ; px < resolution ; px++ ) {
@@ -179,6 +172,8 @@ function Sphere()
 							render_IMG.write( pixel, hue );
 						}
 					}
+
+					m++;
 				}
 			}
 		}
@@ -297,7 +292,7 @@ function Sphere()
 	{
 		build_color_map();
 		build_UV_map();
-		build_light_map();
+		build_shadow_map();
 
 		if ( _.owner !== null && _.owner.has( Sprite ) ) {
 			_.owner.get( Sprite ).centerOrigin();

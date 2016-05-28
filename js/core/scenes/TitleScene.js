@@ -36,7 +36,7 @@ function TitleScene( controller )
 		earth: {
 			x: 600,
 			y: 325,
-			radius: 225
+			radius: 230
 		},
 		moon: {
 			x: 2100,
@@ -118,7 +118,7 @@ function TitleScene( controller )
 			logo: {tween: 'alpha', to: 0, time: slide, ease: Ease.quad.out},
 			starlogo: {tween: 'alpha', to: 0, time: slide, ease: Ease.quad.in},
 			TITLE_MENU: {tween: 'alpha', to: 0, time: ( slide / 2 ), ease: Ease.quad.out},
-			LEVEL_MENU: {tween: 'y', to: 0, time: slide, ease: Ease.quad.inOut }
+			LEVEL_MENU: {tween: 'y', to: 0, time: slide, ease: Ease.quad.inOut, callback: resume_sphere_rotation }
 		}
 	};
 
@@ -323,10 +323,10 @@ function TitleScene( controller )
 
 		var orbits = {
 			earth: [
-				{type: 1, period: 9, inclination: 23, station: 1},
-				{type: 1, period: 9, inclination: -37, station: 2},
-				{type: 1, period: 9, inclination: 48, station: 3},
-				{type: 1, period: 9, inclination: -17, station: 4}
+				{type: 1, period: 20, inclination: 23, station: 1},
+				{type: 1, period: 20, inclination: -37, station: 2},
+				{type: 1, period: 20, inclination: 48, station: 3},
+				{type: 1, period: 20, inclination: -17, station: 4}
 			]
 		};
 
@@ -363,9 +363,21 @@ function TitleScene( controller )
 
 					space_stations.child( orbit.station - 1 ).add(
 						new Oscillation( ORBIT_PATH.width, ORBIT_PATH.height )
-							.setAnchor( planets[planet].x, planets[planet].y )
+							.setAnchor( PLANET_COORDS.x, PLANET_COORDS.y )
 							.setPeriod( orbit.period )
 							.setRotation( orbit.inclination )
+							.setOffset( Math.random() * 2 * Math.PI )
+							.whileMoving( function( sprite, angle ) {
+								if ( angle > Math.PI ) {
+									var is_hidden = (
+										Vec2.distance( sprite.x._, sprite.y._, PLANET_COORDS.x, PLANET_COORDS.y ) < PLANET_COORDS.radius
+									);
+
+									if ( !sprite.alpha.isTweening() ) {
+										sprite.alpha.tweenTo( ( is_hidden ? 0.2 : 1 ), 0.25, Ease.quad.out );
+									}
+								}
+							} )
 					);
 				}
 			}
@@ -502,7 +514,12 @@ function TitleScene( controller )
 
 		for ( var t in tweens ) {
 			if ( tweens.hasOwnProperty( t ) ) {
-				props[t].get( Sprite )[tweens[t].tween].tweenTo( tweens[t].to, tweens[t].time, tweens[t].ease );
+				props[t].get( Sprite )[tweens[t].tween].tweenTo(
+					tweens[t].to,
+					tweens[t].time,
+					tweens[t].ease,
+					tweens[t].callback || null
+				);
 			}
 		}
 	}
@@ -537,6 +554,7 @@ function TitleScene( controller )
 		props.LEVEL_MENU.find( Menu ).enable();
 		props.LEVEL_MENU.find( TextPrinter ).unmute();
 
+		pause_sphere_rotation();
 		run_transition_tweens();
 	}
 

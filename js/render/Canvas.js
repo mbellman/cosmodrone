@@ -54,6 +54,7 @@
 	function DrawOperation( ctx )
 	{
 		this.ctx = ctx;
+		this.shape = new Shape( ctx );
 	}
 
 	/**
@@ -63,7 +64,7 @@
 	{
 		this.ctx.beginPath();
 		this.ctx.arc( x, y, radius, 0, 2 * Math.PI );
-		return new Shape( this.ctx );
+		return this.shape;
 	};
 
 	/**
@@ -73,7 +74,7 @@
 	{
 		this.ctx.beginPath();
 		this.ctx.rect( x, y, width, height );
-		return new Shape( this.ctx );
+		return this.shape;
 	};
 
 	/**
@@ -166,23 +167,33 @@
 	{
 		// -- Private: --
 		var _ = this;
+		var _DrawOperation;
+		var _PixelDataOperation;
 
 		// -- Public: --
 		this.element = element || document.createElement( 'canvas' );
 		this.ctx = this.element.getContext( '2d' );
 
 		/**
+		 * (Internal) create persistent instances of Draw
+		 * and PixelData operation resources to avoid creating
+		 * them on the fly every time an operation is performed
+		 */
+		_DrawOperation = new DrawOperation( _.ctx );
+		_PixelDataOperation = new PixelDataOperation( _.ctx, _.element );
+
+		/**
 		 * Draw shapes/images/etc. (see: DrawOperation())
 		 */
 		this.draw = {
 			circle: function( x, y, radius ) {
-				return new DrawOperation( _.ctx ).circle( x, y, radius );
+				return _DrawOperation.circle( x, y, radius );
 			},
 			rectangle: function( x, y, width, height ) {
-				return new DrawOperation( _.ctx ).rectangle( x, y, width, height );
+				return _DrawOperation.rectangle( x, y, width, height );
 			},
 			image: function( source, x1, y1, width1, height1, x2, y2, width2, height2 ) {
-				return new DrawOperation( _.ctx ).image( source, x1, y1, width1, height1, x2, y2, width2, height2 );
+				return _DrawOperation.image( source, x1, y1, width1, height1, x2, y2, width2, height2 );
 			}
 		};
 
@@ -191,13 +202,13 @@
 		 */
 		this.data = {
 			create: function( width, height ) {
-				return new PixelDataOperation( _.ctx, _.element ).create( width, height );
+				return _PixelDataOperation.create( width, height );
 			},
 			get: function( x, y, width, height ) {
-				return new PixelDataOperation( _.ctx, _.element ).get( x, y, width, height );
+				return _PixelDataOperation.get( x, y, width, height );
 			},
 			put: function( data, x, y ) {
-				return new PixelDataOperation( _.ctx, _.element ).put( data, x, y );
+				return _PixelDataOperation.put( data, x, y );
 			}
 		};
 	}

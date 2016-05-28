@@ -163,6 +163,8 @@ function Oscillation( width, height )
 	var sprite = null;
 	var period = 0;
 	var t = 0;
+	var TAU = 2 * Math.PI;
+	var while_moving = function() {};
 	var angle = {
 		sine: 0,
 		cosine: 1
@@ -187,6 +189,8 @@ function Oscillation( width, height )
 		if ( sprite !== null ) {
 			sprite.x._ = anchor.x + ( radius.x * COS_t * angle.cosine ) - ( radius.y * SIN_t * angle.sine );
 			sprite.y._ = anchor.y + ( radius.y * SIN_t * angle.cosine ) + ( radius.x * COS_t * angle.sine );
+
+			while_moving( sprite, t % TAU );
 		}
 	};
 
@@ -217,7 +221,7 @@ function Oscillation( width, height )
 	 */
 	this.setPeriod = function( seconds )
 	{
-		period = ( seconds / Math.PI );
+		period = ( seconds / TAU );
 		return _;
 	};
 
@@ -231,6 +235,24 @@ function Oscillation( width, height )
 		angle.cosine = Math.cos( _angle );
 		return _;
 	};
+
+	/**
+	 * Set starting angular offset
+	 */
+	this.setOffset = function( _t )
+	{
+		t = _t;
+		return _;
+	};
+
+	/**
+	 * Set a handler to be run during the oscillation
+	 */
+	this.whileMoving = function( handler )
+	{
+		while_moving = handler;
+		return _;
+	}
 }
 
 /**

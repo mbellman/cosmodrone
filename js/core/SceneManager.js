@@ -23,8 +23,8 @@ function SceneManager()
 	 */
 	function clear_sprites()
 	{
-		var position, width, height, buffer, box = {};
 		var cleared = false;
+		var position, width, height, padding, box = {};
 
 		scenes[active_scene].forAllComponentsOfType( Sprite, function( sprite ) {
 			if ( cleared || sprite.getProperAlpha() === 0 || !sprite.isOnScreen() ) {
@@ -36,17 +36,17 @@ function SceneManager()
 			height = sprite.scale._ * sprite.getHeight();
 
 			if ( sprite.rotation._ > 0 ) {
-				// Widen the buffer zone around rotated Sprites
-				buffer = Math.max( width, height );
+				// Widen the clear zone around rotated Sprites
+				padding = Math.max( width, height );
 			} else {
-				buffer = ( sprite.snap ? 0 : 1 );
+				padding = ( sprite.snap ? 0 : 1 );
 			}
 
 			// Constrain the clear rectangle to the screen's boundaries
-			box.x = Math.max( position.x - buffer, 0 );
-			box.y = Math.max( position.y - buffer, 0 );
-			box.width = Math.min( width + 2 * buffer, Viewport.width );
-			box.height = Math.min( height + 2 * buffer, Viewport.height );
+			box.x = Math.max( position.x - padding, 0 );
+			box.y = Math.max( position.y - padding, 0 );
+			box.width = Math.min( width + 2 * padding, Viewport.width );
+			box.height = Math.min( height + 2 * padding, Viewport.height );
 
 			screen.game.clear( box.x, box.y, box.width, box.height );
 
