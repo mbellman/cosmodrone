@@ -335,7 +335,28 @@ function FillSprite( color, width, height )
 	sprite.draw.rectangle( 0, 0, width, height ).fill( color );
 
 	/**
-	 * Inherit and become an instance of Sprite
+	 * Inherit Sprite and set its source to this instance's Canvas
 	 */
 	Sprite.call( this, sprite.element );
+}
+
+/**
+ * -----------------------
+ * Component: VectorSprite
+ * -----------------------
+ *
+ * A special Sprite variant which allows
+ * for custom vector graphics rendering
+ */
+function VectorSprite()
+{
+	/**
+	 * Public Canvas instance for custom control
+	 */
+	this.sprite = new Canvas();
+
+	/**
+	 * Inherit Sprite and set its source to the instance's Canvas
+	 */
+	Sprite.call( this , this.sprite.element );
 }

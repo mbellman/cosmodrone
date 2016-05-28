@@ -32,8 +32,6 @@ A game about space station maintenance!
 * Rivers
 
 ##### CODE
-* ShapeSprite for drawing arbitrary vector shapes
-* See if sphere rendering can be optimized just a little more
 * Consolidate major framework elements (Canvas, WebAudio, AssetLoader, Entity/Component, Sprite, Text, etc.)
 * Background, Terrain, and HeightMap classes need some tidying
 * Child Sprite coordinate system transformations (rotation, scaling, etc.)

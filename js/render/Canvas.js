@@ -4,8 +4,7 @@
 	 * Class: Shape
 	 * ------------
 	 *
-	 * Provides chainable methods for
-	 * Canvas shape drawing operations
+	 * Provides chainable extension methods for Canvas draw operations
 	 */
 	function Shape( ctx )
 	{
@@ -48,8 +47,7 @@
 	 * Class: DrawOperation
 	 * --------------------
 	 *
-	 * Instance which provides a subcategory
-	 * of specific shape/image draw operations
+	 * Resource for Canvas vector graphics rendering
 	 */
 	function DrawOperation( ctx )
 	{
@@ -68,6 +66,24 @@
 	};
 
 	/**
+	 * Draw an ellipse to [ctx]
+	 */
+	DrawOperation.prototype.ellipse = function( x, y, a, b )
+	{
+		var cy = ( b / 0.75 ) / 2;
+		var a2 = a / 2;
+		var b2 = b / 2;
+
+		this.ctx.beginPath();
+		this.ctx.moveTo( x - a2, y );
+		this.ctx.bezierCurveTo( x - a2, y + cy, x + a2, y + cy, x + a2, y );
+		this.ctx.bezierCurveTo( x + a2, y - cy, x - a2, y - cy, x - a2, y );
+		this.ctx.stroke();
+
+		return this.shape;
+	};
+
+	/**
 	 * Draw a rectangle to [ctx]
 	 */
 	DrawOperation.prototype.rectangle = function( x, y, width, height )
@@ -82,15 +98,15 @@
 	 */
 	DrawOperation.prototype.image = function( source, x1, y1, width1, height1, x2, y2, width2, height2 )
 	{
-		if ( typeof x1 === 'undefined' ) {
+		if ( arguments.length === 1 ) {
 			// Draw the source at the top left of the Canvas
 			this.ctx.drawImage( source, 0, 0 );
 		} else
-		if ( typeof width1 === 'undefined' ) {
+		if ( arguments.length === 3 ) {
 			// Draw the source at a specific [x, y] coordinate
 			this.ctx.drawImage( source, x1, y1 );
 		} else
-		if ( typeof x2 === 'undefined' ) {
+		if ( arguments.length === 5 ) {
 			// Draw the source at a specific [x,y] coordinate
 			// scaled to custom dimensions per [width1] & [height1]
 			this.ctx.drawImage( source, x1, y1, width1, height1 );
@@ -114,8 +130,7 @@
 	 * Class: PixelDataOperation
 	 * -------------------------
 	 *
-	 * Instance which provides a subcategory
-	 * of pixel data manipulation operations
+	 * Resource for Canvas pixel data manipulation
 	 */
 	function PixelDataOperation( ctx, element )
 	{
@@ -165,52 +180,25 @@
 	 */
 	function Canvas( element )
 	{
-		// -- Private: --
-		var _ = this;
-		var _DrawOperation;
-		var _PixelDataOperation;
-
-		// -- Public: --
+		/**
+		 * Canvas' DOM element
+		 */
 		this.element = element || document.createElement( 'canvas' );
+
+		/**
+		 * Canvas rendering context
+		 */
 		this.ctx = this.element.getContext( '2d' );
 
 		/**
-		 * (Internal) create persistent instances of Draw
-		 * and PixelData operation resources to avoid creating
-		 * them on the fly every time an operation is performed
+		 * Resource for drawing shapes/images/etc.
 		 */
-		_DrawOperation = new DrawOperation( _.ctx );
-		_PixelDataOperation = new PixelDataOperation( _.ctx, _.element );
+		this.draw = new DrawOperation( this.ctx );
 
 		/**
-		 * Draw shapes/images/etc. (see: DrawOperation())
+		 * Resource for pixel data manipulation 
 		 */
-		this.draw = {
-			circle: function( x, y, radius ) {
-				return _DrawOperation.circle( x, y, radius );
-			},
-			rectangle: function( x, y, width, height ) {
-				return _DrawOperation.rectangle( x, y, width, height );
-			},
-			image: function( source, x1, y1, width1, height1, x2, y2, width2, height2 ) {
-				return _DrawOperation.image( source, x1, y1, width1, height1, x2, y2, width2, height2 );
-			}
-		};
-
-		/**
-		 * Pixel data manipulation handlers (see: PixelDataOperation())
-		 */
-		this.data = {
-			create: function( width, height ) {
-				return _PixelDataOperation.create( width, height );
-			},
-			get: function( x, y, width, height ) {
-				return _PixelDataOperation.get( x, y, width, height );
-			},
-			put: function( data, x, y ) {
-				return _PixelDataOperation.put( data, x, y );
-			}
-		};
+		this.data = new PixelDataOperation( this.ctx, this.element );
 	}
 	
 	/**
@@ -309,6 +297,16 @@
 	Canvas.prototype.setAlpha = function( alpha )
 	{
 		this.ctx.globalAlpha = alpha;
+		return this;
+	};
+
+	/**
+	 * Set Canvas drop shadow [color] and [radius]
+	 */
+	Canvas.prototype.setShadow = function( color, radius )
+	{
+		this.ctx.shadowColor = color;
+		this.ctx.shadowBlur = radius;
 		return this;
 	};
 

@@ -239,7 +239,7 @@ function Oscillation( width, height )
 	/**
 	 * Set starting angular offset
 	 */
-	this.setOffset = function( _t )
+	this.setStart = function( _t )
 	{
 		t = _t;
 		return _;

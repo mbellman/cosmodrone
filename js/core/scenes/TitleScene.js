@@ -12,89 +12,67 @@ function TitleScene( controller )
 	// Private:
 	var _ = this;
 
-	// Primary scene
+	/**
+	 * Core variables
+	 */
 	var menu = 1;
 	var stage = new Entity();
 	var props = {};
 	var slide = 1.5;
 
-	// Level select menu
-	var level_zone = 1;
-	var zone_offsets = {
-		1: 0,         // Earth
-		2: 1500,      // Moon
-		3: 2500,      // Deep Space 1
-		4: 5000       // Mars
-	};
-	var zones = {
-		1: 1, 2: 1, 3: 1, 4: 1,
-		5: 2,
-		6: 3, 7: 3,
-		8: 4, 9: 4, 10: 4, 11: 4, 12: 4, 13: 4, 14: 4, 15: 4, 16: 4
-	};
-	var planets = {
-		earth: {
-			x: 600,
-			y: 325,
-			radius: 230
-		},
-		moon: {
-			x: 2100,
-			y: 325,
-			radius: 100
-		},
-		mars: {
-			x: 5600,
-			y: 325,
-			radius: 180
-		}
-	};
-	// TODO: Remove this once stations are automatically set
-	var stations = [
-		// Earth
-		{x: 200, y: 200},
-		{x: 250, y: 350},
-		{x: 900, y: 400},
-		{x: 950, y: 150},
-		// Moon
-		{x: 1800, y: 250},
-		// Deep Space 1
-		{x: 2900, y: 150},
-		{x: 3250, y: 500},
-		// Mars
-		{x: 5250, y: 200},
-		{x: 5350, y: 100},
-		{x: 5450, y: 250},
-		{x: 5550, y: 150},
-		{x: 5650, y: 550},
-		{x: 5650, y: 50},
-		{x: 5750, y: 450},
-		{x: 5850, y: 250},
-		{x: 5950, y: 250}
-	];
-	var level_text = [
-		'Level One...that\'s which level this is!',
-		'Level Two...that\'s which level this is!',
-		'Level Three...that\'s which level this is!',
-		'Level Four...that\'s which level this is!',
-		'Level Five...that\'s which le...v...[br]s-sorry...',
-		'Level One...that\'s which level this is!',
-		'Level One...that\'s which level this is!',
-		'Level One...that\'s which level this is!',
-		'Level One...that\'s which level this is!',
-		'Level One...that\'s which level this is!',
-		'Level One...that\'s which level this is!',
-		'Level One...that\'s which level this is!',
-		'Level One...that\'s which level this is!',
-		'Level One...that\'s which level this is!',
-		'Level One...that\'s which level this is!',
-		'Level One...that\'s which level this is!'
-	];
+	/**
+	 * Level select menu
+	 */
 
-	// List of props and properties to be
-	// tweened when navigating between menus
-	//
-	// TODO: Organize this more nicely!
+	// Current zone
+	var mission_zone = 'earth';
+
+	// Panning offsets for each zone
+	var zone_offsets = {
+		earth: 0,
+		moon: 1500,
+		DEEP_SPACE_1: 2500,
+		mars: 5000
+	};
+
+	// Planet locations/sizes
+	var planets = {
+		earth: {x: 600, y: 325, radius: 230},
+		moon: {x: 2100, y: 325, radius: 100},
+		mars: {x: 5600, y: 325, radius: 180}
+	};
+
+	// Orbital paths taken by each station (static positions
+	// denoted by [x, y] coordinates in lieu of orbital parameters)
+	var station_orbits = {
+		1: {zone: 'earth', width: 600, height: 100, period: 20, inclination: 23},
+		2: {zone: 'earth', width: 700, height: 150, period: 28, inclination: -37},
+		3: {zone: 'earth', width: 550, height: 300, period: 16, inclination: 48},
+		4: {zone: 'earth', width: 525, height: 200, period: 14, inclination: -17},
+		5: {zone: 'moon', width: 235, height: 125, period: 6, inclination: 30},
+		6: {zone: 'DEEP_SPACE_1', x: 2900, y: 150},
+		7: {zone: 'DEEP_SPACE_1', x: 3250, y: 500},
+		8: {zone: 'mars', width: 430, height: 250, period: 10, inclination: -29}
+	};
+
+	// Level preview summaries
+	var level_text = {
+		1: 'Level One...that\'s which level this is!',
+		2: 'Level Two...that\'s which level this is!',
+		3: 'Level Three...that\'s which level this is!',
+		4: 'Level Four...that\'s which level this is!',
+		5: 'Level Five...that\'s which le...v...[br]s-sorry...',
+		6: 'Where the heck is this?!!??!',
+		7: 'Whoa...there\'s nothing out here!!!![br]OOoooOOOoooOhhh noOOOoooOOo!!!!',
+		8: 'Next stop...Mars!',
+	};
+
+	/**
+	 * List of props and properties to be
+	 * tweened when navigating between menus
+	 *
+	 * TODO: Organize this more nicely!
+	 */
 	var transitions = {
 		// To title screen
 		1: {
@@ -290,100 +268,128 @@ function TitleScene( controller )
 		var MARS_TEXTURE = Assets.getImage( 'title/level-select/mars.png' );
 
 		/**
-		 * Change the [alpha] of an orbital line path by [index]
+		 * Creates a pair of foreground/background
+		 * ellipse assets for orbital path rendering
+		 */
+		function INTERNAL_build_orbit_path( width, height )
+		{
+			var orbit = new VectorSprite();
+			var orbit_BG, orbit_FG;
+			var w2 = ( width / 2) , h2 = ( height / 2 );
+			var glow = 6;
+
+			orbit.sprite.setSize( width + 2 * glow, height + 2 * glow );
+			orbit.sprite.setShadow( '#0ff', glow );
+			orbit.sprite.draw
+				.ellipse( w2 + glow, h2 + glow, width, height )
+				.stroke( '#0ff', 2 );
+
+			orbit_BG = new Canvas().setSize( orbit.getWidth(), orbit.getHeight() / 2);
+			orbit_FG = new Canvas().setSize( orbit.getWidth(), orbit.getHeight() / 2);
+
+			orbit_BG.draw.image( orbit.sprite.element );
+			orbit_FG.draw.image( orbit.sprite.element, 0, -orbit.getHeight() / 2 );
+
+			return {
+				bg: orbit_BG.element,
+				fg: orbit_FG.element
+			};
+		}
+
+		/**
+		 * Change the [alpha] of an orbital line path specified by its orbit [index]
 		 */
 		function INTERNAL_set_orbit_alpha( index, alpha )
 		{
 			var orbit_BG = orbits_BG.child( index );
 			var orbit_FG = orbits_FG.child( index );
 
-			if ( orbit_BG !== null && orbit_FG !== null ) {
+			if (
+				( orbit_BG !== null && orbit_BG.get( Sprite ) !== null ) &&
+				( orbit_FG !== null && orbit_FG.get( Sprite ) !== null )
+			) {
 				orbit_BG.get( Sprite ).alpha.tweenTo( alpha, 0.5, Ease.quad.out );
 				orbit_FG.get( Sprite ).alpha.tweenTo( alpha, 0.5, Ease.quad.out );
 			}
 		}
 
-		// Space station icons
-		var space_stations = new Entity();
+		/**
+		 * Set stations around their orbits or simply put them into static position
+		 */
+		function INTERNAL_set_station( station )
+		{
+			var orbit = station_orbits[station];
+			var zone = orbit.zone;
+			var planet = planets[zone];
 
-		for ( var s = 0 ; s < stations.length ; s++ ) {
-			space_stations.addChild(
-				new Entity().add(
-					new Sprite( STATION_ICON ).setXY( stations[s].x, stations[s].y ).centerOrigin()
-				)
-			);
+			if ( orbit.width && orbit.height ) {
+				// Station has an orbital path
+				var ellipse = INTERNAL_build_orbit_path( orbit.width, orbit.height );
+
+				orbits_BG.addChild( new Entity().add(
+					new Sprite( ellipse.bg )
+						.setXY( planet.x, planet.y )
+						.setOrigin( ellipse.bg.width / 2, ellipse.bg.height )
+						.setRotation( orbit.inclination )
+						.setAlpha( 0.2 )
+				) );
+
+				orbits_FG.addChild( new Entity().add(
+					new Sprite( ellipse.fg )
+						.setXY( planet.x, planet.y )
+						.setOrigin( ellipse.fg.width / 2, 0 )
+						.setRotation( orbit.inclination )
+						.setAlpha( 0.2 )
+				) );
+
+				space_stations.child( station - 1 ).add(
+					new Oscillation( orbit.width, orbit.height )
+						.setAnchor( planet.x, planet.y )
+						.setPeriod( orbit.period )
+						.setRotation( orbit.inclination )
+						.setStart( Math.random() * 2 * Math.PI )
+						.whileMoving( function( sprite, angle ) {
+							if ( angle > Math.PI ) {
+								var is_hidden = ( Vec2.distance( sprite.x._, sprite.y._, planet.x, planet.y ) < planet.radius );
+
+								if ( !sprite.alpha.isTweening() ) {
+									sprite.alpha.tweenTo( ( is_hidden ? 0.2 : 1 ), 0.25, Ease.quad.out );
+								}
+							}
+						} )
+				);
+			} else
+			if ( orbit.x && orbit.y ) {
+				// Station is...stationary!
+				space_stations.child( station - 1 ).get( Sprite ).setXY( orbit.x, orbit. y );
+
+				// Continue to fill orbit path container entities to prevent index gaps
+				orbits_BG.addChild( new Entity() );
+				orbits_FG.addChild( new Entity() );
+			}
 		}
 
-		// Orbital path outlines
-		var orbit_types = {
-			earth: {
-				1: {width: 595, height: 100}
-			}
-		};
-
-		var orbits = {
-			earth: [
-				{type: 1, period: 20, inclination: 23, station: 1},
-				{type: 1, period: 20, inclination: -37, station: 2},
-				{type: 1, period: 20, inclination: 48, station: 3},
-				{type: 1, period: 20, inclination: -17, station: 4}
-			]
-		};
-
+		// Orbital paths and space stations
 		var orbits_BG = new Entity();
 		var orbits_FG = new Entity();
-		var P_orbits, orbit, PLANET_COORDS, ORBIT_PATH, PATH_BG, PATH_BG;
+		var space_stations = new Entity();
+		var TOTAL_STATIONS = 0;
 
-		for ( var planet in orbits ) {
-			if ( orbits.hasOwnProperty( planet ) ) {
-				P_orbits = orbits[planet];
+		for ( var station in station_orbits ) {
+			if ( station_orbits.hasOwnProperty( station ) ) {
+				TOTAL_STATIONS++;
 
-				for ( var o = 0 ; o < P_orbits.length ; o++ ) {
-					orbit = P_orbits[o];
-					PLANET_COORDS = planets[planet];
-					ORBIT_PATH = orbit_types[planet][orbit.type];
-					PATH_BG = Assets.getImage( 'title/level-select/orbits/' + planet + '-' + orbit.type + '-bg.png' );
-					PATH_FG = Assets.getImage( 'title/level-select/orbits/' + planet + '-' + orbit.type + '-fg.png' );
+				space_stations.addChild(
+					new Entity().add(
+						new Sprite( STATION_ICON ).centerOrigin()
+					)
+				);
 
-					orbits_BG.addChild( new Entity().add(
-						new Sprite( PATH_BG )
-							.setXY( PLANET_COORDS.x, PLANET_COORDS.y )
-							.setOrigin( PATH_BG.width / 2, PATH_BG.height )
-							.setRotation( orbit.inclination )
-							.setAlpha( 0.2 )
-					) );
-
-					orbits_FG.addChild( new Entity().add(
-						new Sprite( PATH_FG )
-							.setXY( PLANET_COORDS.x, PLANET_COORDS.y )
-							.setOrigin( PATH_FG.width / 2, 0 )
-							.setRotation( orbit.inclination )
-							.setAlpha( 0.2 )
-					) );
-
-					space_stations.child( orbit.station - 1 ).add(
-						new Oscillation( ORBIT_PATH.width, ORBIT_PATH.height )
-							.setAnchor( PLANET_COORDS.x, PLANET_COORDS.y )
-							.setPeriod( orbit.period )
-							.setRotation( orbit.inclination )
-							.setOffset( Math.random() * 2 * Math.PI )
-							.whileMoving( function( sprite, angle ) {
-								if ( angle > Math.PI ) {
-									var is_hidden = (
-										Vec2.distance( sprite.x._, sprite.y._, PLANET_COORDS.x, PLANET_COORDS.y ) < PLANET_COORDS.radius
-									);
-
-									if ( !sprite.alpha.isTweening() ) {
-										sprite.alpha.tweenTo( ( is_hidden ? 0.2 : 1 ), 0.25, Ease.quad.out );
-									}
-								}
-							} )
-					);
-				}
+				INTERNAL_set_station( station );
 			}
 		}
 
-		// Planets/moons/etc.
+		// Container for planets/moons, orbital paths, and station icons
 		var space = new Entity()
 			.add( new Sprite() )
 			.addChild( orbits_BG )
@@ -439,21 +445,31 @@ function TitleScene( controller )
 			new Menu( 'grid' )
 				.configure(
 					{
-						items: 16,
+						items: TOTAL_STATIONS,
 						options: function( i ) {
 							return new Entity().add(
 								new Sprite().setXY( 20 * i, 0 )
 							);
 						},
 						onFocus: function( entity, i ) {
-							space_stations.child( i ).get( Sprite ).setSource( STATION_ICON_SELECTED ).centerOrigin();
-							text.find( TextPrinter ).print( level_text[i] );
+							space_stations.child( i ).get( Sprite )
+								.setSource( STATION_ICON_SELECTED )
+								.centerOrigin();
+
+							text.find( TextPrinter ).print( level_text[++i] );
+
 							INTERNAL_set_orbit_alpha( i, 1 );
 
-							if ( zones[++i] !== level_zone ) {
-								level_zone = zones[i];
+							if ( station_orbits[i].zone !== mission_zone ) {
+								mission_zone = station_orbits[i].zone;
+
 								pause_sphere_rotation();
-								space.get( Sprite ).x.tweenTo( -1 * zone_offsets[level_zone], 1.5, Ease.quad.inOut, resume_sphere_rotation );
+								space.get( Sprite ).x.tweenTo(
+									-1 * zone_offsets[mission_zone],
+									1.5,
+									Ease.quad.inOut,
+									resume_sphere_rotation
+								);
 							}
 						},
 						onUnFocus: function( entity, i ) {
