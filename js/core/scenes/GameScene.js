@@ -20,7 +20,7 @@ function GameScene( controller )
 	var camera;
 	var drone;
 	var speed;
-	var background;
+	var background = new Entity();
 	var hud;
 	var stage = new Entity();
 
@@ -70,15 +70,16 @@ function GameScene( controller )
 	 */
 	function add_background()
 	{
+		if ( background.has( Background ) ) {
+			return;
+		}
+
 		var t = Date.now();
 
 		// Halt loop during generation/prerendering
 		_.pause();
-		// Safeguard for re-generating a new
-		// background if an older one exists
-		destroy_background();
 
-		background = new Entity().add(
+		background.add(
 			new Background()
 				.configure(
 					{
@@ -92,7 +93,7 @@ function GameScene( controller )
 						tileSize: 2,
 						lightAngle: 220,
 						hours: [12, 19, 20, 0, 4, 6],
-						cycleSpeed: 60000,
+						cycleSpeed: 60,
 						scrollSpeed:
 						{
 							x: -10,
@@ -125,9 +126,8 @@ function GameScene( controller )
 	 */
 	function destroy_background()
 	{
-		if ( background !== null && typeof background !== 'undefined' ) {
-			background.get( Background ).stop();
-			background = null;
+		if ( background !== null && background.has( Background ) ) {
+			background.remove( Background );
 		}
 	}
 

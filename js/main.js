@@ -58,15 +58,13 @@ function main()
 function createScreens()
 {
 	// Backgrounds (for planet surface, starfield, etc.)
-	screen.bg0 = createScreen();
-	screen.bg1 = createScreen();
+	screen.background = createScreen();
 	screen.clouds = createScreen();
 	screen.clouds.element.style.zIndex = '3';
 
 	// Add background canvases to the document
 	$( '#game #bg' )
-		.append( screen.bg0.element )
-		.append( screen.bg1.element )
+		.append( screen.background.element )
 		.append( screen.clouds.element );
 
 	// Primary game screen
@@ -114,7 +112,7 @@ function loadGame()
 	} )
 	.then( function() {
 		var controller = new Controller();
-		controller.showTitle();
+		controller.showGame();
 	} );
 }
 

@@ -237,7 +237,7 @@ function TitleScene( controller )
 							},
 							sounds: {
 								cursor: Assets.getAudio( 'ui/chime1.wav' ),
-								select: Assets.getAudio( 'ui/select.wav' ),
+								select: Assets.getAudio( 'ui/select1.wav' ),
 								invalid: Assets.getAudio( 'ui/error1.wav' )
 							},
 							cursor: Assets.getImage( 'ui/drone-cursor.png' ),
@@ -484,7 +484,7 @@ function TitleScene( controller )
 						},
 						sounds: {
 							cursor: Assets.getAudio( 'ui/chime1.wav' ),
-							select: Assets.getAudio( 'ui/select.wav' ),
+							select: Assets.getAudio( 'ui/select1.wav' ),
 							invalid: Assets.getAudio( 'ui/error1.wav' )
 						}
 					}

@@ -42,12 +42,19 @@ function Tweenable( value )
 	// -- Private: --
 	var _ = this;
 	var tween = {
+		// Currently tweening?
 		on: false,
+		// Start tween value
 		start: 0,
+		// End tween value
 		end: 0,
-		running_time: 0,
-		complete_time: 0,
+		// Ratio to tween completion
+		progress: 0,
+		// Tween duration
+		duration: 0,
+		// Tween completion handler
 		onComplete: function() {},
+		// Easing type
 		ease: null
 	};
 	var delay = 0;
@@ -64,17 +71,16 @@ function Tweenable( value )
 				return;
 			}
 
-			tween.running_time += ( dt * 1000 );
+			tween.progress += ( ( dt * 1000 ) / tween.duration );
 
-			if ( tween.running_time >= tween.complete_time ) {
+			if ( tween.progress >= 1 ) {
 				_._ = tween.end;
 				_.stop();
 				tween.onComplete();
 				return;
 			}
 
-			var t = tween.running_time / tween.complete_time;
-			var ease = tween.ease( t ) * ( tween.end - tween.start );
+			var ease = tween.easing( tween.progress ) * ( tween.end - tween.start );
 			_._ = tween.start + ease;
 		}
 	};
@@ -87,10 +93,11 @@ function Tweenable( value )
 		tween.on = true;
 		tween.start = _._;
 		tween.end = value;
-		tween.running_time = 0;
-		tween.complete_time = seconds * 1000;
+		tween.progress = 0;
+		tween.duration = seconds * 1000;
 		tween.onComplete = callback || tween.onComplete;
-		tween.ease = easing;
+		tween.easing = easing;
+		return _;
 	};
 
 	/**
@@ -109,6 +116,15 @@ function Tweenable( value )
 	this.stop = function()
 	{
 		tween.on = false;
+		return _;
+	};
+
+	/**
+	 * Get the progress of the active tween
+	 */
+	this.progress = function()
+	{
+		return tween.progress;
 	};
 
 	/**

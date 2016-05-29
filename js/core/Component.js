@@ -7,6 +7,10 @@
  */
 function Component()
 {
+	// -- Private: --
+	var _ = this;
+
+	// -- Public: --
 	/**
 	 * The component's owner entity
 	 */
@@ -31,4 +35,14 @@ function Component()
 	 * Component removed from owner handler
 	 */
 	this.onRemoved = function() {};
+
+	/**
+	 * Remove this component from its owner
+	 */
+	this.dispose = function()
+	{
+		if ( _.owner !== null ) {
+			_.owner.remove( _.constructor.name );
+		}
+	};
 }

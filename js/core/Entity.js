@@ -125,6 +125,21 @@ function Entity()
 	};
 
 	/**
+	 * Get rid of a specific child entity by reference
+	 */
+	this.removeChild = function( entity )
+	{
+		for ( var c = 0 ; c < children.length ; c++ ) {
+			if ( children[c] === entity ) {
+				children.splice( c, 1 );
+				break;
+			}
+		}
+
+		return _;
+	};
+
+	/**
 	 * Get rid of child entities
 	 */
 	this.disposeChildren = function()

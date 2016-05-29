@@ -4,6 +4,7 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
+* Level select needs a little "console" to print the level descriptions on
 * Text coloring
 * Loading bar/indicator of some kind (connect level menu with gameplay!!!)
 * New drone sprite
@@ -15,7 +16,6 @@ A game about space station maintenance!
 * Alerts screen with ability to select hardware maintenance jobs
 * Handler for drone running out of power/fuel
 * Ability to move drone above or below the station
-* Momentum panning on level select screen (?)
 * Moving docking targets (later-stage development) (?)
 * Scene zoom-out when speeding up (?)
 * Replace jQuery with vanilla JS (?)
@@ -26,11 +26,11 @@ A game about space station maintenance!
 * Indicate when docking mode is usable
 * Radar/local area map
 
-##### BACKGROUND
-* Try drawing both times to one canvas using globalAlpha for transitions
+##### BACKGROUND/TERRAIN
+* Additional color formula sets/terrain features (for other planets)
 * Rivers
 
 ##### CODE
 * Consolidate major framework elements (Canvas, WebAudio, AssetLoader, Entity/Component, Sprite, Text, etc.)
-* Background, Terrain, and HeightMap classes need some tidying
+* Terrain and HeightMap classes need some tidying
 * Child Sprite coordinate system transformations (rotation, scaling, etc.)

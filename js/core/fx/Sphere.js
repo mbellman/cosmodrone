@@ -141,7 +141,7 @@ function Sphere()
 
 		var rotation_ratio = ( rotation.angle / 360 );
 		var rotation_shift = rotation_ratio * TEXTURE_W;
-		var i, j, m = 0, UV, shadow, TEXTURE = {}, C_index, hue = {}, pixel;
+		var i, j, m = 0, UV, shadow, color = {}, C_index, hue = {}, pixel;
 
 		for ( var y = 0 ; y < render.element.height ; y += resolution ) {
 			j = Math.pow( y - radius, 2 );
@@ -153,16 +153,16 @@ function Sphere()
 					UV = maps.UV[m];
 					shadow = maps.shadow[m];
 
-					TEXTURE.x = Math.floor( UV.u + rotation_shift ) % TEXTURE_W;
-					TEXTURE.y = UV.v;
+					color.x = Math.floor( UV.u + rotation_shift ) % TEXTURE_W;
+					color.y = UV.v;
 
-					C_index = ( TEXTURE.x + TEXTURE.y * TEXTURE_W );
-					TEXTURE.RGB = maps.color[C_index];
+					C_index = ( color.x + color.y * TEXTURE_W );
+					color.RGB = maps.color[C_index];
 
-					hue.red = TEXTURE.RGB.red - 2 * shadow;
-					hue.green = TEXTURE.RGB.green - 2 * shadow;
-					hue.blue = TEXTURE.RGB.blue - shadow;
-					hue.alpha = TEXTURE.RGB.alpha;
+					hue.red = color.RGB.red - 2 * shadow;
+					hue.green = color.RGB.green - 2 * shadow;
+					hue.blue = color.RGB.blue - shadow;
+					hue.alpha = color.RGB.alpha;
 
 					for ( var py = 0 ; py < resolution ; py++ ) {
 						for ( var px = 0 ; px < resolution ; px++ ) {
