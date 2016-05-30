@@ -19,39 +19,22 @@ function SceneManager()
 	var frame;
 
 	/**
-	 * Iterate over all Sprites in the active scene and
-	 * clear the screen at their drawn coordinates
+	 * Erase all Sprites in the active scene
 	 */
 	function clear_sprites()
 	{
 		var cleared = false;
-		var position, width, height, padding, box = {};
+		var bounds;
 
 		scenes[active_scene].forAllComponentsOfType( Sprite, function( sprite ) {
 			if ( cleared || sprite.getProperAlpha() === 0 || !sprite.isOnScreen() ) {
 				return;
 			}
 
-			position = sprite.getScreenCoordinates();
-			width = sprite.scale._ * sprite.getWidth();
-			height = sprite.scale._ * sprite.getHeight();
+			sprite.erase();
+			bounds = sprite.getBoundingBox();
 
-			if ( sprite.rotation._ > 0 ) {
-				// Widen the clear zone around rotated Sprites
-				padding = Math.max( width, height );
-			} else {
-				padding = ( sprite.snap ? 0 : 1 );
-			}
-
-			// Constrain the clear rectangle to the screen's boundaries
-			box.x = Math.max( position.x - padding, 0 );
-			box.y = Math.max( position.y - padding, 0 );
-			box.width = Math.min( width + 2 * padding, Viewport.width );
-			box.height = Math.min( height + 2 * padding, Viewport.height );
-
-			screen.game.clear( box.x, box.y, box.width, box.height );
-
-			if ( box.x === 0 && box.y === 0 && box.width === Viewport.width && box.height === Viewport.height ) {
+			if ( bounds.x === 0 && bounds.y === 0 && bounds.width === Viewport.width && bounds.height === Viewport.height ) {
 				// Last clear region took up whole screen
 				// area, so no need to clear any more sprites
 				cleared = true;

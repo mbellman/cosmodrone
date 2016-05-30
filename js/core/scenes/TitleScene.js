@@ -68,7 +68,7 @@ function TitleScene( controller )
 	};
 
 	/**
-	 * List of props and properties to be
+	 * List of props and their properties to be
 	 * tweened when navigating between menus
 	 *
 	 * TODO: Organize this more nicely!
@@ -96,7 +96,7 @@ function TitleScene( controller )
 			logo: {tween: 'alpha', to: 0, time: slide, ease: Ease.quad.out},
 			starlogo: {tween: 'alpha', to: 0, time: slide, ease: Ease.quad.in},
 			TITLE_MENU: {tween: 'alpha', to: 0, time: ( slide / 2 ), ease: Ease.quad.out},
-			LEVEL_MENU: {tween: 'y', to: 0, time: slide, ease: Ease.quad.inOut, callback: resume_sphere_rotation }
+			LEVEL_MENU: {tween: 'y', to: 0, time: slide, ease: Ease.quad.inOut, callback: resume_sphere_rotation}
 		}
 	};
 
@@ -359,7 +359,7 @@ function TitleScene( controller )
 									var is_hidden = ( Vec2.distance( sprite.x._, sprite.y._, planet.x, planet.y ) < planet.radius );
 
 									if ( !sprite.alpha.isTweening() ) {
-										sprite.alpha.tweenTo( ( is_hidden ? 0.2 : 1 ), 0.25, Ease.quad.out );
+										sprite.alpha.tweenTo( ( is_hidden ? 0.2 : 1 ), 0.15, Ease.quad.out );
 									}
 								}
 							} )

@@ -254,7 +254,6 @@
 			}
 		}
 
-		// Write scaled data back into self
 		this.data.put( self );
 
 		return this;

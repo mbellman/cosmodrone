@@ -15,10 +15,15 @@ function Sprite( _source )
 	var parent_offset = {x: 0, y: 0};      // Offset of the owner's parent/ancestor entity Sprite (where applicable)
 	var offset = {x: 0, y: 0};             // A persistent offset as specified via Sprite.setOffset(x, y)
 	var origin = {x: 0, y: 0};             // Origin point of the Sprite (for positioning, rotations, scaling, etc.)
-	var render = {x: 0, y: 0};             // On-screen coordinates of the Sprite (updated internally)
 	var parent = null;                     // Parent or ancestor entity Sprite
 	var pivot;                             // Target Point for movement pivoting (motion opposite to)
 	var alpha = 1;                         // Proper Sprite alpha, influenced by parent Sprite alpha (update internally)
+	var bounds = {                         // Sprite's bounding rectangle (updated internally)
+		x: 0,
+		y: 0,
+		width: 0,
+		height: 0
+	};
 
 	/**
 	 * Update all Tweenable instances
@@ -43,22 +48,27 @@ function Sprite( _source )
 	}
 
 	/**
-	 * Recalculate the Sprite's global (on-screen) coordinates
+	 * Recalculate the Sprite's global (on-screen) coordinates/visible size
 	 */
-	function update_render_coordinates()
+	function update_bounding_box()
 	{
 		check_parent();
 
 		if ( parent !== null ) {
-			parent_offset = parent.getScreenCoordinates();
+			parent_offset = parent.getBoundingBox();
 		}
 
-		render.x = _.x._ - ( !!pivot ? pivot.getPosition().x : 0 ) + parent_offset.x + offset.x - origin.x;
-		render.y = _.y._ - ( !!pivot ? pivot.getPosition().y : 0 ) + parent_offset.y + offset.y - origin.y;
+		bounds.x = _.x._ - ( !!pivot ? pivot.getPosition().x : 0 ) + parent_offset.x + offset.x - origin.x;
+		bounds.y = _.y._ - ( !!pivot ? pivot.getPosition().y : 0 ) + parent_offset.y + offset.y - origin.y;
+
+		if ( source !== null ) {
+			bounds.width = _.scale._ * source.width;
+			bounds.height = _.scale._ * source.height;
+		}
 
 		if ( _.snap ) {
-			render.x = Math.floor( render.x );
-			render.y = Math.floor( render.y );
+			bounds.x = Math.floor( bounds.x );
+			bounds.y = Math.floor( bounds.y );
 		}
 	}
 
@@ -97,7 +107,7 @@ function Sprite( _source )
 
 		if ( _.rotation._ > 0 ) {
 			screen.game
-				.translate( render.x + origin.x, render.y + origin.y )
+				.translate( bounds.x + origin.x, bounds.y + origin.y )
 				.rotate( _.rotation._ * Math.PI_RAD );
 		}
 	}
@@ -121,7 +131,7 @@ function Sprite( _source )
 	this.update = function( dt )
 	{
 		update_tweens( dt );
-		update_render_coordinates();
+		update_bounding_box();
 		update_proper_alpha();
 
 		if (source === null || alpha === 0 || !_.isOnScreen() ) {
@@ -135,10 +145,10 @@ function Sprite( _source )
 
 		screen.game.draw.image(
 			source,
-			( _.rotation._ > 0 ? ( -origin.x * _.scale._ ) : render.x ),
-			( _.rotation._ > 0 ? ( -origin.y * _.scale._ ) : render.y ),
-			source.width * _.scale._,
-			source.height * _.scale._
+			( _.rotation._ > 0 ? ( -origin.x * _.scale._ ) : bounds.x ),
+			( _.rotation._ > 0 ? ( -origin.y * _.scale._ ) : bounds.y ),
+			bounds.width,
+			bounds.height
 		);
 
 		if ( has_effects() ) screen.game.restore();
@@ -158,19 +168,38 @@ function Sprite( _source )
 	this.onRemoved = function()
 	{
 		_.owner.forAllComponentsOfType( Sprite, function( sprite ) {
-			sprite.deleteParent();
+			sprite.unlistParent();
 		} );
 	};
 
 	/**
-	 * Returns the global (on-screen) coordinates of the Sprite
+	 * Clears the area around the Sprite
 	 */
-	this.getScreenCoordinates = function()
+	this.erase = function()
 	{
-		return {
-			x: render.x,
-			y: render.y
-		};
+		var buffer = (
+			_.rotation._ === 0 ?
+				( _.snap ? 0 : 1)
+			:
+				( Math.max( bounds.width, bounds.height ) / 2 )
+		);
+
+		screen.game.clear(
+			bounds.x - buffer,
+			bounds.y - buffer,
+			bounds.width + 2 * buffer,
+			bounds.height + 2 * buffer
+		);
+
+		return _;
+	};
+
+	/**
+	 * Returns the Sprite's bounding rectangle
+	 */
+	this.getBoundingBox = function()
+	{
+		return bounds;
 	};
 
 	/**
@@ -289,7 +318,7 @@ function Sprite( _source )
 	/**
 	 * Reset parent/ancestor Sprite reference
 	 */
-	this.deleteParent = function()
+	this.unlistParent = function()
 	{
 		parent = null;
 		return _;
@@ -303,8 +332,8 @@ function Sprite( _source )
 		if ( source === null ) return false;
 
 		return (
-			( render.x < Viewport.width && render.x + ( source.width * _.scale._ ) > 0) &&
-			( render.y < Viewport.height && render.y + ( source.height * _.scale._ ) > 0)
+			( bounds.x < Viewport.width && bounds.x + bounds.width > 0) &&
+			( bounds.y < Viewport.height && bounds.y + bounds.height > 0)
 		);
 	};
 
@@ -318,7 +347,7 @@ function Sprite( _source )
 }
 
 /**
- * Static method for determining whether a bounding box is on-screen
+ * Static method for determining whether a bounding rectangle is on-screen
  */
 Sprite.isOnScreen = function( x, y, width, height )
 {

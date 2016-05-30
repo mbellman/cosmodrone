@@ -138,7 +138,24 @@
 		}
 
 		/**
-		 * Executes special print instructions
+		 * Update Canvas [size] based on new [offset]
+		 */
+		function update_canvas_size( clip )
+		{
+			var char_height = offset.y + clip.height + clip.top;
+			offset.x += ( clip.width + letter_spacing );
+
+			if (offset.x > size.width) {
+				size.width = offset.x;
+			}
+
+			if (char_height > size.height) {
+				size.height = char_height;
+			}
+		}
+
+		/**
+		 * Executes special text block instructions
 		 */
 		function process_instruction( instruction )
 		{
@@ -154,23 +171,6 @@
 					offset.y += line_height;
 					buffer += 4;
 					break;
-			}
-		}
-
-		/**
-		 * Update Canvas [size] based on new [offset]
-		 */
-		function update_canvas_size( clip )
-		{
-			var char_height = offset.y + clip.height + clip.top;
-			offset.x += ( clip.width + letter_spacing );
-
-			if (offset.x > size.width) {
-				size.width = offset.x;
-			}
-
-			if (char_height > size.height) {
-				size.height = char_height;
 			}
 		}
 
@@ -218,9 +218,8 @@
 		}
 
 		/**
-		 * Iterate over [string], either to
-		 * ascertain the new [render] Canvas
-		 * size or to print it to [render]
+		 * Iterate over [string], either to ascertain the new
+		 * [render] Canvas size or to print it to [render]
 		 */
 		function feed_string( is_printing )
 		{
@@ -244,18 +243,6 @@
 
 			feed_string( false );
 			render.setSize( size.width, size.height );
-		}
-
-		/**
-		 * Prints [string] to [render] Canvas
-		 */
-		function print_string()
-		{
-			feed_string( true );
-
-			if ( _.owner !== null && _.owner.has( Sprite ) ) {
-				_.owner.get(Sprite).setSource( render.element );
-			}
 		}
 
 		// -- Public: --
@@ -308,7 +295,7 @@
 		{
 			string = _string;
 			set_canvas_size();
-			print_string();
+			feed_string( true );
 			return _;
 		};
 

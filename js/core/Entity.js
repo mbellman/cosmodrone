@@ -75,8 +75,8 @@ function Entity( name )
 	};
 
 	/**
-	 * Called when this Entity gets
-	 * added as a child to another Entity
+	 * Called when this entity gets added
+	 * as a child to another [entity]
 	 */
 	this.onAddedToParent = function( entity )
 	{
@@ -88,7 +88,7 @@ function Entity( name )
 	};
 
 	/**
-	 * Add a component to the entity by instance
+	 * Add a [component] to the entity by instance
 	 */
 	this.add = function( component )
 	{
@@ -118,7 +118,7 @@ function Entity( name )
 	};
 
 	/**
-	 * Add this entity to a parent entity
+	 * Add this entity to a [parent] entity
 	 */
 	this.addToParent = function( parent )
 	{
@@ -127,7 +127,7 @@ function Entity( name )
 	};
 
 	/**
-	 * Get rid of a specific child entity by reference
+	 * Get rid of a specific child [entity] by reference
 	 */
 	this.removeChild = function( entity )
 	{
@@ -157,7 +157,7 @@ function Entity( name )
 	};
 
 	/**
-	 * Retrieve a Component by instance name
+	 * Retrieve a [component] by instance name
 	 */
 	this.get = function( component )
 	{
@@ -165,7 +165,7 @@ function Entity( name )
 	};
 
 	/**
-	 * Retrieves the first available component from
+	 * Retrieves the first available [component] from
 	 * the entity or its children by instance name.
 	 */
 	this.find = function( component )
@@ -186,8 +186,8 @@ function Entity( name )
 	};
 
 	/**
-	 * Retrieve a Component from parent entities by instance
-	 * name; returns null if no parents have the Component
+	 * Retrieve a [component] from parent entities by instance
+	 * name; returns null if no parents have the component
 	 */
 	this.getFromParents = function( component )
 	{
@@ -210,7 +210,7 @@ function Entity( name )
 	};
 
 	/**
-	 * Verify that this Entity has a Component by instance name
+	 * Verify that this entity has a [component] by instance name
 	 */
 	this.has = function( component )
 	{
@@ -218,7 +218,7 @@ function Entity( name )
 	};
 
 	/**
-	 * Remove a Component from this Entity by instance name
+	 * Remove a [component] from this entity by instance name
 	 */
 	this.remove = function( component )
 	{
@@ -234,9 +234,9 @@ function Entity( name )
 	};
 
 	/**
-	 * Run a [handler] operation on all Components of this
-	 * Entity, and recursively on its children. [handler]
-	 * receives the Component instance as an argument.
+	 * Run a [handler] operation on all components of this
+	 * entity and recursively on its children. [handler]
+	 * receives the component instance as an argument.
 	 */
 	this.forAllComponents = function( handler )
 	{
