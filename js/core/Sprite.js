@@ -300,6 +300,8 @@ function Sprite( _source )
 	 */
 	this.isOnScreen = function()
 	{
+		if ( source === null ) return false;
+
 		return (
 			( render.x < Viewport.width && render.x + ( source.width * _.scale._ ) > 0) &&
 			( render.y < Viewport.height && render.y + ( source.height * _.scale._ ) > 0)
@@ -351,6 +353,8 @@ function FillSprite( color, width, height )
 	Sprite.call( this, sprite.element );
 }
 
+FillSprite.prototype = Object.create(Sprite.prototype);
+
 /**
  * -----------------------
  * Component: VectorSprite
@@ -371,3 +375,5 @@ function VectorSprite()
 	 */
 	Sprite.call( this , this.sprite.element );
 }
+
+VectorSprite.prototype = Object.create(Sprite.prototype);
