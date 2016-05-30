@@ -102,7 +102,7 @@
 			// 1. Get the [pixel] coordinate in original texture space
 			// 2. Get the chunk this coordinate falls within
 			// 3. Determine where to start clipping on the smaller chunk texture
-			// 4. Get drawing coordinate
+			// 4. Get drawing coordinates
 			// 5. Get partial clipping area width/height
 			// 6. Render the partial clipped texture
 			// 7. Advance pixel offset and continue
@@ -110,7 +110,8 @@
 			while ( pixel.x < region_W || pixel.y < region_H ) {
 				if ( ++loops > 5000 ) {
 					// Failsafe against infinite looping (only
-					// occurs in the case of unusual [divisions])
+					// occurs in the case of unusual [divisions]
+					// due to floating point modulo errors)
 					break;
 				}
 
@@ -407,7 +408,7 @@
 		function prerender_terrain_variant( hour )
 		{
 			terrain.setTime( hour );
-			renders.terrain.push( new TextureCache().divide( terrain.canvas, 17 ) );
+			renders.terrain.push( new TextureCache().divide( terrain.canvas, 18 ) );
 		}
 
 		/**

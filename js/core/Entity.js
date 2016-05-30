@@ -3,10 +3,11 @@
  * Class: Entity
  * -------------
  *
- * A blank template object which can store
- * and manage component/entity instances
+ * A blank template object which can store and
+ * manage multiple component/entity instances
+ * (the [name] parameter is completely optional)
  */
-function Entity()
+function Entity( name )
 {
 	// -- Private: --
 	var _ = this;
@@ -57,6 +58,7 @@ function Entity()
 
 	// -- Public: --
 	this.parent = null;
+	this.name = name || null;
 
 	/**
 	 * Update cycle
@@ -277,5 +279,26 @@ function Entity()
 	this.child = function( n )
 	{
 		return children[n] || null;
+	};
+
+	/**
+	 * Returns a child or descendant entity by name [query]
+	 */
+	this.$ = function( query )
+	{
+		for ( var c = 0 ; c < children.length ; c++ ) {
+			var child = children[c];
+			var search = child.$( query );
+
+			if ( child.name === query ) {
+				return child;
+			}
+
+			if ( search !== null ) {
+				return search;
+			}
+		}
+
+		return null;
 	};
 }

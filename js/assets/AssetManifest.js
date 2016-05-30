@@ -71,6 +71,8 @@ var AssetManifest =
 			'title/level-select/moon.png',
 			'title/level-select/orbits/earth-1-bg.png',
 			'title/level-select/orbits/earth-1-fg.png',
+			'title/level-select/pane-glow.png',
+			'title/level-select/pane.png',
 			'title/level-select/station-icon-selected.png',
 			'title/level-select/station-icon.png',
 			'title/nova1.png',

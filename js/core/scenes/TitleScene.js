@@ -37,22 +37,22 @@ function TitleScene( controller )
 
 	// Planet locations/sizes
 	var planets = {
-		earth: {x: 600, y: 325, radius: 230},
-		moon: {x: 2100, y: 325, radius: 100},
-		mars: {x: 5600, y: 325, radius: 180}
+		earth: {x: 740, y: 325, radius: 230},
+		moon: {x: 2240, y: 325, radius: 100},
+		mars: {x: 5740, y: 325, radius: 180}
 	};
 
 	// Orbital paths taken by each station (static positions
 	// denoted by [x, y] coordinates in lieu of orbital parameters)
 	var station_orbits = {
-		1: {zone: 'earth', width: 600, height: 100, period: 20, inclination: 23},
-		2: {zone: 'earth', width: 700, height: 150, period: 28, inclination: -37},
-		3: {zone: 'earth', width: 550, height: 300, period: 16, inclination: 48},
-		4: {zone: 'earth', width: 525, height: 200, period: 14, inclination: -17},
-		5: {zone: 'moon', width: 235, height: 125, period: 6, inclination: 30},
-		6: {zone: 'DEEP_SPACE_1', x: 2900, y: 150},
-		7: {zone: 'DEEP_SPACE_1', x: 3250, y: 500},
-		8: {zone: 'mars', width: 430, height: 250, period: 10, inclination: -29}
+		1: {zone: 'earth', width: 600, height: 100, period: 12, inclination: 23},
+		2: {zone: 'earth', width: 700, height: 150, period: 14, inclination: -37},
+		3: {zone: 'earth', width: 550, height: 300, period: 11, inclination: 48},
+		4: {zone: 'earth', width: 525, height: 200, period: 10, inclination: -17},
+		5: {zone: 'moon', width: 235, height: 125, period: 5, inclination: 30},
+		6: {zone: 'DEEP_SPACE_1', x: 3050, y: 150},
+		7: {zone: 'DEEP_SPACE_1', x: 3400, y: 500},
+		8: {zone: 'mars', width: 420, height: 250, period: 8, inclination: -29}
 	};
 
 	// Level preview summaries
@@ -186,11 +186,12 @@ function TitleScene( controller )
 
 		for ( var c = 0 ; c < logo.characters.length ; c++ ) {
 			var character = logo.characters[c];
-			var entity = new Entity().add(
-				new Sprite( Assets.getImage( 'title/letters/' + character + '.png' ) )
-					.setXY( logo.x[c], logo.y[c] )
-					.setAlpha( 0 )
-			);
+			var entity = new Entity()
+				.add(
+					new Sprite( Assets.getImage( 'title/letters/' + character + '.png' ) )
+						.setXY( logo.x[c], logo.y[c] )
+						.setAlpha( 0 )
+				);
 
 			entity.get( Sprite ).alpha
 				.delay( 0.75 + ( c * 0.1 ) )
@@ -326,38 +327,43 @@ function TitleScene( controller )
 				// Station has an orbital path
 				var ellipse = INTERNAL_build_orbit_path( orbit.width, orbit.height );
 
-				orbits_BG.addChild( new Entity().add(
-					new Sprite( ellipse.bg )
-						.setXY( planet.x, planet.y )
-						.setOrigin( ellipse.bg.width / 2, ellipse.bg.height )
-						.setRotation( orbit.inclination )
-						.setAlpha( 0.2 )
-				) );
-
-				orbits_FG.addChild( new Entity().add(
-					new Sprite( ellipse.fg )
-						.setXY( planet.x, planet.y )
-						.setOrigin( ellipse.fg.width / 2, 0 )
-						.setRotation( orbit.inclination )
-						.setAlpha( 0.2 )
-				) );
-
-				space_stations.child( station - 1 ).add(
-					new Oscillation( orbit.width, orbit.height )
-						.setAnchor( planet.x, planet.y )
-						.setPeriod( orbit.period )
-						.setRotation( orbit.inclination )
-						.setStart( Math.random() * 2 * Math.PI )
-						.whileMoving( function( sprite, angle ) {
-							if ( angle > Math.PI ) {
-								var is_hidden = ( Vec2.distance( sprite.x._, sprite.y._, planet.x, planet.y ) < planet.radius );
-
-								if ( !sprite.alpha.isTweening() ) {
-									sprite.alpha.tweenTo( ( is_hidden ? 0.2 : 1 ), 0.25, Ease.quad.out );
-								}
-							}
-						} )
+				orbits_BG.addChild( new Entity()
+					.add(
+						new Sprite( ellipse.bg )
+							.setXY( planet.x, planet.y )
+							.setOrigin( ellipse.bg.width / 2, ellipse.bg.height )
+							.setRotation( orbit.inclination )
+							.setAlpha( 0.2 )
+					)
 				);
+
+				orbits_FG.addChild( new Entity()
+					.add(
+						new Sprite( ellipse.fg )
+							.setXY( planet.x, planet.y )
+							.setOrigin( ellipse.fg.width / 2, 0 )
+							.setRotation( orbit.inclination )
+							.setAlpha( 0.2 )
+					)
+				);
+
+				space_stations.child( station - 1 )
+					.add(
+						new Oscillation( orbit.width, orbit.height, true )
+							.setAnchor( planet.x, planet.y )
+							.setPeriod( orbit.period )
+							.setRotation( orbit.inclination )
+							.setStart( Math.random() * 2 * Math.PI )
+							.whileMoving( function( sprite, angle ) {
+								if ( angle > Math.PI ) {
+									var is_hidden = ( Vec2.distance( sprite.x._, sprite.y._, planet.x, planet.y ) < planet.radius );
+
+									if ( !sprite.alpha.isTweening() ) {
+										sprite.alpha.tweenTo( ( is_hidden ? 0.2 : 1 ), 0.25, Ease.quad.out );
+									}
+								}
+							} )
+					);
 			} else
 			if ( orbit.x && orbit.y ) {
 				// Station is...stationary!
@@ -380,9 +386,10 @@ function TitleScene( controller )
 				station_total++;
 
 				space_stations.addChild(
-					new Entity().add(
-						new Sprite( STATION_ICON ).centerOrigin()
-					)
+					new Entity()
+						.add(
+							new Sprite( STATION_ICON ).centerOrigin()
+						)
 				);
 
 				INTERNAL_set_station( station );
@@ -394,106 +401,134 @@ function TitleScene( controller )
 			.add( new Sprite() )
 			.addChild( orbits_BG )
 			.addChild(
-				new Entity().add(
-					new Sphere()
-						.setRadius( planets.earth.radius )
-						.setTexture( EARTH_TEXTURE )
-						.setAmbientLight( 0.4 )
-						.setRotationSpeed( -10 )
-						.setResolution( 2 )
-						.setXY( planets.earth.x, planets.earth.y )
-						.render()
-				),
-				new Entity().add(
-					new Sphere()
-						.setRadius( planets.moon.radius )
-						.setTexture( MOON_TEXTURE )
-						.setAmbientLight( 0.1 )
-						.setLightDiffusion( 0.1 )
-						.setRotationSpeed( -2 )
-						.setResolution( 2 )
-						.setXY( planets.moon.x, planets.moon.y )
-						.render()
-				),
-				new Entity().add(
-					new Sphere()
-						.setRadius( planets.mars.radius )
-						.setTexture( MARS_TEXTURE )
-						.setAmbientLight( 0.6 )
-						.setLightDiffusion( 0.5 )
-						.setRotationSpeed( -8 )
-						.setResolution( 2 )
-						.setXY( planets.mars.x, planets.mars.y )
-						.render()
-				)
+				new Entity()
+					.add(
+						new Sphere()
+							.setRadius( planets.earth.radius )
+							.setTexture( EARTH_TEXTURE )
+							.setAmbientLight( 0.4 )
+							.setRotationSpeed( -8 )
+							.setResolution( 2 )
+							.setXY( planets.earth.x, planets.earth.y )
+							.render()
+					),
+				new Entity()
+					.add(
+						new Sphere()
+							.setRadius( planets.moon.radius )
+							.setTexture( MOON_TEXTURE )
+							.setAmbientLight( 0.1 )
+							.setLightDiffusion( 0.1 )
+							.setRotationSpeed( -2 )
+							.setResolution( 2 )
+							.setXY( planets.moon.x, planets.moon.y )
+							.render()
+					),
+				new Entity()
+					.add(
+						new Sphere()
+							.setRadius( planets.mars.radius )
+							.setTexture( MARS_TEXTURE )
+							.setAmbientLight( 0.6 )
+							.setLightDiffusion( 0.5 )
+							.setRotationSpeed( -8 )
+							.setResolution( 2 )
+							.setXY( planets.mars.x, planets.mars.y )
+							.render()
+					)
 			)
 			.addChild( orbits_FG )
 			.addChild( space_stations );
 
+		// Level information pane
+		var pane = new Entity( 'pane' )
+			.add(
+				new Sprite().setXY( -300, 110 )
+			)
+			.addChild(
+				new Entity()
+					.add(
+						new Sprite( Assets.getImage( 'title/level-select/pane-glow.png' ) )
+					)
+					.add(
+						new Flicker()
+							.setAlphaRange( 0.2, 0.5 )
+							.setTimeRange( 0.3, 0.5 )
+					)
+			)
+			.addChild(
+				new Entity().add(
+					new Sprite( Assets.getImage( 'title/level-select/pane.png' ) )
+				)
+			);
+
 		// Level description text
-		var text = new Entity().add(
-			new Sprite().setXY( 200, 550 )
-		)
-		.add(
-			new TextPrinter( 'Monitor' )
-				.setSound( Assets.getAudio( 'ui/blip1.wav' ), Assets.getAudio( 'ui/blip2.wav' ) )
-				.setInterval( 25 )
-		);
+		var text = new Entity()
+			.add(
+				new Sprite().setXY( 25, 50 )
+			)
+			.add(
+				new TextPrinter( 'Monitor' )
+					.setSound( Assets.getAudio( 'ui/blip1.wav' ), Assets.getAudio( 'ui/blip2.wav' ) )
+					.setInterval( 25 )
+			)
+			.addToParent( pane );
 
 		// Off-screen Menu component for navigation
-		var menu = new Entity().add(
-			new Menu( 'grid' )
-				.configure(
-					{
-						items: station_total,
-						options: function( i ) {
-							return new Entity().add(
-								new Sprite().setXY( 20 * i, 0 )
-							);
-						},
-						onFocus: function( entity, i ) {
-							space_stations.child( i ).get( Sprite )
-								.setSource( STATION_ICON_SELECTED )
-								.centerOrigin();
-
-							INTERNAL_set_orbit_alpha( i, 1 );
-							text.find( TextPrinter ).print( level_text[++i] );
-
-							if ( station_orbits[i].zone !== mission_zone ) {
-								mission_zone = station_orbits[i].zone;
-
-								pause_sphere_rotation();
-								space.get( Sprite ).x.tweenTo(
-									-1 * zone_offsets[mission_zone],
-									1.5,
-									Ease.quad.inOut,
-									resume_sphere_rotation
+		var menu = new Entity()
+			.add(
+				new Menu( 'grid' )
+					.configure(
+						{
+							items: station_total,
+							options: function( i ) {
+								return new Entity().add(
+									new Sprite().setXY( 20 * i, 0 )
 								);
-							}
-						},
-						onUnFocus: function( entity, i ) {
-							space_stations.child( i ).get( Sprite ).setSource( STATION_ICON ).centerOrigin();
-							INTERNAL_set_orbit_alpha( i, 0.2 );
-						},
-						onSelect: function( entity, i ) {
-							if ( i < 1 ) {
-								return true;
-							}
+							},
+							onFocus: function( entity, i ) {
+								space_stations.child( i ).get( Sprite )
+									.setSource( STATION_ICON_SELECTED )
+									.centerOrigin();
 
-							return false;
-						},
-						sounds: {
-							cursor: Assets.getAudio( 'ui/chime1.wav' ),
-							select: Assets.getAudio( 'ui/select1.wav' ),
-							invalid: Assets.getAudio( 'ui/error1.wav' )
+								INTERNAL_set_orbit_alpha( i, 1 );
+								text.find( TextPrinter ).print( level_text[++i] );
+
+								if ( station_orbits[i].zone !== mission_zone ) {
+									mission_zone = station_orbits[i].zone;
+
+									pause_sphere_rotation();
+									space.get( Sprite ).x.tweenTo(
+										-1 * zone_offsets[mission_zone],
+										1.5,
+										Ease.quad.inOut,
+										resume_sphere_rotation
+									);
+								}
+							},
+							onUnFocus: function( entity, i ) {
+								space_stations.child( i ).get( Sprite ).setSource( STATION_ICON ).centerOrigin();
+								INTERNAL_set_orbit_alpha( i, 0.2 );
+							},
+							onSelect: function( entity, i ) {
+								if ( i < 1 ) {
+									return true;
+								}
+
+								return false;
+							},
+							sounds: {
+								cursor: Assets.getAudio( 'ui/chime1.wav' ),
+								select: Assets.getAudio( 'ui/select1.wav' ),
+								invalid: Assets.getAudio( 'ui/error1.wav' )
+							}
 						}
-					}
-				)
-		);
+					)
+			);
 
 		props.LEVEL_MENU = new Entity()
 			.add( new Sprite().setXY( 0, -Viewport.height ) )
-			.addChild( space, text, menu );
+			.addChild( space, pane, menu );
 	}
 
 	/**
@@ -550,7 +585,10 @@ function TitleScene( controller )
 		props.nova2.remove( Flicker );
 
 		props.TITLE_MENU.get( Menu ).enable();
+
 		props.LEVEL_MENU.find( Menu ).disable();
+		props.LEVEL_MENU.find( TextPrinter ).mute();
+		props.LEVEL_MENU.$( 'pane' ).get( Sprite ).x.tweenTo( -300, slide, Ease.quad.inOut );
 
 		run_transition_tweens();
 	}
@@ -566,8 +604,10 @@ function TitleScene( controller )
 		props.nova2.add( new Flicker().setAlphaRange( 0.7, 1.0 ) );
 
 		props.TITLE_MENU.get( Menu ).disable();
+
 		props.LEVEL_MENU.find( Menu ).enable();
 		props.LEVEL_MENU.find( TextPrinter ).unmute();
+		props.LEVEL_MENU.$( 'pane' ).get( Sprite ).x.delay( 0.25 ).tweenTo( 0, slide, Ease.quad.inOut );
 
 		pause_sphere_rotation();
 		run_transition_tweens();

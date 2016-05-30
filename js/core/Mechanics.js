@@ -23,8 +23,8 @@ function Flicker()
 		if ( !sprite.alpha.isTweening() ) {
 			// Start new flicker tween
 			sprite.alpha.tweenTo(
-				random( range.alpha.low, range.alpha.high ),
-				random( range.time.low, range.time.high ),
+				randomFloat( range.alpha.low, range.alpha.high ),
+				randomFloat( range.time.low, range.time.high ),
 				Ease.quad.inOut
 			);
 		}
@@ -154,7 +154,7 @@ function Point()
  * Oscillates a Sprite by having it trace
  * out a parameterized elliptical path
  */
-function Oscillation( width, height )
+function Oscillation( width, height, is_reversed )
 {
 	Component.call( this );
 
@@ -181,7 +181,7 @@ function Oscillation( width, height )
 	// -- Public: --
 	this.update = function( dt )
 	{
-		t += ( dt / period );
+		t += ( dt / period ) * ( is_reversed ? -1 : 1 );
 
 		var COS_t = Math.cos( t );
 		var SIN_t = Math.sin( t );
@@ -190,7 +190,7 @@ function Oscillation( width, height )
 			sprite.x._ = anchor.x + ( radius.x * COS_t * angle.cosine ) - ( radius.y * SIN_t * angle.sine );
 			sprite.y._ = anchor.y + ( radius.y * SIN_t * angle.cosine ) + ( radius.x * COS_t * angle.sine );
 
-			while_moving( sprite, t % TAU );
+			while_moving( sprite, mod( t, TAU ) );
 		}
 	};
 

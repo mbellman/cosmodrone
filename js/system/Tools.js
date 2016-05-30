@@ -10,7 +10,7 @@ Math.RAD_PI = 180 / Math.PI;
 // -------------------------------------- //
 
 /**
- * RNG between two limits
+ * Return a pseudo-random integer between two limits
  */
 function random( low, high )
 {
@@ -18,7 +18,15 @@ function random( low, high )
 }
 
 /**
- * 50/50 chance of returning true or false
+ * Return a pseudo-random floating point value between two limits
+ */
+function randomFloat( low, high )
+{
+	return low + Math.random() * ( high - low );
+}
+
+/**
+ * ~50/50 chance of returning true or false
  */
 function chance()
 {
@@ -26,7 +34,7 @@ function chance()
 }
 
 /**
- * Randomly selects and returns an argument
+ * Randomly selects and returns one of the arguments
  */
 function pick_random()
 {
