@@ -288,14 +288,15 @@ function Entity( name )
 	{
 		for ( var c = 0 ; c < children.length ; c++ ) {
 			var child = children[c];
-			var search = child.$( query );
 
 			if ( child.name === query ) {
 				return child;
-			}
+			} else {
+				var search = child.$( query );
 
-			if ( search !== null ) {
-				return search;
+				if ( search !== null ) {
+					return search;
+				}
 			}
 		}
 
