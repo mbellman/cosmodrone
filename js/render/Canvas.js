@@ -260,6 +260,50 @@
 	};
 
 	/**
+	 * Replace all pixels of [color1] RGB
+	 * value with that of [color2] value
+	 */
+	Canvas.prototype.replace = function( color1, color2 )
+	{
+		var self = this.data.get();
+		var pixel, color;
+
+		color2.alpha = color2.alpha || 255;
+
+		for ( var y = 0 ; y < this.element.height ; y++ ) {
+			for ( var x = 0 ; x < this.element.width ; x++ ) {
+				pixel = self.getPixelIndex( x, y );
+				color = self.read( pixel );
+
+				if (
+					color.red === color1.red &&
+					color.blue === color1.blue &&
+					color.green === color1.green
+				) {
+					self.write( pixel, color2 );
+				}
+			}
+		}
+
+		this.data.put( self );
+
+		return this;
+	};
+
+	/**
+	 * Return a copied instance of Canvas
+	 */
+	Canvas.prototype.copy = function()
+	{
+		var size = this.getSize();
+		var copy = new Canvas().setSize( size.width, size.height );
+
+		copy.draw.image( this.element );
+
+		return copy;
+	};
+
+	/**
 	 * Get Canvas dimensions
 	 */
 	Canvas.prototype.getSize = function()
@@ -343,6 +387,37 @@
 	{
 		this.ctx.restore();
 		return this;
+	};
+
+	/**
+	 * Static method for converting a [hex] string to a RGB value
+	 */
+	Canvas.hexToRGB = function( hex )
+	{
+		hex = hex.replace( /#/g, '' );
+		var red = 0, green = 0, blue = 0;
+
+		if ( hex.length === 3 ) {
+			// 3-character hex color
+			red = hex.charAt( 0 );
+			green = hex.charAt( 1 );
+			blue = hex.charAt( 2);
+
+			red += red;
+			green += green;
+			blue += blue;
+		} else {
+			// 6-character hex color
+			red = hex.substr( 0, 2 );
+			green = hex.substr( 2, 2 );
+			blue = hex.substr( 4, 2 );
+		}
+
+		return {
+			red: parseInt( red, 16 ),
+			green: parseInt( green, 16 ),
+			blue: parseInt( blue, 16 )
+		};
 	};
 
 	/**

@@ -37,9 +37,9 @@ function TitleScene( controller )
 
 	// Planet locations/sizes
 	var planets = {
-		earth: {x: 740, y: 325, radius: 230},
-		moon: {x: 2240, y: 325, radius: 100},
-		mars: {x: 5740, y: 325, radius: 180}
+		earth: {x: 440, y: 325, radius: 230},
+		moon: {x: 1940, y: 325, radius: 100},
+		mars: {x: 5440, y: 325, radius: 180}
 	};
 
 	// Orbital paths taken by each station (static positions
@@ -50,21 +50,21 @@ function TitleScene( controller )
 		3: {zone: 'earth', width: 550, height: 300, period: 11, inclination: 48},
 		4: {zone: 'earth', width: 525, height: 200, period: 10, inclination: -17},
 		5: {zone: 'moon', width: 235, height: 125, period: 5, inclination: 30},
-		6: {zone: 'DEEP_SPACE_1', x: 3050, y: 150},
-		7: {zone: 'DEEP_SPACE_1', x: 3400, y: 500},
+		6: {zone: 'DEEP_SPACE_1', x: 2750, y: 150},
+		7: {zone: 'DEEP_SPACE_1', x: 3100, y: 500},
 		8: {zone: 'mars', width: 420, height: 250, period: 8, inclination: -29}
 	};
 
 	// Level preview summaries
 	var level_text = {
-		1: 'PLANET: Earth[br]STATION: Unity Base[br]ALTITUDE: 70km[br]DIFFICULTY: Easy',
-		2: 'The quick brown fox[br]jumped over the lazy[br]dog!!?!?! :-) __proto__',
-		3: 'Level Three...that\'s which level this is!',
-		4: 'Level Four...that\'s which level this is!',
-		5: 'Level Five...that\'s which le...v...[br]s-sorry...',
-		6: 'Where the heck is this?!!??!',
-		7: 'Whoa...there\'s nothing out here!!!![br]OOoooOOOoooOhhh noOOOoooOOo!!!!',
-		8: 'Next stop...Mars!',
+		1: '[rgb=#0ff]LOCATION[rgb=#fff]: Earth[br][rgb=#afa]STATION[rgb=#fff]: Training Center[br][rgb=#0ff]ALTITUDE[rgb=#fff]: 600km',
+		2: 'LOCATION: Earth[br]STATION: Unity Base[br]ALTITUDE: 700km',
+		3: 'LOCATION: Earth[br]STATION: Frontier Station[br]ALTITUDE: 550km',
+		4: 'LOCATION: Earth[br]STATION: ISS IV[br]ALTITUDE: 525km',
+		5: 'LOCATION: Moon[br]STATION: Luna Base[br]ALTITUDE: 235km',
+		6: 'LOCATION: Deep Space[br]VESSEL: Cosmo IX[br]ALTITUDE: N/A',
+		7: 'LOCATION: Deep Space[br]VESSEL: Explorer II[br]ALTITUDE: N/A',
+		8: 'LOCATION: Mars[br]STATION: Valor Station[br]ALTITUDE: 420km',
 	};
 
 	/**
@@ -233,8 +233,8 @@ function TitleScene( controller )
 							font: 'Monitor',
 							options: {
 								'STATION SELECT': view_level_select,
-								'STATION BUILDER': null,
-								'CREDITS': null
+								'[rgb=#bbc]STATION BUILDER': null,
+								'[rgb=#bbc]CREDITS': null
 							},
 							sounds: {
 								cursor: Assets.getAudio( 'ui/chime1.wav' ),
@@ -451,7 +451,7 @@ function TitleScene( controller )
 		// Level information pane
 		var pane = new Entity( 'pane' )
 			.add(
-				new Sprite().setXY( -300, 110 )
+				new Sprite().setXY( Viewport.width, 110 )
 			)
 			.addChild(
 				new Entity()
@@ -460,8 +460,8 @@ function TitleScene( controller )
 					)
 					.add(
 						new Flicker()
-							.setAlphaRange( 0.1, 0.25 )
-							.setTimeRange( 0.2, 0.5 )
+							.setAlphaRange( 0.1, 0.2 )
+							.setTimeRange( 0.2, 0.4 )
 					)
 			)
 			.addChild(
@@ -476,11 +476,12 @@ function TitleScene( controller )
 		var text = new Entity()
 			.add(
 				new Sprite()
-					.setXY( 25, 50 )
+					.setXY( 50, 50 )
 					.setAlpha( 0.8 )
 			)
 			.add(
 				new TextPrinter( 'MonitorMini' )
+					.loadColors( '#0ff', '#afa' )
 					.setSound( Assets.getAudio( 'ui/blip1.wav' ), Assets.getAudio( 'ui/blip2.wav' ) )
 					.setInterval( 25 )
 			)
@@ -602,7 +603,7 @@ function TitleScene( controller )
 
 		props.LEVEL_MENU.find( Menu ).disable();
 		props.LEVEL_MENU.find( TextPrinter ).mute();
-		props.LEVEL_MENU.$( 'pane' ).get( Sprite ).x.tweenTo( -300, slide, Ease.quad.inOut );
+		props.LEVEL_MENU.$( 'pane' ).get( Sprite ).x.tweenTo( Viewport.width, slide, Ease.quad.inOut );
 
 		run_transition_tweens();
 	}
@@ -621,7 +622,7 @@ function TitleScene( controller )
 
 		props.LEVEL_MENU.find( Menu ).enable();
 		props.LEVEL_MENU.find( TextPrinter ).unmute();
-		props.LEVEL_MENU.$( 'pane' ).get( Sprite ).x.delay( 0.25 ).tweenTo( 0, slide, Ease.quad.inOut );
+		props.LEVEL_MENU.$( 'pane' ).get( Sprite ).x.delay( 0.25 ).tweenTo( Viewport.width - 375, slide, Ease.quad.inOut );
 
 		pause_sphere_rotation();
 		run_transition_tweens();

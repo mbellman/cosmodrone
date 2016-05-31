@@ -15,6 +15,8 @@ function TextString( _font )
 	var render = new Canvas();
 	var font = _font;
 	var bitmap = Assets.getImage( Fonts[font].file );
+	var bitmaps = {};
+	var color = '#fff';
 	var string = '';
 	var line_height = 30;
 	var letter_spacing = 2;
@@ -22,7 +24,15 @@ function TextString( _font )
 	var buffer = 0;
 	var offset = {x: 0, y: 0};
 	var size = {width: 0, height: 0};
-	var instructions = [' ', '[br]'];
+	var instructions = [' ', '[br]', '[rgb='];
+
+	/**
+	 * Load first font bitmap (default #fff color)
+	 */
+	bitmaps[color] = new Canvas();
+	bitmaps[color]
+		.setSize( bitmap.width, bitmap.height )
+		.draw.image( bitmap );
 
 	/**
 	 * Get the clipping region for a character
@@ -56,9 +66,28 @@ function TextString( _font )
 	}
 
 	/**
-	 * Executes special text block instructions
+	 * Checks the data inside a special variable instruction
+	 * block and returns it after advancing the output buffer
 	 */
-	function process_instruction( instruction )
+	function parse_special_instruction()
+	{
+		var start = string.indexOf( '=', buffer );
+		var end = string.indexOf( ']', buffer );
+
+		if ( start > -1 && end > -1 ) {
+			buffer = end + 1;
+			return string.substring( start + 1, end );
+		} else {
+			// Malformed block
+			buffer++;
+			return null;
+		}
+	}
+
+	/**
+	 * Executes text block instructions
+	 */
+	function process_instruction( instruction, is_printing )
 	{
 		switch ( instruction ) {
 			// Space
@@ -72,6 +101,25 @@ function TextString( _font )
 				offset.y += line_height;
 				buffer += 4;
 				break;
+			// Color change
+			case '[rgb=':
+				var new_color = parse_special_instruction();
+
+				if ( !bitmaps.hasOwnProperty( new_color ) ) {
+					// Create the new text color bitmap on the fly
+					bitmaps[new_color] = bitmaps['#fff'].copy().replace(
+						{red: 255, green: 255, blue: 255},
+						Canvas.hexToRGB( new_color )
+					);
+				}
+
+				if ( is_printing ) {
+					color = new_color;
+				}
+
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -81,7 +129,7 @@ function TextString( _font )
 	function print_character( clip )
 	{
 		render.draw.image(
-			bitmap,
+			bitmaps[color].element,
 			clip.x, clip.y, clip.width, clip.height,
 			offset.x, offset.y + clip.top, clip.width, clip.height
 		);
@@ -94,12 +142,12 @@ function TextString( _font )
 	 */
 	function feed_character( is_printing )
 	{
-		// Special print instruction check
+		// Instruction block check
 		for ( var i = 0 ; i < instructions.length ; i++ ) {
 			var instruction = instructions[i];
 
 			if ( string.substr( buffer, instruction.length ) === instruction ) {
-				process_instruction( instruction );
+				process_instruction( instruction, is_printing );
 				return;
 			}
 		}
@@ -212,11 +260,32 @@ function TextString( _font )
 	/**
 	 * Change text style [properties]
 	 */
-	this.style = function( properties )
+	this.setStyle = function( properties )
 	{
 		line_height = properties.lineHeight || 30;
 		letter_spacing = properties.letterSpacing || 2;
 		space_size = properties.spaceSize || 10;
+		return _;
+	};
+
+	/**
+	 * Save different color variants of the original bitmap font
+	 */
+	this.loadColors = function()
+	{
+		var white = {red: 255, green: 255, blue: 255};
+		var hex, RGB, variant;
+
+		for ( var a = 0 ; a < arguments.length ; a++ ) {
+			hex = arguments[a];
+
+			if ( !bitmaps.hasOwnProperty( hex ) ) {
+				RGB = Canvas.hexToRGB( hex );
+				variant = bitmaps['#fff'].copy().replace( white, RGB );
+				bitmaps[hex] = variant;
+			}
+		}
+
 		return _;
 	};
 }
@@ -241,11 +310,27 @@ function TextPrinter( _font )
 	var sounds = [];
 	var sound_queued = false;
 	var muted = false;
-	var instructions = [' ', '[br]'];
+	var instructions = [' ', '[br]', '[rgb='];
+	var special = ['[rgb='];
 	var delay = {
 		interval: 50,
 		counter: 0
 	};
+
+	/**
+	 * Determine whether or not an instruction block
+	 * is of a special type with variable data strings
+	 */
+	function is_special_instruction( instruction )
+	{
+		for ( var t = 0 ; t < special.length ; t++ ) {
+			if ( instruction === special[t] ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 
 	/**
 	 * Restarts text printing cycle
@@ -279,10 +364,21 @@ function TextPrinter( _font )
 			var instruction = instructions[i];
 
 			if ( string.substr( buffer, instruction.length ) === instruction ) {
-				// Print special 'instruction' blocks silently
+				// Print instruction blocks silently
 				output += instruction;
 				buffer += instruction.length;
-				break;
+
+				if ( is_special_instruction( instruction ) ) {
+					var end = string.indexOf( ']', buffer );
+
+					if ( ++end > 0 ) {
+						output += string.substring( buffer, end );
+						buffer = end;
+					}
+				}
+
+				print_next_character();
+				return;
 			}
 		}
 
@@ -351,6 +447,12 @@ function TextPrinter( _font )
 	this.setFont = function( _font )
 	{
 		text.setFont( _font );
+		return _;
+	};
+
+	this.loadColors = function()
+	{
+		text.loadColors.apply( null, arguments );
 		return _;
 	};
 
