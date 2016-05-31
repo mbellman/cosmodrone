@@ -57,8 +57,8 @@ function TitleScene( controller )
 
 	// Level preview summaries
 	var level_text = {
-		1: 'Level One...that\'s which level this is!',
-		2: 'Level Two...that\'s which level this is!',
+		1: 'PLANET: Earth[br]STATION: Unity Base[br]ALTITUDE: 70km[br]DIFFICULTY: Easy',
+		2: 'The quick brown fox[br]jumped over the lazy[br]dog!!?!?! :-) __proto__',
 		3: 'Level Three...that\'s which level this is!',
 		4: 'Level Four...that\'s which level this is!',
 		5: 'Level Five...that\'s which le...v...[br]s-sorry...',
@@ -268,6 +268,8 @@ function TitleScene( controller )
 		var MOON_TEXTURE = Assets.getImage( 'title/level-select/moon.png' );
 		var MARS_TEXTURE = Assets.getImage( 'title/level-select/mars.png' );
 
+		// ----------------------------
+
 		/**
 		 * Creates a pair of foreground/background
 		 * ellipse assets for orbital path rendering
@@ -375,6 +377,8 @@ function TitleScene( controller )
 			}
 		}
 
+		// ----------------------------
+
 		// Orbital paths and space stations
 		var orbits_BG = new Entity();
 		var orbits_FG = new Entity();
@@ -395,6 +399,8 @@ function TitleScene( controller )
 				INTERNAL_set_station( station );
 			}
 		}
+
+		// ----------------------------
 
 		// Container for planets/moons, orbital paths, and station icons
 		var space = new Entity()
@@ -440,6 +446,8 @@ function TitleScene( controller )
 			.addChild( orbits_FG )
 			.addChild( space_stations );
 
+		// ----------------------------
+
 		// Level information pane
 		var pane = new Entity( 'pane' )
 			.add(
@@ -462,17 +470,23 @@ function TitleScene( controller )
 				)
 			);
 
+		// ----------------------------
+
 		// Level description text
 		var text = new Entity()
 			.add(
-				new Sprite().setXY( 25, 50 )
+				new Sprite()
+					.setXY( 25, 50 )
+					.setAlpha( 0.8 )
 			)
 			.add(
-				new TextPrinter( 'Monitor' )
+				new TextPrinter( 'MonitorMini' )
 					.setSound( Assets.getAudio( 'ui/blip1.wav' ), Assets.getAudio( 'ui/blip2.wav' ) )
 					.setInterval( 25 )
 			)
 			.addToParent( pane );
+
+		// ----------------------------
 
 		// Off-screen Menu component for navigation
 		var menu = new Entity()

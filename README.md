@@ -4,7 +4,6 @@ A game about space station maintenance!
 ### TODO:
 
 ##### GAME
-* Level select needs a little "console" to print the level descriptions on
 * Text coloring
 * Loading bar/indicator of some kind (connect level menu with gameplay!!!)
 * New drone sprite
@@ -31,7 +30,6 @@ A game about space station maintenance!
 * Rivers
 
 ##### CODE
-* Sprite: add an erase() method to be called by TextPrinter on re-print() and in the SceneManager sprite clearing cycle
 * Consolidate major framework elements (Canvas, WebAudio, AssetLoader, Entity/Component, Sprite, Text, etc.)
 * Terrain and HeightMap classes need some tidying
 * Child Sprite coordinate system transformations (rotation, scaling, etc.)

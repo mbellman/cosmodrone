@@ -6,6 +6,7 @@ var AssetManifest =
 		files:
 		[
 			'fonts/Monitor.png',
+			'fonts/MonitorMini.png',
 			'game/clouds/cirrus-1.png',
 			'game/clouds/cirrus-2.png',
 			'game/clouds/cirrus-3.png',
