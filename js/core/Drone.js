@@ -170,8 +170,8 @@ function Drone()
 		var top = ( specs.orientation === 'top' );
 		var left = ( specs.orientation === 'left' );
 
-		target.x += ( specs.x + ( left ? -1 : 1 ) * _.owner.get( Sprite ).getWidth() / 2 );
-		target.y += ( specs.y + ( top ? -1 : 1 ) * _.owner.get( Sprite ).getHeight() / 2 );
+		target.x += ( specs.x + ( left ? -1 : 1 ) * _.owner.get( Sprite ).width() / 2 );
+		target.y += ( specs.y + ( top ? -1 : 1 ) * _.owner.get( Sprite ).height() / 2 );
 
 		docking.distance.x = player.x - target.x;
 		docking.distance.y = player.y - target.y;

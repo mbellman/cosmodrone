@@ -199,8 +199,8 @@ function GameScene( controller )
 		var minimum_distance = Number.POSITIVE_INFINITY;
 		var position, distance, entity;
 
-		player.x += drone.get( Sprite ).getWidth() / 2;
-		player.y += drone.get( Sprite ).getHeight() / 2;
+		player.x += drone.get( Sprite ).width() / 2;
+		player.y += drone.get( Sprite ).height() / 2;
 
 		stage.forAllComponentsOfType( HardwarePart, function( part ) {
 			position = part.getPosition();

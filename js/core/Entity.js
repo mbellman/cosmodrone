@@ -132,7 +132,11 @@ function Entity( name )
 	this.removeChild = function( entity )
 	{
 		for ( var c = 0 ; c < children.length ; c++ ) {
-			if ( children[c] === entity ) {
+			var child = children[c];
+
+			if ( child === entity ) {
+				child.disposeComponents();
+				child.disposeChildren();
 				children.splice( c, 1 );
 				break;
 			}
@@ -142,17 +146,29 @@ function Entity( name )
 	};
 
 	/**
-	 * Get rid of child entities
+	 * Get rid of child entities (recursive)
 	 */
 	this.disposeChildren = function()
 	{
 		for ( var c = 0 ; c < children.length ; c++ ) {
-			children[c].forAllComponents( function( component ) {
-				component.onRemoved();
-			} );
+			children[c].disposeComponents();
+			children[c].disposeChildren();
 		}
 
 		children.length = 0;
+		return _;
+	};
+
+	/**
+	 * Get rid of components
+	 */
+	this.disposeComponents = function()
+	{
+		for ( var c = 0 ; c < components.length ; c++ ) {
+			components[c].dispose();
+		}
+
+		components.length = 0;
 		return _;
 	};
 
@@ -279,6 +295,14 @@ function Entity( name )
 	this.child = function( n )
 	{
 		return children[n] || null;
+	};
+
+	/**
+	 * Return the number of direct descendant child entities
+	 */
+	this.size = function()
+	{
+		return children.length;
 	};
 
 	/**

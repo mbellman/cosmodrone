@@ -30,14 +30,14 @@ function TitleScene( controller )
 	// Panning offsets for each zone
 	var zone_offsets = {
 		earth: 0,
-		moon: 1500,
-		DEEP_SPACE_1: 2500,
-		mars: 5000
+		moon: 1450,
+		DEEP_SPACE_1: 2450,
+		mars: 4950
 	};
 
 	// Planet locations/sizes
 	var planets = {
-		earth: {x: 440, y: 325, radius: 230},
+		earth: {x: 490, y: 325, radius: 230},
 		moon: {x: 1940, y: 325, radius: 100},
 		mars: {x: 5440, y: 325, radius: 180}
 	};
@@ -287,11 +287,11 @@ function TitleScene( controller )
 				.ellipse( w2 + glow, h2 + glow, width, height )
 				.stroke( '#0ff', 2 );
 
-			orbit_BG = new Canvas().setSize( orbit.getWidth(), orbit.getHeight() / 2);
-			orbit_FG = new Canvas().setSize( orbit.getWidth(), orbit.getHeight() / 2);
+			orbit_BG = new Canvas().setSize( orbit.width(), orbit.height() / 2);
+			orbit_FG = new Canvas().setSize( orbit.width(), orbit.height() / 2);
 
 			orbit_BG.draw.image( orbit.sprite.element );
-			orbit_FG.draw.image( orbit.sprite.element, 0, -orbit.getHeight() / 2 );
+			orbit_FG.draw.image( orbit.sprite.element, 0, -orbit.height() / 2 );
 
 			return {
 				bg: orbit_BG.element,
@@ -448,6 +448,40 @@ function TitleScene( controller )
 
 		// ----------------------------
 
+		// Zone/level icons
+		var icons = new Entity( 'icons' )
+			.add(
+				new Sprite().setXY( 20, 150 )
+			)
+			.addChild(
+				new Entity( 'earth' ).add(
+					new Sprite( Assets.getImage( 'title/level-select/earth-icon.png' ) )
+				)
+			);
+
+		for ( var station in station_orbits ) {
+			if ( station_orbits.hasOwnProperty( station ) ) {
+				var zone = station_orbits[station].zone;
+				var container = icons.$( zone );
+
+				// TODO: Finish remaining zone icons and remove the need for this check
+				if ( container !== null ) {
+					var sprite = container.get( Sprite );
+					var icon = new Entity( 'icon-' + station )
+						.add(
+							new Sprite( Assets.getImage( 'title/level-select/icon.png' ) )
+								.setXY( sprite.width() + 10 + 20 * container.size(), sprite.height() / 2 )
+								.setAlpha( 0.3 )
+								.centerOrigin()
+						);
+
+					container.addChild( icon );
+				}
+			}
+		}
+
+		// ----------------------------
+
 		// Level information pane
 		var pane = new Entity( 'pane' )
 			.add(
@@ -489,8 +523,11 @@ function TitleScene( controller )
 
 		// ----------------------------
 
-		// Off-screen Menu component for navigation
+		// Menu component for navigation
 		var menu = new Entity()
+			.add(
+				new Sprite().setXY( 250, Viewport.height - 100 )
+			)
 			.add(
 				new Menu( 'grid' )
 					.configure(
@@ -498,7 +535,7 @@ function TitleScene( controller )
 							items: station_total,
 							options: function( i ) {
 								return new Entity().add(
-									new Sprite().setXY( 20 * i, 0 )
+									new Sprite().setXY( 20 * i, 50 )
 								);
 							},
 							onFocus: function( entity, i ) {
@@ -508,6 +545,12 @@ function TitleScene( controller )
 
 								INTERNAL_set_orbit_alpha( i, 1 );
 								text.find( TextPrinter ).print( level_text[++i] );
+
+								var icon = icons.$( 'icon-' + i );
+
+								if ( icon !== null ) {
+									icon.get( Sprite ).alpha.tweenTo( 1, 0.3, Ease.quad.out );
+								}
 
 								if ( station_orbits[i].zone !== mission_zone ) {
 									mission_zone = station_orbits[i].zone;
@@ -524,6 +567,12 @@ function TitleScene( controller )
 							onUnFocus: function( entity, i ) {
 								space_stations.child( i ).get( Sprite ).setSource( STATION_ICON ).centerOrigin();
 								INTERNAL_set_orbit_alpha( i, 0.2 );
+
+								var icon = icons.$( 'icon-' + ( i + 1 ) );
+
+								if ( icon !== null) {
+									icon.get( Sprite ).alpha.tweenTo( 0.25, 0.3, Ease.quad.out );
+								}
 							},
 							onSelect: function( entity, i ) {
 								if ( i < 1 ) {
@@ -543,7 +592,7 @@ function TitleScene( controller )
 
 		props.LEVEL_MENU = new Entity()
 			.add( new Sprite().setXY( 0, -Viewport.height ) )
-			.addChild( space, pane, menu );
+			.addChild( space, icons, pane, menu );
 	}
 
 	/**

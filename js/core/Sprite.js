@@ -213,7 +213,7 @@ function Sprite( _source )
 	/**
 	 * Returns the width of the Sprite
 	 */
-	this.getWidth = function()
+	this.width = function()
 	{
 		return source.width;
 	};
@@ -221,7 +221,7 @@ function Sprite( _source )
 	/**
 	 * Returns the height of the Sprite
 	 */
-	this.getHeight = function()
+	this.height = function()
 	{
 		return source.height;
 	};
