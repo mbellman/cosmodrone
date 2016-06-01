@@ -5,7 +5,6 @@ A game about space station maintenance!
 
 ##### GAME
 * / character for MonitorMini font
-* Finish remaining zone icons
 * Map layout preview below level description
 * Loading bar/indicator of some kind (connect level menu with gameplay!!!)
 * New drone sprite

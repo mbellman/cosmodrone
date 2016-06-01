@@ -172,6 +172,7 @@ function TextString( _font )
 	 */
 	function feed_string( is_printing )
 	{
+		color = '#fff';
 		offset.x = 0;
 		offset.y = 0;
 		buffer = 0;
@@ -450,6 +451,18 @@ function TextPrinter( _font )
 		return _;
 	};
 
+	/**
+	 * Alias for TextString.setStyle()
+	 */
+	this.setStyle = function()
+	{
+		text.setStyle.apply( null, arguments );
+		return _;
+	};
+
+	/**
+	 * Alias for TextString.loadColors()
+	 */
 	this.loadColors = function()
 	{
 		text.loadColors.apply( null, arguments );

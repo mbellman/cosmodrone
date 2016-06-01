@@ -30,14 +30,14 @@ function TitleScene( controller )
 	// Panning offsets for each zone
 	var zone_offsets = {
 		earth: 0,
-		moon: 1450,
-		DEEP_SPACE_1: 2450,
-		mars: 4950
+		moon: 1425,
+		DEEP_SPACE_1: 2400,
+		mars: 4925
 	};
 
 	// Planet locations/sizes
 	var planets = {
-		earth: {x: 490, y: 325, radius: 230},
+		earth: {x: 510, y: 325, radius: 230},
 		moon: {x: 1940, y: 325, radius: 100},
 		mars: {x: 5440, y: 325, radius: 180}
 	};
@@ -52,19 +52,57 @@ function TitleScene( controller )
 		5: {zone: 'moon', width: 235, height: 125, period: 5, inclination: 30},
 		6: {zone: 'DEEP_SPACE_1', x: 2750, y: 150},
 		7: {zone: 'DEEP_SPACE_1', x: 3100, y: 500},
-		8: {zone: 'mars', width: 420, height: 250, period: 8, inclination: -29}
+		8: {zone: 'mars', width: 420, height: 250, period: 8, inclination: -29},
+		9: {zone: 'mars', width: 480, height: 120, period: 9, inclination: 12},
 	};
 
 	// Level preview summaries
 	var level_text = {
-		1: '[rgb=#0ff]LOCATION[rgb=#fff]: Earth[br][rgb=#afa]STATION[rgb=#fff]: Training Center[br][rgb=#0ff]ALTITUDE[rgb=#fff]: 600km',
-		2: 'LOCATION: Earth[br]STATION: Unity Base[br]ALTITUDE: 700km',
-		3: 'LOCATION: Earth[br]STATION: Frontier Station[br]ALTITUDE: 550km',
-		4: 'LOCATION: Earth[br]STATION: ISS IV[br]ALTITUDE: 525km',
-		5: 'LOCATION: Moon[br]STATION: Luna Base[br]ALTITUDE: 235km',
-		6: 'LOCATION: Deep Space[br]VESSEL: Cosmo IX[br]ALTITUDE: N/A',
-		7: 'LOCATION: Deep Space[br]VESSEL: Explorer II[br]ALTITUDE: N/A',
-		8: 'LOCATION: Mars[br]STATION: Valor Station[br]ALTITUDE: 420km',
+		1: {
+			LOCATION: 'Earth',
+			STATION: 'Training Center',
+			ALTITUDE: '600km'
+		},
+		2: {
+			LOCATION: 'Earth',
+			STATION: 'Unity Base',
+			ALTITUDE: '700km'
+		},
+		3: {
+			LOCATION: 'Earth',
+			STATION: 'Frontier Station',
+			ALTITUDE: '550km'
+		},
+		4: {
+			LOCATION: 'Earth',
+			STATION: 'ISS IV',
+			ALTITUDE: '525km'
+		},
+		5: {
+			LOCATION: 'Moon',
+			STATION: 'Luna Base',
+			ALTITUDE: '235km'
+		},
+		6: {
+			LOCATION: 'Deep Space',
+			STATION: 'Cosmo IX',
+			ALTITUDE: 'N/A'
+		},
+		7: {
+			LOCATION: 'Deep Space',
+			STATION: 'Explorer II',
+			ALTITUDE: 'N/A'
+		},
+		8: {
+			LOCATION: 'Mars',
+			STATION: 'Valor Station',
+			ALTITUDE: '420km'
+		},
+		9: {
+			LOCATION: 'Mars',
+			STATION: 'Mariner Station',
+			ALTITUDE: '480km'
+		}
 	};
 
 	/**
@@ -271,6 +309,35 @@ function TitleScene( controller )
 		// ----------------------------
 
 		/**
+		 * Set up a 'glass pane' container entity
+		 */
+		function INTERNAL_create_pane( asset, x, y )
+		{
+			var entity = new Entity( asset )
+				.add(
+					new Sprite().setXY( x, y )
+				)
+				.addChild(
+					new Entity()
+						.add(
+							new Sprite( Assets.getImage( 'title/level-select/' + asset + '-glow.png' ) )
+						)
+						.add(
+							new Flicker()
+								.setAlphaRange( 0.1, 0.2 )
+								.setTimeRange( 0.5, 1 )
+						)
+				)
+				.addChild(
+					new Entity().add(
+						new Sprite( Assets.getImage( 'title/level-select/' + asset + '.png' ) )
+					)
+				);
+
+			return entity;
+		}
+
+		/**
 		 * Creates a pair of foreground/background
 		 * ellipse assets for orbital path rendering
 		 */
@@ -297,23 +364,6 @@ function TitleScene( controller )
 				bg: orbit_BG.element,
 				fg: orbit_FG.element
 			};
-		}
-
-		/**
-		 * Change the [alpha] of an orbital line path specified by its orbit [index]
-		 */
-		function INTERNAL_set_orbit_alpha( index, alpha )
-		{
-			var orbit_BG = orbits_BG.child( index );
-			var orbit_FG = orbits_FG.child( index );
-
-			if (
-				( orbit_BG !== null && orbit_BG.get( Sprite ) !== null ) &&
-				( orbit_FG !== null && orbit_FG.get( Sprite ) !== null )
-			) {
-				orbit_BG.get( Sprite ).alpha.tweenTo( alpha, 0.5, Ease.quad.out );
-				orbit_FG.get( Sprite ).alpha.tweenTo( alpha, 0.5, Ease.quad.out );
-			}
 		}
 
 		/**
@@ -377,6 +427,40 @@ function TitleScene( controller )
 			}
 		}
 
+		/**
+		 * Change the [alpha] of an orbital line path specified by its orbit [index]
+		 */
+		function INTERNAL_set_orbit_alpha( index, alpha )
+		{
+			var orbit_BG = orbits_BG.child( index );
+			var orbit_FG = orbits_FG.child( index );
+
+			if (
+				( orbit_BG !== null && orbit_BG.get( Sprite ) !== null ) &&
+				( orbit_FG !== null && orbit_FG.get( Sprite ) !== null )
+			) {
+				orbit_BG.get( Sprite ).alpha.tweenTo( alpha, 0.5, Ease.quad.out );
+				orbit_FG.get( Sprite ).alpha.tweenTo( alpha, 0.5, Ease.quad.out );
+			}
+		}
+
+		/**
+		 * Prnt new level preview summary
+		 */
+		function INTERNAL_update_level_text( index )
+		{
+			var string = '';
+			var text_data = level_text[index];
+
+			for ( var data in text_data ) {
+				if ( text_data.hasOwnProperty( data ) ) {
+					string += '[rgb=#bff]' + data + '[rgb=#fff]: ' + text_data[data] + '[br]';
+				}
+			}
+
+			text.find( TextPrinter ).print( string );
+		}
+
 		// ----------------------------
 
 		// Orbital paths and space stations
@@ -403,6 +487,8 @@ function TitleScene( controller )
 		// ----------------------------
 
 		// Container for planets/moons, orbital paths, and station icons
+		var LIGHT_SOURCE = new Vector( -100, 30, -100 );
+
 		var space = new Entity()
 			.add( new Sprite() )
 			.addChild( orbits_BG )
@@ -416,7 +502,6 @@ function TitleScene( controller )
 							.setRotationSpeed( -8 )
 							.setResolution( 2 )
 							.setXY( planets.earth.x, planets.earth.y )
-							.render()
 					),
 				new Entity()
 					.add(
@@ -428,7 +513,6 @@ function TitleScene( controller )
 							.setRotationSpeed( -2 )
 							.setResolution( 2 )
 							.setXY( planets.moon.x, planets.moon.y )
-							.render()
 					),
 				new Entity()
 					.add(
@@ -440,69 +524,66 @@ function TitleScene( controller )
 							.setRotationSpeed( -8 )
 							.setResolution( 2 )
 							.setXY( planets.mars.x, planets.mars.y )
-							.render()
 					)
 			)
 			.addChild( orbits_FG )
 			.addChild( space_stations );
 
+		space.forAllComponentsOfType( Sphere, function( sphere ) {
+			sphere.setLightSource( LIGHT_SOURCE ).render();
+		} );
+
 		// ----------------------------
 
-		// Zone/level icons
+		// Glass panes
+		var pane_L = INTERNAL_create_pane( 'pane_L', -220, 110 );
+		var pane_R = INTERNAL_create_pane( 'pane_R', Viewport.width, 110 );
+
+		// ----------------------------
+
+		// Zone/level icon group
 		var icons = new Entity( 'icons' )
 			.add(
-				new Sprite().setXY( 20, 150 )
+				new Sprite().setXY( 80, 75 ).setAlpha( 0.9 )
 			)
-			.addChild(
-				new Entity( 'earth' ).add(
-					new Sprite( Assets.getImage( 'title/level-select/earth-icon.png' ) )
-				)
-			);
+			.addToParent( pane_L );
 
+		// Zone icons
+		var offset_Y = 0;
+
+		for ( var zone in zone_offsets ) {
+			if ( zone_offsets.hasOwnProperty( zone ) ) {
+				var is_space = ( zone.indexOf( 'DEEP_SPACE' ) > -1 );
+				var file = 'title/level-select/' + ( is_space ? 'space' : zone ) + '-icon.png';
+
+				icons.addChild(
+					new Entity( zone ).add(
+						new Sprite( Assets.getImage( file ) )
+							.setXY( 0, 50 * offset_Y++ )
+							.centerOrigin()
+					)
+				);
+			}
+		}
+
+		// Level icons
 		for ( var station in station_orbits ) {
 			if ( station_orbits.hasOwnProperty( station ) ) {
 				var zone = station_orbits[station].zone;
 				var container = icons.$( zone );
+				var zone_icon = container.get( Sprite );
 
-				// TODO: Finish remaining zone icons and remove the need for this check
-				if ( container !== null ) {
-					var sprite = container.get( Sprite );
-					var icon = new Entity( 'icon-' + station )
-						.add(
-							new Sprite( Assets.getImage( 'title/level-select/icon.png' ) )
-								.setXY( sprite.width() + 10 + 20 * container.size(), sprite.height() / 2 )
-								.setAlpha( 0.3 )
-								.centerOrigin()
-						);
+				var icon = new Entity( 'icon-' + station )
+					.add(
+						new Sprite( Assets.getImage( 'title/level-select/icon.png' ) )
+							.setXY( zone_icon.width() + 10 + 20 * container.size(), zone_icon.height() / 2 )
+							.setAlpha( 0.2 )
+							.centerOrigin()
+					);
 
-					container.addChild( icon );
-				}
+				container.addChild( icon );
 			}
 		}
-
-		// ----------------------------
-
-		// Level information pane
-		var pane = new Entity( 'pane' )
-			.add(
-				new Sprite().setXY( Viewport.width, 110 )
-			)
-			.addChild(
-				new Entity()
-					.add(
-						new Sprite( Assets.getImage( 'title/level-select/pane-glow.png' ) )
-					)
-					.add(
-						new Flicker()
-							.setAlphaRange( 0.1, 0.2 )
-							.setTimeRange( 0.2, 0.4 )
-					)
-			)
-			.addChild(
-				new Entity().add(
-					new Sprite( Assets.getImage( 'title/level-select/pane.png' ) )
-				)
-			);
 
 		// ----------------------------
 
@@ -515,11 +596,12 @@ function TitleScene( controller )
 			)
 			.add(
 				new TextPrinter( 'MonitorMini' )
-					.loadColors( '#0ff', '#afa' )
+					.loadColors( '#aff' )
 					.setSound( Assets.getAudio( 'ui/blip1.wav' ), Assets.getAudio( 'ui/blip2.wav' ) )
 					.setInterval( 25 )
+					.setStyle( {spaceSize: 6} )
 			)
-			.addToParent( pane );
+			.addToParent( pane_R );
 
 		// ----------------------------
 
@@ -533,29 +615,30 @@ function TitleScene( controller )
 					.configure(
 						{
 							items: station_total,
+							// Entity builder
 							options: function( i ) {
 								return new Entity().add(
 									new Sprite().setXY( 20 * i, 50 )
 								);
 							},
+							// Option focus handler
 							onFocus: function( entity, i ) {
+								icons.$( 'icon-' + ( i + 1 ) ).get( Sprite ).alpha
+									.tweenTo( 1, 0.25, Ease.quad.out );
+
+								INTERNAL_set_orbit_alpha( i, 1 );
+
 								space_stations.child( i ).get( Sprite )
 									.setSource( STATION_ICON_SELECTED )
 									.centerOrigin();
 
-								INTERNAL_set_orbit_alpha( i, 1 );
-								text.find( TextPrinter ).print( level_text[++i] );
-
-								var icon = icons.$( 'icon-' + i );
-
-								if ( icon !== null ) {
-									icon.get( Sprite ).alpha.tweenTo( 1, 0.3, Ease.quad.out );
-								}
+								INTERNAL_update_level_text( ++i );
 
 								if ( station_orbits[i].zone !== mission_zone ) {
 									mission_zone = station_orbits[i].zone;
 
 									pause_sphere_rotation();
+
 									space.get( Sprite ).x.tweenTo(
 										-1 * zone_offsets[mission_zone],
 										1.5,
@@ -564,16 +647,18 @@ function TitleScene( controller )
 									);
 								}
 							},
+							// Option lose-focus handler
 							onUnFocus: function( entity, i ) {
-								space_stations.child( i ).get( Sprite ).setSource( STATION_ICON ).centerOrigin();
 								INTERNAL_set_orbit_alpha( i, 0.2 );
 
-								var icon = icons.$( 'icon-' + ( i + 1 ) );
+								space_stations.child( i ).get( Sprite )
+									.setSource( STATION_ICON )
+									.centerOrigin();
 
-								if ( icon !== null) {
-									icon.get( Sprite ).alpha.tweenTo( 0.25, 0.3, Ease.quad.out );
-								}
+								icons.$( 'icon-' + ( ++i ) ).get( Sprite ).alpha
+									.tweenTo( 0.2, 0.25, Ease.quad.out );
 							},
+							// Option selection handler
 							onSelect: function( entity, i ) {
 								if ( i < 1 ) {
 									return true;
@@ -592,7 +677,7 @@ function TitleScene( controller )
 
 		props.LEVEL_MENU = new Entity()
 			.add( new Sprite().setXY( 0, -Viewport.height ) )
-			.addChild( space, icons, pane, menu );
+			.addChild( space, pane_L, pane_R, menu );
 	}
 
 	/**
@@ -652,7 +737,9 @@ function TitleScene( controller )
 
 		props.LEVEL_MENU.find( Menu ).disable();
 		props.LEVEL_MENU.find( TextPrinter ).mute();
-		props.LEVEL_MENU.$( 'pane' ).get( Sprite ).x.tweenTo( Viewport.width, slide, Ease.quad.inOut );
+
+		props.LEVEL_MENU.$( 'pane_R' ).get( Sprite ).x
+			.tweenTo( Viewport.width, slide, Ease.quad.inOut );
 
 		run_transition_tweens();
 	}
@@ -664,14 +751,21 @@ function TitleScene( controller )
 	{
 		menu = 2;
 
-		props.nova.add( new Flicker().setAlphaRange( 0.7, 1.0 ) );
-		props.nova2.add( new Flicker().setAlphaRange( 0.7, 1.0 ) );
+		props.nova.add( new Flicker().setAlphaRange( 0.5, 0.7 ) );
+		props.nova2.add( new Flicker().setAlphaRange( 0.5, 0.7 ) );
 
 		props.TITLE_MENU.get( Menu ).disable();
 
 		props.LEVEL_MENU.find( Menu ).enable();
 		props.LEVEL_MENU.find( TextPrinter ).unmute();
-		props.LEVEL_MENU.$( 'pane' ).get( Sprite ).x.delay( 0.25 ).tweenTo( Viewport.width - 375, slide, Ease.quad.inOut );
+
+		props.LEVEL_MENU.$( 'pane_L' ).get( Sprite ).x
+			.delay( 0.25 )
+			.tweenTo( -50, slide, Ease.quad.inOut );
+
+		props.LEVEL_MENU.$( 'pane_R' ).get( Sprite ).x
+			.delay( 0.25 )
+			.tweenTo( Viewport.width - 350, slide, Ease.quad.inOut );
 
 		pause_sphere_rotation();
 		run_transition_tweens();
