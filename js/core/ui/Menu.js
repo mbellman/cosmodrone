@@ -91,7 +91,7 @@
 
 			if ( closest !== selection ) {
 				events.unfocus( stage.child( selection ), selection );
-				events.focus( stage.child( closest ), closest );
+				events.focus( stage.child( closest ), closest, direction );
 				play_sound( 'cursor' );
 
 				selection = closest;
@@ -474,7 +474,7 @@
 				// GridMenu parameters:
 				// Number of grid items to construct
 				items: 0,
-				// Handler for navigating to a menu option. Receives the grid item entity and its index as two arguments.
+				// Handler for navigating to a menu option. Receives the grid item entity, its index, and the direction as three arguments.
 				onFocus: null,
 				// Handler for leaving a menu option. Receives the grid item entity and its index as two arguments.
 				onUnFocus: null,

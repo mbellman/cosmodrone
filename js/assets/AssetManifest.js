@@ -67,6 +67,8 @@ var AssetManifest =
 			'title/letters/o3.png',
 			'title/letters/r.png',
 			'title/letters/s.png',
+			'title/level-select/arrow_L.png',
+			'title/level-select/arrow_R.png',
 			'title/level-select/earth-icon.png',
 			'title/level-select/earth.png',
 			'title/level-select/icon.png',

@@ -60,47 +60,47 @@ function TitleScene( controller )
 	var level_text = {
 		1: {
 			LOCATION: 'Earth',
-			STATION: 'Training Center',
+			VESSEL: 'Training Center',
 			ALTITUDE: '600km'
 		},
 		2: {
 			LOCATION: 'Earth',
-			STATION: 'Unity Base',
+			VESSEL: 'Unity Base',
 			ALTITUDE: '700km'
 		},
 		3: {
 			LOCATION: 'Earth',
-			STATION: 'Frontier Station',
+			VESSEL: 'Frontier Station',
 			ALTITUDE: '550km'
 		},
 		4: {
 			LOCATION: 'Earth',
-			STATION: 'ISS IV',
+			VESSEL: 'ISS IV',
 			ALTITUDE: '525km'
 		},
 		5: {
 			LOCATION: 'Moon',
-			STATION: 'Luna Base',
+			VESSEL: 'Luna Base',
 			ALTITUDE: '235km'
 		},
 		6: {
 			LOCATION: 'Deep Space',
-			STATION: 'Cosmo IX',
+			VESSEL: 'Cosmo IX',
 			ALTITUDE: 'N/A'
 		},
 		7: {
 			LOCATION: 'Deep Space',
-			STATION: 'Explorer II',
+			VESSEL: 'Explorer II',
 			ALTITUDE: 'N/A'
 		},
 		8: {
 			LOCATION: 'Mars',
-			STATION: 'Valor Station',
+			VESSEL: 'Valor Station',
 			ALTITUDE: '420km'
 		},
 		9: {
 			LOCATION: 'Mars',
-			STATION: 'Mariner Station',
+			VESSEL: 'Mariner Station',
 			ALTITUDE: '480km'
 		}
 	};
@@ -324,7 +324,7 @@ function TitleScene( controller )
 						)
 						.add(
 							new Flicker()
-								.setAlphaRange( 0.1, 0.2 )
+								.setAlphaRange( 0, 0.1 )
 								.setTimeRange( 0.5, 1 )
 						)
 				)
@@ -454,11 +454,34 @@ function TitleScene( controller )
 
 			for ( var data in text_data ) {
 				if ( text_data.hasOwnProperty( data ) ) {
-					string += '[rgb=#bff]' + data + '[rgb=#fff]: ' + text_data[data] + '[br]';
+					string += '[rgb=#8ff]' + data + '[rgb=#fff]: ' + text_data[data] + '[br]';
 				}
 			}
 
 			text.find( TextPrinter ).print( string );
+		}
+
+		/**
+		 * Highlight level arrows according to level
+		 */
+		function INTERNAL_update_level_arrows( index, direction )
+		{
+			var alpha_L = ( index === 1 ? 0.1 : 0.7 );
+			var alpha_R = ( index === station_total ? 0.1 : 0.7 );
+
+			var arrow_L = arrows.$( 'arrow_L' ).get( Sprite );
+			var arrow_R = arrows.$( 'arrow_R' ).get( Sprite );
+
+			if ( direction === 'left' ) {
+				arrow_L.alpha._ = 1;
+			}
+
+			if ( direction === 'right' ) {
+				arrow_R.alpha._ = 1;
+			}
+
+			arrow_L.alpha.tweenTo( alpha_L, 0.3, Ease.quad.out )
+			arrow_R.alpha.tweenTo( alpha_R, 0.3, Ease.quad.out )
 		}
 
 		// ----------------------------
@@ -544,7 +567,7 @@ function TitleScene( controller )
 		// Zone/level icon group
 		var icons = new Entity( 'icons' )
 			.add(
-				new Sprite().setXY( 80, 75 ).setAlpha( 0.9 )
+				new Sprite().setXY( 80, 75 )
 			)
 			.addToParent( pane_L );
 
@@ -596,12 +619,28 @@ function TitleScene( controller )
 			)
 			.add(
 				new TextPrinter( 'MonitorMini' )
-					.loadColors( '#aff' )
 					.setSound( Assets.getAudio( 'ui/blip1.wav' ), Assets.getAudio( 'ui/blip2.wav' ) )
 					.setInterval( 25 )
 					.setStyle( {spaceSize: 6} )
 			)
 			.addToParent( pane_R );
+
+		// Level arrows
+		var arrows = new Entity().add(
+			new Sprite().setXY( 144, 360 )
+		)
+		.addChild(
+			new Entity( 'arrow_L' ).add(
+				new Sprite( Assets.getImage( 'title/level-select/arrow_L.png' ) )
+					.setAlpha( 0.25 )
+			),
+			new Entity( 'arrow_R' ).add(
+				new Sprite( Assets.getImage( 'title/level-select/arrow_R.png' ) )
+					.setXY( 50, 0 )
+					.setAlpha( 0.25 )
+			)
+		)
+		.addToParent( pane_R );
 
 		// ----------------------------
 
@@ -622,7 +661,7 @@ function TitleScene( controller )
 								);
 							},
 							// Option focus handler
-							onFocus: function( entity, i ) {
+							onFocus: function( entity, i, direction ) {
 								icons.$( 'icon-' + ( i + 1 ) ).get( Sprite ).alpha
 									.tweenTo( 1, 0.25, Ease.quad.out );
 
@@ -633,6 +672,7 @@ function TitleScene( controller )
 									.centerOrigin();
 
 								INTERNAL_update_level_text( ++i );
+								INTERNAL_update_level_arrows( i, direction );
 
 								if ( station_orbits[i].zone !== mission_zone ) {
 									mission_zone = station_orbits[i].zone;
