@@ -195,10 +195,13 @@
 
 		var loaded = false;                                // Whether or not prerendering has finished, enabling the background cycle to start
 		var terrain;                                       // Landscape instance
-		var renders = {                                    // Render bank
-			terrain: [],                                   // Prerendered time-of-day terrain variants
-			clouds: [],                                    // Prerendered cloud types, scaled based on [configuration.tileSize]
-			shadows: []                                    // Prerendered cloud shadows, scaled based on [configuration.tileSize]
+		var renders = {
+			// Prerendered time-of-day terrain variants
+			terrain: [],
+			// Prerendered cloud types, scaled based on [configuration.tileSize]
+			clouds: [],
+			// Prerendered cloud shadows, scaled based on [configuration.tileSize]
+			shadows: []
 		};
 		var camera;                                        // Scrolling background camera instance
 		var clouds = [];                                   // Active cloud objects on screen
