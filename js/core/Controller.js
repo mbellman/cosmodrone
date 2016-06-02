@@ -29,7 +29,7 @@ function Controller()
 
 		var game = new GameScene( _ ).setLevel( level );
 
-		_.scenes.setActiveScene( 'game', new Entity().add( game ) );
+		_.scenes.setActiveScene( 'game', new Entity().add( game ), true );
 		game.debug( true ).init().start();
 	};
 }

@@ -3,17 +3,23 @@ A game about space station maintenance!
 
 ### TODO:
 
-##### GAME
+##### LEVEL SELECT SCREEN
 * / character for MonitorMini font
 * Map layout preview below level description
 * Loading bar/indicator of some kind (connect level menu with gameplay!!!)
+
+##### GAME
+* Print debug text using TextString component
 * New drone sprite
-* Print debug text using Text component
-* Make sure hardware asset "light source" is adjusted based on the side of the module
+* Dynamic dialogue
+* More modules and hardware parts (with correct lighting based on orientation)
+* Radio signal reception mechanic
+* Recharging/refueling terminal
 * Collisions/drone damage
-* Hardware/part maintenance interface
 * Components with update cycles/architecture for various hardware parts
+* Icons next to vulnerable hardware parts
 * Alerts screen with ability to select hardware maintenance jobs
+* Hardware repair interface - needs various ideas for maintenance 'minigames'
 * Handler for drone running out of power/fuel
 * Ability to move drone above or below the station
 * Moving docking targets (later-stage development) (?)
@@ -22,7 +28,6 @@ A game about space station maintenance!
 
 ##### HUD
 * "Autospin" system indicator
-* Radio signal reception mechanic
 * Indicate when docking mode is usable
 * Radar/local area map
 

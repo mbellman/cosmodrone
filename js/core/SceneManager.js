@@ -97,6 +97,7 @@ function SceneManager()
 	 */
 	this.removeScene = function( name )
 	{
+		scenes[name].disposeChildren();
 		delete scenes[name];
 		return _;
 	};
@@ -105,10 +106,14 @@ function SceneManager()
 	 * Set the active scene by [name],
 	 * optionally as a new [entity]
 	 */
-	this.setActiveScene = function( name, entity )
+	this.setActiveScene = function( name, entity, is_replacing )
 	{
 		if ( entity !== null ) {
 			_.addScene( name, entity );
+		}
+
+		if ( is_replacing ) {
+			scenes[active_scene].disposeChildren();
 		}
 
 		if ( scenes.hasOwnProperty( name ) ) {

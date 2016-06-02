@@ -71,7 +71,7 @@ function Tweenable( value )
 				return;
 			}
 
-			tween.progress += ( ( dt * 1000 ) / tween.duration );
+			tween.progress += ( dt / tween.duration );
 
 			if ( tween.progress >= 1 ) {
 				_._ = tween.end;
@@ -94,7 +94,7 @@ function Tweenable( value )
 		tween.start = _._;
 		tween.end = value;
 		tween.progress = 0;
-		tween.duration = seconds * 1000;
+		tween.duration = seconds;
 		tween.onComplete = callback || tween.onComplete;
 		tween.easing = easing;
 		return _;

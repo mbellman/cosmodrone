@@ -383,6 +383,7 @@ function FillSprite( color, width, height )
 }
 
 FillSprite.prototype = Object.create(Sprite.prototype);
+FillSprite.prototype.constructor = FillSprite;
 
 /**
  * -----------------------
@@ -406,3 +407,4 @@ function VectorSprite()
 }
 
 VectorSprite.prototype = Object.create(Sprite.prototype);
+VectorSprite.prototype.constructor = VectorSprite;

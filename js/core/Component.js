@@ -42,7 +42,7 @@ function Component()
 	this.dispose = function()
 	{
 		if ( _.owner !== null ) {
-			_.owner.remove( _.constructor.name );
+			_.owner.remove( _.constructor );
 		}
 	};
 }

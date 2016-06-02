@@ -361,8 +361,8 @@ function TitleScene( controller )
 			orbit_FG.draw.image( orbit.sprite.element, 0, -orbit.height() / 2 );
 
 			return {
-				bg: orbit_BG.element,
-				fg: orbit_FG.element
+				BG: orbit_BG.element,
+				FG: orbit_FG.element
 			};
 		}
 
@@ -379,26 +379,28 @@ function TitleScene( controller )
 				// Station has an orbital path
 				var ellipse = INTERNAL_build_orbit_path( orbit.width, orbit.height );
 
+				// Orbit ellipse halves (split by FG/BG for layering with planets)
 				orbits_BG.addChild( new Entity()
 					.add(
-						new Sprite( ellipse.bg )
+						new Sprite( ellipse.BG )
 							.setXY( planet.x, planet.y )
-							.setOrigin( ellipse.bg.width / 2, ellipse.bg.height )
+							.setOrigin( ellipse.BG.width / 2, ellipse.BG.height )
 							.setRotation( orbit.inclination )
-							.setAlpha( 0.2 )
+							.setAlpha( 0.15 )
 					)
 				);
 
 				orbits_FG.addChild( new Entity()
 					.add(
-						new Sprite( ellipse.fg )
+						new Sprite( ellipse.FG )
 							.setXY( planet.x, planet.y )
-							.setOrigin( ellipse.fg.width / 2, 0 )
+							.setOrigin( ellipse.FG.width / 2, 0 )
 							.setRotation( orbit.inclination )
-							.setAlpha( 0.2 )
+							.setAlpha( 0.15 )
 					)
 				);
 
+				// Induce orbital motion in the station icons
 				space_stations.child( station - 1 )
 					.add(
 						new Oscillation( orbit.width, orbit.height, true )
@@ -509,13 +511,14 @@ function TitleScene( controller )
 
 		// ----------------------------
 
-		// Container for planets/moons, orbital paths, and station icons
 		var LIGHT_SOURCE = new Vector( -100, 30, -100 );
 
+		// Container for planets/moons, orbital paths, and station icons
 		var space = new Entity()
 			.add( new Sprite() )
 			.addChild( orbits_BG )
 			.addChild(
+				// Earth
 				new Entity()
 					.add(
 						new Sphere()
@@ -526,6 +529,7 @@ function TitleScene( controller )
 							.setResolution( 2 )
 							.setXY( planets.earth.x, planets.earth.y )
 					),
+				// Moon
 				new Entity()
 					.add(
 						new Sphere()
@@ -537,6 +541,7 @@ function TitleScene( controller )
 							.setResolution( 2 )
 							.setXY( planets.moon.x, planets.moon.y )
 					),
+				// Mars
 				new Entity()
 					.add(
 						new Sphere()
@@ -689,7 +694,7 @@ function TitleScene( controller )
 							},
 							// Option lose-focus handler
 							onUnFocus: function( entity, i ) {
-								INTERNAL_set_orbit_alpha( i, 0.2 );
+								INTERNAL_set_orbit_alpha( i, 0.15 );
 
 								space_stations.child( i ).get( Sprite )
 									.setSource( STATION_ICON )
@@ -701,6 +706,7 @@ function TitleScene( controller )
 							// Option selection handler
 							onSelect: function( entity, i ) {
 								if ( i < 1 ) {
+									controller.showGame();
 									return true;
 								}
 
