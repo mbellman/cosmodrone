@@ -56,7 +56,7 @@
 	}
 
 	/**
-	 * Draw a circle to [ctx]
+	 * Draw a circle to the Canvas context
 	 */
 	DrawOperation.prototype.circle = function( x, y, radius )
 	{
@@ -66,12 +66,13 @@
 	};
 
 	/**
-	 * Draw an ellipse to [ctx]
+	 * Draw an ellipse to the Canvas context at [x, y]
+	 * with horizontal radius [a] and vertical radius [b]
 	 */
 	DrawOperation.prototype.ellipse = function( x, y, a, b )
 	{
 		var control_Y = ( b / 0.75 ) / 2;
-		var half_A = a / 2;
+		var half_A = ( a / 2 );
 
 		this.ctx.beginPath();
 		this.ctx.moveTo( x - half_A, y );
@@ -83,7 +84,7 @@
 	};
 
 	/**
-	 * Draw a rectangle to [ctx]
+	 * Draw a rectangle to the Canvas context
 	 */
 	DrawOperation.prototype.rectangle = function( x, y, width, height )
 	{
@@ -93,7 +94,7 @@
 	};
 
 	/**
-	 * Draw an image to [ctx]
+	 * Draw an image to the Canvas context
 	 */
 	DrawOperation.prototype.image = function( source, x1, y1, width1, height1, x2, y2, width2, height2 )
 	{

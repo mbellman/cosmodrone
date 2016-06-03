@@ -92,7 +92,8 @@ function GameScene( controller )
 						maxCitySize: 40,
 						tileSize: 2,
 						lightAngle: 220,
-						hours: [12, 19, 20, 0, 4, 6],
+						//hours: [12, 19, 20, 0, 4, 6],
+						hours: [12],
 						cycleSpeed: 60,
 						scrollSpeed:
 						{

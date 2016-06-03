@@ -112,7 +112,7 @@ function SceneManager()
 			_.addScene( name, entity );
 		}
 
-		if ( is_replacing ) {
+		if ( active_scene !== null && is_replacing ) {
 			scenes[active_scene].disposeChildren();
 		}
 

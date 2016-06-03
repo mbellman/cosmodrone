@@ -8,19 +8,19 @@ var Modules =
 		orientation: 'horizontal',
 		size: {
 			width: 600,
-			height: 300
+			height: 298
 		},
 		docking: {
 			top: {x: 248, y: 2},
 			left: {x: 2, y: 82},
 			right: {x: 598, y: 82},
-			bottom: {x: 248, y: 298}
+			bottom: {x: 248, y: 296}
 		},
 		terminals: {
 			top1: {x: 60, y: 6},
 			top2: {x: 500, y: 6},
-			bottom1: {x: 60, y: 294},
-			bottom2: {x: 500, y: 294}
+			bottom1: {x: 60, y: 292},
+			bottom2: {x: 500, y: 292}
 		}
 	},
 	MODULE_GENERAL_VERTICAL_SMALL: {

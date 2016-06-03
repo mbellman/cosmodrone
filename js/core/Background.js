@@ -60,7 +60,7 @@
 						height: CHUNK_H + buffer
 					};
 
-					chunk = new Canvas().setSize( CHUNK_W + buffer, CHUNK_H + buffer );
+					chunk = new Canvas().setSize( clip.width, clip.height );
 
 					chunk.draw.image(
 						texture,
@@ -130,8 +130,8 @@
 
 				// Clip width/height should stop either at the edge
 				// of the chunk or the edge of the draw region
-				clip.width = Math.min( CHUNK_W - clip.x, region_W - draw.x );
-				clip.height = Math.min( CHUNK_H - clip.y, region_H - draw.y );
+				clip.width = Math.min( CHUNK_W + buffer - clip.x, region_W - draw.x );
+				clip.height = Math.min( CHUNK_H + buffer - clip.y, region_H - draw.y );
 
 				canvas.draw.image(
 					chunk.texture,

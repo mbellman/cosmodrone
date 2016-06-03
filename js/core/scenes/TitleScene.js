@@ -300,6 +300,7 @@ function TitleScene( controller )
 	 */
 	function add_level_menu()
 	{
+		var LIGHT_SOURCE = new Vector( -100, 30, -100 );
 		var STATION_ICON = Assets.getImage( 'title/level-select/station-icon.png' );
 		var STATION_ICON_SELECTED = Assets.getImage( 'title/level-select/station-icon-selected.png' );
 		var EARTH_TEXTURE = Assets.getImage( 'title/level-select/earth.png' );
@@ -345,17 +346,18 @@ function TitleScene( controller )
 		{
 			var orbit = new VectorSprite();
 			var orbit_BG, orbit_FG;
-			var w2 = ( width / 2) , h2 = ( height / 2 );
+			var half_W = ( width / 2 );
+			var half_H = ( height / 2 );
 			var glow = 6;
 
 			orbit.sprite.setSize( width + 2 * glow, height + 2 * glow );
 			orbit.sprite.setShadow( '#0ff', glow );
 			orbit.sprite.draw
-				.ellipse( w2 + glow, h2 + glow, width, height )
+				.ellipse( half_W + glow, half_H + glow, width, height )
 				.stroke( '#0ff', 2 );
 
-			orbit_BG = new Canvas().setSize( orbit.width(), orbit.height() / 2);
-			orbit_FG = new Canvas().setSize( orbit.width(), orbit.height() / 2);
+			orbit_BG = new Canvas().setSize( orbit.width(), orbit.height() / 2 );
+			orbit_FG = new Canvas().setSize( orbit.width(), orbit.height() / 2 );
 
 			orbit_BG.draw.image( orbit.sprite.element );
 			orbit_FG.draw.image( orbit.sprite.element, 0, -orbit.height() / 2 );
@@ -510,8 +512,6 @@ function TitleScene( controller )
 		}
 
 		// ----------------------------
-
-		var LIGHT_SOURCE = new Vector( -100, 30, -100 );
 
 		// Container for planets/moons, orbital paths, and station icons
 		var space = new Entity()
