@@ -69,15 +69,15 @@
 	 * Draw an ellipse to the Canvas context at [x, y]
 	 * with horizontal radius [a] and vertical radius [b]
 	 */
-	DrawOperation.prototype.ellipse = function( x, y, a, b )
+	DrawOperation.prototype.ellipse = function( x, y, width, height )
 	{
-		var control_Y = ( b / 0.75 ) / 2;
-		var half_A = ( a / 2 );
+		var control_Y = ( height / 0.75 ) / 2;
+		var half_W = ( width / 2 );
 
 		this.ctx.beginPath();
-		this.ctx.moveTo( x - half_A, y );
-		this.ctx.bezierCurveTo( x - half_A, y + control_Y, x + half_A, y + control_Y, x + half_A, y );
-		this.ctx.bezierCurveTo( x + half_A, y - control_Y, x - half_A, y - control_Y, x - half_A, y );
+		this.ctx.moveTo( x - half_W, y );
+		this.ctx.bezierCurveTo( x - half_W, y + control_Y, x + half_W, y + control_Y, x + half_W, y );
+		this.ctx.bezierCurveTo( x + half_W, y - control_Y, x - half_W, y - control_Y, x - half_W, y );
 		this.ctx.stroke();
 
 		return this.shape;

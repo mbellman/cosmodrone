@@ -50,6 +50,95 @@
 		var is_built = [];          // Module build completion flags
 		var entities = [];          // List of entities to be created
 
+		// -------------------------------------------- //
+		// ------------- STATION HARDWARE ------------- //
+		// -------------------------------------------- //
+
+		/**
+		 * Returns hardware part specs based on name and
+		 * module side, which determines orientation
+		 */
+		function get_part_specs( part, side )
+		{
+			side = side || 'top';
+
+			var specs = HardwareParts[part];
+			var data = {};
+
+			switch ( side ) {
+				case 'top':
+					data.file = specs.file + 'top.png';
+					data.width = specs.width;
+					data.height = specs.height;
+					data.x = specs.x;
+					data.y = specs.y;
+					break;
+				case 'right':
+					data.file = specs.file + 'right.png';
+					data.width = specs.height;
+					data.height = specs.width;
+					data.x = data.width;
+					data.y = specs.x;
+					break;
+				case 'bottom':
+					data.file = specs.file + 'bottom.png';
+					data.width = specs.width;
+					data.height = specs.height;
+					data.x = specs.x;
+					data.y = specs.height;
+					break;
+				case 'left':
+					data.file = specs.file + 'left.png';
+					data.width = specs.height;
+					data.height = specs.width;
+					data.x = specs.y;
+					data.y = specs.x;
+					break;
+			}
+
+			return data;
+		}
+
+		/**
+		 * Determines which hardware parts need to be created
+		 * for the station module at index [x, y] in the level
+		 * layout, and creates/returns them as an entity list
+		 */
+		function create_hardware_parts( y, x )
+		{
+			var module = get_module_specs( data.layout[y][x] );
+			var part_list = data.parts[y][x];
+			var part, terminal, specs, position = {}, entities = [];
+
+			for ( var p = 0 ; p < part_list.length ; p++ ) {
+				part = part_list[p];
+				terminal = part.side + part.index;
+
+				if ( module.terminals.hasOwnProperty( terminal ) ) {
+					specs = get_part_specs( part.name, part.side );
+					specs.orientation = part.side;
+
+					position.x = module.terminals[terminal].x - specs.x;
+					position.y = module.terminals[terminal].y - specs.y;
+
+					entities.push(
+						new Entity()
+							.add(
+								new HardwarePart()
+									.setSpecs( specs )
+									.setMoving( data.moving )
+							)
+							.add(
+								new Sprite( Assets.getImage( specs.file ) )
+									.setXY( position.x, position.y )
+							)
+					);
+				}
+			}
+
+			return entities;
+		}
+
 		// ------------------------------------------- //
 		// ------------- STATION MODULES ------------- //
 		// ------------------------------------------- //
@@ -214,95 +303,6 @@
 					is_built[y][x] = false;
 				}
 			}
-		}
-
-		// -------------------------------------------- //
-		// ------------- STATION HARDWARE ------------- //
-		// -------------------------------------------- //
-
-		/**
-		 * Returns hardware part specs based on name and
-		 * module side, which determines orientation
-		 */
-		function get_part_specs( part, side )
-		{
-			side = side || 'top';
-
-			var specs = HardwareParts[part];
-			var data = {};
-
-			switch ( side ) {
-				case 'top':
-					data.file = specs.file + 'top.png';
-					data.width = specs.width;
-					data.height = specs.height;
-					data.x = specs.x;
-					data.y = specs.y;
-					break;
-				case 'right':
-					data.file = specs.file + 'right.png';
-					data.width = specs.height;
-					data.height = specs.width;
-					data.x = data.width;
-					data.y = specs.x;
-					break;
-				case 'bottom':
-					data.file = specs.file + 'bottom.png';
-					data.width = specs.width;
-					data.height = specs.height;
-					data.x = specs.x;
-					data.y = specs.height;
-					break;
-				case 'left':
-					data.file = specs.file + 'left.png';
-					data.width = specs.height;
-					data.height = specs.width;
-					data.x = specs.y;
-					data.y = specs.x;
-					break;
-			}
-
-			return data;
-		}
-
-		/**
-		 * Determines which hardware parts need to be created
-		 * for the station module at index [x, y] in the level
-		 * layout, and creates/returns them as an entity list
-		 */
-		function create_hardware_parts( y, x )
-		{
-			var module = get_module_specs( data.layout[y][x] );
-			var part_list = data.parts[y][x];
-			var part, terminal, specs, position = {}, entities = [];
-
-			for ( var p = 0 ; p < part_list.length ; p++ ) {
-				part = part_list[p];
-				terminal = part.side + part.index;
-
-				if ( module.terminals.hasOwnProperty( terminal ) ) {
-					specs = get_part_specs( part.name, part.side );
-					specs.orientation = part.side;
-
-					position.x = module.terminals[terminal].x - specs.x;
-					position.y = module.terminals[terminal].y - specs.y;
-
-					entities.push(
-						new Entity()
-							.add(
-								new HardwarePart()
-									.setSpecs( specs )
-									.setMoving( data.moving )
-							)
-							.add(
-								new Sprite( Assets.getImage( specs.file ) )
-									.setXY( position.x, position.y )
-							)
-					);
-				}
-			}
-
-			return entities;
 		}
 
 		// -- Public: --

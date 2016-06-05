@@ -98,38 +98,17 @@ function HeightMap()
 	}
 
 	/**
-	 * Returns the average of an array of numbers
-	 */
-	function average( array )
-	{
-		var sum = 0, i = 0;
-
-		while ( typeof array[i] !== 'undefined' ) {
-			if ( array[i] === null ) {
-				array.splice( i, 1 );
-				continue;
-			}
-
-			sum += array[i++];
-		}
-
-		return Math.round( sum / array.length );
-	}
-
-	/**
 	 * Returns the average elevation of four corners
 	 * from a central point [point] where each corner
 	 * is [unit] tiles away along the x and y axes
 	 */
 	function corners( point, unit )
 	{
-		return average(
-			[
-				get_point( point.y - unit, point.x - unit ),
-				get_point( point.y - unit, point.x + unit ),
-				get_point( point.y + unit, point.x - unit ),
-				get_point( point.y + unit, point.x + unit )
-			]
+		return whole_average(
+			get_point( point.y - unit, point.x - unit ),
+			get_point( point.y - unit, point.x + unit ),
+			get_point( point.y + unit, point.x - unit ),
+			get_point( point.y + unit, point.x + unit )
 		);
 	}
 
@@ -139,13 +118,11 @@ function HeightMap()
 	 */
 	function adjacents( point, unit )
 	{
-		return average(
-			[
-				get_point( point.y, point.x - unit ),
-				get_point( point.y, point.x + unit ),
-				get_point( point.y - unit, point.x ),
-				get_point( point.y + unit, point.x )
-			]
+		return whole_average(
+			get_point( point.y, point.x - unit ),
+			get_point( point.y, point.x + unit ),
+			get_point( point.y - unit, point.x ),
+			get_point( point.y + unit, point.x )
 		);
 	}
 
@@ -215,7 +192,7 @@ function HeightMap()
 				var left = line[point - unit];
 				var right = line[point + unit];
 
-				line[point] = average( [left, right] ) + offset( step );
+				line[point] = whole_average( left, right ) + offset( step );
 			}
 		}
 

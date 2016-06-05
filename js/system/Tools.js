@@ -64,13 +64,36 @@ function clamp( value, min, max )
 function minimum()
 {
 	var min = Number.POSITIVE_INFINITY;
-	var len = arguments.length;
+	var args = arguments.length;
 
-	for ( var n = 0 ; n < len ; n++ ) {
+	for ( var n = 0 ; n < args ; n++ ) {
 		min = Math.min( arguments[n], min );
 	}
 
 	return min;
+}
+
+/**
+ * Return the average (mean) of all numerical arguments
+ */
+function average()
+{
+	var sum = 0;
+	var args = arguments.length;
+
+	for ( var n = 0 ; n < args ; n++ ) {
+		sum += arguments[n];
+	}
+
+	return sum / args;
+}
+
+/**
+ * Return a rounded whole number average of all numerical arguments
+ */
+function whole_average()
+{
+	return Math.round( average.apply( null, arguments ) );
 }
 
 /**

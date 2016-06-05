@@ -636,13 +636,10 @@ function Terrain()
 	}
 
 	/**
-	 * Runs through the heightmap and city layers in order
-	 * to composite the results to [time_canvas]. Accepts an
-	 * argument to specify the time of day for the rendering.
-	 *
-	 * TODO: Cleanup and organization
+	 * Renders the generated landscape + city 
+	 * together at a specific [hour] of the day.
 	 */
-	function composite_layers( hour )
+	function render_time( hour )
 	{
 		if ( isNaN( hour ) ) {
 			hour = 12;
@@ -654,18 +651,19 @@ function Terrain()
 		var city_IMG = city_canvas.data.get();
 		var composite_IMG = time_canvas.data.get();
 
-		var light_level = 12 - Math.abs( 12 - hour );
-		var city_light_reduction = 30 * ( mod( hour - 8, 24 ) - 16 );
-		var CLR_3q = Math.round( 0.75 * city_light_reduction );
-		var density_light_limit = color.presets.city.r - 5;
+		var LIGHT_LEVEL = 12 - Math.abs( 12 - hour );
+		var EVENING_LIGHT_MODIFIER = 15 * ( 4 - LIGHT_LEVEL );
+		var CITY_LIGHT_REDUCTION = 30 * ( mod( hour - 8, 24 ) - 16 );
+		var BLUE_CLR = Math.round( 0.75 * CITY_LIGHT_REDUCTION );
+		var DENSITY_LIGHT_LIMIT = color.presets.city.r - 5;
 
-		var is_twilight = ( light_level === 5 );
-		var is_night = ( light_level < 5 );
+		var is_twilight = ( LIGHT_LEVEL === 5 );
+		var is_night = ( LIGHT_LEVEL < 5 );
 
-		var lighting = {
-			red: color.time.red( light_level ),
-			green: color.time.green( light_level ),
-			blue: color.time.blue( light_level )
+		var LIGHT_COLOR = {
+			red: color.time.red( LIGHT_LEVEL ),
+			green: color.time.green( LIGHT_LEVEL ),
+			blue: color.time.blue( LIGHT_LEVEL )
 		};
 
 		for ( var p = 0 ; p < terrain_IMG.data.length ; p += 4 ) {
@@ -682,12 +680,12 @@ function Terrain()
 
 			if ( is_night && is_city ) {
 				// City lights
-				var density_light_reduction = Math.pow( clamp( density_light_limit - city_RGB.red, 0, density_light_limit ), 2 );
-				var DLR_3q = Math.round( 0.75 * density_light_reduction );
+				var density_light_reduction = Math.pow( clamp( DENSITY_LIGHT_LIMIT - city_RGB.red, 0, DENSITY_LIGHT_LIMIT ), 2 );
+				var blue_DLR = Math.round( 0.75 * density_light_reduction );
 
-				composite_RGB.red = color.presets.city2.r - city_light_reduction - density_light_reduction;
-				composite_RGB.green = color.presets.city2.g - city_light_reduction - density_light_reduction - Generator.random( 0, 60 );
-				composite_RGB.blue = color.presets.city2.b - CLR_3q - DLR_3q - Generator.random( 0, 75 );
+				composite_RGB.red = color.presets.city2.r - CITY_LIGHT_REDUCTION - density_light_reduction;
+				composite_RGB.green = color.presets.city2.g - CITY_LIGHT_REDUCTION - density_light_reduction - Generator.random( 0, 60 );
+				composite_RGB.blue = color.presets.city2.b - BLUE_CLR - blue_DLR - Generator.random( 0, 75 );
 			} else {
 				// Normal terrain
 				var RGB = {
@@ -695,17 +693,17 @@ function Terrain()
 					green: ( is_city ? city_RGB.green : terrain_RGB.green ),
 					blue: ( is_city ? city_RGB.blue : terrain_RGB.blue )
 				};
-				var RGB_average = Math.round( ( RGB.red + RGB.green + RGB.blue ) / 3 );
-				var light_modifier = RGB_average - 15 * ( 4 - light_level );
-				var time = {
-					red: ( is_twilight ? Math.round( ( RGB.red + light_modifier ) / 2 ) : ( is_night ? light_modifier : RGB.red ) ),
-					green: ( is_twilight ? Math.round( ( RGB.green + light_modifier ) / 2 ) : ( is_night ? light_modifier : RGB.green ) ),
-					blue: ( is_twilight ? Math.round( ( RGB.blue + light_modifier ) / 2 ) : ( is_night ? light_modifier : RGB.blue ) )
+				var RGB_average = whole_average( RGB.red, RGB.green, RGB.blue );
+				var rgb_modifier = RGB_average - EVENING_LIGHT_MODIFIER;
+				var time_color = {
+					red: ( is_twilight ? whole_average( RGB.red, rgb_modifier ) : ( is_night ? rgb_modifier : RGB.red ) ),
+					green: ( is_twilight ? whole_average( RGB.green, rgb_modifier ) : ( is_night ? rgb_modifier : RGB.green ) ),
+					blue: ( is_twilight ? whole_average( RGB.blue, rgb_modifier ) : ( is_night ? rgb_modifier : RGB.blue ) )
 				};
 
-				composite_RGB.red = lighting.red + time.red;
-				composite_RGB.green = lighting.green + time.green;
-				composite_RGB.blue = lighting.blue + time.blue;
+				composite_RGB.red = LIGHT_COLOR.red + time_color.red;
+				composite_RGB.green = LIGHT_COLOR.green + time_color.green;
+				composite_RGB.blue = LIGHT_COLOR.blue + time_color.blue;
 			}
 
 			var T_pixel = terrain_IMG.getPixelXY( p );
@@ -803,7 +801,7 @@ function Terrain()
 	 */
 	this.setTime = function( hour )
 	{
-		composite_layers( hour );
+		render_time( hour );
 		return _;
 	};
 
