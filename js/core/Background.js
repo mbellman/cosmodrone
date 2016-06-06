@@ -103,8 +103,8 @@
 			// 2. Get the chunk this coordinate falls within
 			// 3. Determine where to start clipping on the smaller chunk texture
 			// 4. Get drawing coordinates
-			// 5. Get partial clipping area width/height
-			// 6. Render the partial clipped texture
+			// 5. Get clipping area coordinates/width/height
+			// 6. Render the clipped texture
 			// 7. Advance pixel offset and continue
 			// -----
 			while ( pixel.x < region_W || pixel.y < region_H ) {
@@ -130,8 +130,8 @@
 
 				// Clip width/height should stop either at the edge
 				// of the chunk or the edge of the draw region
-				clip.width = Math.min( CHUNK_W + buffer - clip.x, region_W - draw.x );
-				clip.height = Math.min( CHUNK_H + buffer - clip.y, region_H - draw.y );
+				clip.width = Math.min( CHUNK_W - clip.x, region_W - draw.x );
+				clip.height = Math.min( CHUNK_H - clip.y, region_H - draw.y );
 
 				canvas.draw.image(
 					chunk.texture,

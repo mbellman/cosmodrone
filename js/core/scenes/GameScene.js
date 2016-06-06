@@ -89,7 +89,7 @@ function GameScene( controller )
 						smoothness: 8,
 						repeat: true,
 						cities: 250,
-						maxCitySize: 40,
+						maxCitySize: 45,
 						tileSize: 2,
 						lightAngle: 220,
 						//hours: [12, 19, 20, 0, 4, 6],

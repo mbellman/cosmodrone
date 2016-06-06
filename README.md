@@ -6,15 +6,15 @@ A game about space station maintenance!
 ##### LEVEL SELECT SCREEN
 * / character for MonitorMini font
 * Map layout preview below level description
-* Loading bar/indicator of some kind (connect level menu with gameplay!!!)
+* Loading bar/indicator of some kind
 
 ##### GAME
 * Print debug text using TextString component
 * New drone sprite
 * Dynamic dialogue
-* More modules and hardware parts (with correct lighting based on orientation)
-* Radio signal reception mechanic
 * Recharging/refueling terminal
+* Radio signal reception mechanic
+* More modules and hardware parts (with correct lighting based on orientation)
 * Collisions/drone damage
 * Components with update cycles/architecture for various hardware parts
 * Icons next to vulnerable hardware parts
