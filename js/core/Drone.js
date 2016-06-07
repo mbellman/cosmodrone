@@ -74,21 +74,6 @@ function Drone()
 	}
 
 	/**
-	 * Returns the angle necessary to approach the docking
-	 * alignment position from the drone's current location
-	 */
-	function get_docking_alignment_angle()
-	{
-		var direction = get_docking_alignment_direction();
-
-		var ax = ( direction.x < 0 ? 270 : 90 );
-		var ay = ( direction.y < 0 ? 0 : 180 );
-
-		if ( docking.angle === 0 || docking.angle === 180 ) return ax;
-		if ( docking.angle === 90 || docking.angle === 270 ) return ay;
-	}
-
-	/**
 	 * Update the drone's saved [retrograde_angle]
 	 */
 	function update_retrograde_angle()
@@ -156,6 +141,21 @@ function Drone()
 	}
 
 	/**
+	 * Returns the angle necessary to approach the docking
+	 * alignment position from the drone's current location
+	 */
+	function get_docking_alignment_angle()
+	{
+		var direction = get_docking_alignment_direction();
+
+		var ax = ( direction.x < 0 ? 270 : 90 );
+		var ay = ( direction.y < 0 ? 0 : 180 );
+
+		if ( docking.angle === 0 || docking.angle === 180 ) return ax;
+		if ( docking.angle === 90 || docking.angle === 270 ) return ay;
+	}
+
+	/**
 	 * Checks and saves the distance between
 	 * the player drone and the docking terminal
 	 * (expressed in the coordinates the drone
@@ -167,11 +167,29 @@ function Drone()
 		var target = docking.target.get( HardwarePart ).getPosition();
 		var specs = docking.target.get( HardwarePart ).getSpecs();
 
-		var top = ( specs.orientation === 'top' );
-		var left = ( specs.orientation === 'left' );
+		var DRONE_W = _.owner.get( Sprite ).width();
+		var DRONE_H = _.owner.get( Sprite ).height();
 
-		target.x += ( specs.x + ( left ? -1 : 1 ) * _.owner.get( Sprite ).width() / 2 );
-		target.y += ( specs.y + ( top ? -1 : 1 ) * _.owner.get( Sprite ).height() / 2 );
+		// Align distance vector to terminal based
+		// on the hardware sprite's orientation
+		switch ( specs.orientation ) {
+			case 'top':
+				target.x += ( -specs.x + DRONE_W / 2 );
+				target.y -= DRONE_H / 2;
+				break;
+			case 'left':
+				target.x -= DRONE_W / 2;
+				target.y += DRONE_H;
+				break;
+			case 'right':
+				target.x += ( specs.width + DRONE_W / 2 );
+				target.y += DRONE_H;
+				break;
+			case 'bottom':
+				target.x += DRONE_W;
+				target.y += ( specs.height + DRONE_H / 2 );
+				break;
+		}
 
 		docking.distance.x = player.x - target.x;
 		docking.distance.y = player.y - target.y;

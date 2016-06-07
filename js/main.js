@@ -114,7 +114,7 @@ function loadGame()
 	} )
 	.then( function() {
 		var controller = new Controller();
-		controller.showTitle();
+		controller.showGame();
 	} );
 }
 

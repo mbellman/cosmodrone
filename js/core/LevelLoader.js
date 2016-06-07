@@ -9,22 +9,27 @@
 	var LevelData = {
 		1: {
 			layout: [
-				[0, 1, 0, 1, 0],
+				[0, 3, 0, 1, 0],
 				[0, 2, 0, 2, 0],
 				[1, 1, 1, 1, 1],
-				[0, 2, 0, 2, 0]
+				[0, 2, 0, 3, 0]
 			],
 			parts: {
 				0: {
 					1: [
-						{side: 'top', index: 1, name: 'SATELLITE_1'},
-						{side: 'bottom', index: 2, name: 'SATELLITE_1'}
-					]
+						{side: 'left', index: 1, name: 'SATELLITE_1'},
+					],
 				},
 				1: {
 					1: [
 						{side: 'left', index: 1, name: 'SATELLITE_1'},
 						{side: 'right', index: 2, name: 'SATELLITE_1'},
+					]
+				},
+				2: {
+					0: [
+						{side: 'top', index: 1, name: 'SATELLITE_1'},
+						{side: 'bottom', index: 2, name: 'SATELLITE_1'}
 					]
 				}
 			},
@@ -55,48 +60,47 @@
 		// -------------------------------------------- //
 
 		/**
-		 * Returns hardware part specs based on name and
-		 * module side, which determines orientation
+		 * Returns hardware [part] specs adjusted by [side] orientation
 		 */
 		function get_part_specs( part, side )
 		{
 			side = side || 'top';
 
 			var specs = HardwareParts[part];
-			var data = {};
+			var rotated_specs = {};
 
 			switch ( side ) {
 				case 'top':
-					data.file = specs.file + 'top.png';
-					data.width = specs.width;
-					data.height = specs.height;
-					data.x = specs.x;
-					data.y = specs.y;
+					rotated_specs.file = specs.file + 'top.png';
+					rotated_specs.width = specs.width;
+					rotated_specs.height = specs.height;
+					rotated_specs.x = specs.x;
+					rotated_specs.y = specs.y;
 					break;
 				case 'right':
-					data.file = specs.file + 'right.png';
-					data.width = specs.height;
-					data.height = specs.width;
-					data.x = data.width;
-					data.y = specs.x;
+					rotated_specs.file = specs.file + 'right.png';
+					rotated_specs.width = specs.height;
+					rotated_specs.height = specs.width;
+					rotated_specs.x = -specs.height - specs.y;
+					rotated_specs.y = specs.x;
 					break;
 				case 'bottom':
-					data.file = specs.file + 'bottom.png';
-					data.width = specs.width;
-					data.height = specs.height;
-					data.x = specs.x;
-					data.y = specs.height;
+					rotated_specs.file = specs.file + 'bottom.png';
+					rotated_specs.width = specs.width;
+					rotated_specs.height = specs.height;
+					rotated_specs.x = specs.x;
+					rotated_specs.y = -specs.height - specs.y;
 					break;
 				case 'left':
-					data.file = specs.file + 'left.png';
-					data.width = specs.height;
-					data.height = specs.width;
-					data.x = specs.y;
-					data.y = specs.x;
+					rotated_specs.file = specs.file + 'left.png';
+					rotated_specs.width = specs.height;
+					rotated_specs.height = specs.width;
+					rotated_specs.x = specs.y;
+					rotated_specs.y = specs.x;
 					break;
 			}
 
-			return data;
+			return rotated_specs;
 		}
 
 		/**
@@ -118,8 +122,8 @@
 					specs = get_part_specs( part.name, part.side );
 					specs.orientation = part.side;
 
-					position.x = module.terminals[terminal].x - specs.x;
-					position.y = module.terminals[terminal].y - specs.y;
+					position.x = module.terminals[terminal].x + specs.x;
+					position.y = module.terminals[terminal].y + specs.y;
 
 					entities.push(
 						new Entity()
