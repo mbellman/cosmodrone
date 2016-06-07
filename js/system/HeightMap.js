@@ -104,7 +104,7 @@ function HeightMap()
 	 */
 	function corners( point, unit )
 	{
-		return whole_average(
+		return roundedAverage(
 			get_point( point.y - unit, point.x - unit ),
 			get_point( point.y - unit, point.x + unit ),
 			get_point( point.y + unit, point.x - unit ),
@@ -118,7 +118,7 @@ function HeightMap()
 	 */
 	function adjacents( point, unit )
 	{
-		return whole_average(
+		return roundedAverage(
 			get_point( point.y, point.x - unit ),
 			get_point( point.y, point.x + unit ),
 			get_point( point.y - unit, point.x ),
@@ -192,7 +192,7 @@ function HeightMap()
 				var left = line[point - unit];
 				var right = line[point + unit];
 
-				line[point] = whole_average( left, right ) + offset( step );
+				line[point] = roundedAverage( left, right ) + offset( step );
 			}
 		}
 

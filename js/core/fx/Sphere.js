@@ -16,9 +16,9 @@ function Sphere()
 	var texture = new Canvas();
 	var TEXTURE_W = 0;
 	var TEXTURE_H = 0;
-	var light = new Vector( -100, 10, -100 ).normalize( 1 );
-	var ambience = 0.75;
-	var diffusion = 0.75;
+	var LIGHT_SOURCE = new Vector( -100, 10, -100 ).normalize( 1 );
+	var LIGHT_AMBIENCE = 0.75;
+	var LIGHT_DIFFUSION = 0.75;
 	var radius = 0;
 	var resolution = 1;
 	var paused = false;
@@ -37,8 +37,8 @@ function Sphere()
 	};
 
 	/**
-	 * Return front-facing sphere surface point coordinates
-	 * from two screen coordinates (both offset by -[radius])
+	 * Return viewer-facing sphere surface point coordinates
+	 * from 2 screen coordinates (both offset by -[radius])
 	 */
 	function get_sphere_coordinates( x, y )
 	{
@@ -56,29 +56,31 @@ function Sphere()
 	function get_UV_coordinates( x, y, z )
 	{
 		return {
-			u: 0.5 + ( Math.atan2( z, x ) / ( 2 * Math.PI ) ),
-			v: 0.5 - ( Math.asin( y ) / Math.PI )
+			u: ( 0.5 + ( Math.atan2( z, x ) / ( 2 * Math.PI ) ) ) * TEXTURE_W,
+			v: ( 0.5 - ( Math.asin( y ) / Math.PI ) ) * TEXTURE_H
 		};
 	}
 
 	/**
-	 * Cache the color values for each pixel of the texture
+	 * Cache the RGBA values for each pixel of the texture
 	 */
 	function build_color_map()
 	{
 		maps.color.length = 0;
 		var image = texture.data.get();
+		var pixel, RGBA;
 
 		for ( var y = 0 ; y < TEXTURE_H ; y++ ) {
 			for ( var x = 0 ; x < TEXTURE_W ; x++ ) {
-				maps.color.push( image.read( image.getPixelIndex( x, ( TEXTURE_H - y - 1 ) ) ) );
+				pixel = image.getPixelIndex( x, ( TEXTURE_H - y - 1 ) );
+				RGBA = image.read( pixel );
+				maps.color.push( RGBA );
 			}
 		}
 	}
 
 	/**
-	 * Generate a transformation map from screen
-	 * coordinates to texture coordinates
+	 * Cache the screen coordinate -> texture coordinate map
 	 */
 	function build_UV_map()
 	{
@@ -90,8 +92,7 @@ function Sphere()
 				if ( Math.sqrt( x * x + y * y ) < radius ) {
 					surface = get_sphere_coordinates( x, y ).normalize( 1 );
 					UV = get_UV_coordinates( surface.n[0], surface.n[1], surface.n[2] );
-					UV.u = UV.u * TEXTURE_W;
-					UV.v = Math.floor( UV.v * TEXTURE_H ) % TEXTURE_H;
+					UV.v = Math.floor( UV.v ) % TEXTURE_H;
 					maps.UV.push( UV );
 				}
 			}
@@ -99,7 +100,7 @@ function Sphere()
 	}
 
 	/**
-	 * Cache the shadow map based on the [light_source] vector
+	 * Cache the shadow map based on the [LIGHT_SOURCE] vector
 	 */
 	function build_shadow_map()
 	{
@@ -110,11 +111,11 @@ function Sphere()
 			for ( var x = -radius ; x < radius ; x += resolution ) {
 				if ( Math.sqrt( x * x + y * y ) < radius ) {
 					surface = get_sphere_coordinates( x, y ).normalize( 1 );
-					intensity = Vector.dotProduct( light, surface );
-					intensity = ( intensity < 0 ? -intensity : 0 );
-					exponent = Math.pow( intensity, diffusion ) + ambience;
-					shadow = clamp( ( 1 - exponent ) * 255, 0, 255 );
-					maps.shadow.push( Math.floor( shadow ) );
+					intensity = Vector.dotProduct( LIGHT_SOURCE, surface );
+					intensity = ( intensity < 0 ? -1 * intensity : 0 );
+					exponent = Math.pow( intensity, LIGHT_DIFFUSION ) + LIGHT_AMBIENCE;
+					shadow = Math.floor( clamp( ( 1 - exponent ) * 255, 0, 255 ) );
+					maps.shadow.push( shadow );
 				}
 			}
 		}
@@ -144,10 +145,10 @@ function Sphere()
 		var i, j, m = 0, UV, shadow, color = {}, C_index, hue = {}, pixel;
 
 		for ( var y = 0 ; y < render.element.height ; y += resolution ) {
-			j = Math.pow( y - radius, 2 );
+			j = ( y - radius ) * ( y - radius );
 
 			for ( var x = 0 ; x < render.element.width ; x += resolution ) {
-				i = Math.pow( x - radius, 2 );
+				i = ( x - radius ) * ( x - radius );
 
 				if ( Math.sqrt( i + j ) < radius ) {
 					UV = maps.UV[m];
@@ -219,25 +220,25 @@ function Sphere()
 	 */
 	this.setLightSource = function( vec3 )
 	{
-		light.copy( vec3 ).normalize( 1 );
+		LIGHT_SOURCE.copy( vec3 ).normalize( 1 );
 		return _;
 	};
 
 	/**
 	 * Set the ambient light level
 	 */
-	this.setAmbientLight = function( _ambience )
+	this.setAmbientLight = function( ambience )
 	{
-		ambience = _ambience;
+		LIGHT_AMBIENCE = ambience;
 		return _;
 	};
 
 	/**
 	 * Set the sharpness of the light/shadow gradient
 	 */
-	this.setLightDiffusion = function( _diffusion )
+	this.setLightDiffusion = function( diffusion )
 	{
-		diffusion = _diffusion;
+		LIGHT_DIFFUSION = diffusion;
 		return _;
 	};
 

@@ -1,9 +1,41 @@
-// --------------------------------- //
-// ----------- Constants ----------- //
-// --------------------------------- //
+// ---------------------------------------- //
+// ----------- Static resources ----------- //
+// ---------------------------------------- //
 
 Math.PI_RAD = Math.PI / 180;
 Math.RAD_PI = 180 / Math.PI;
+Math.TAU = 2 * Math.PI;
+
+( function( scope ) {
+	/**
+	 * A list of 10^x, from x = [0 - 11]
+	 */
+	var E = [];
+
+	for ( var e = 0 ; e < 12 ; e++ ) {
+		E.push( Math.pow( 10, e ) );
+	}
+
+	/**
+	 * Methods for rounding to a specific decimal
+	 */
+	var Round = {
+		toDecimal: function( number, decimal ) {
+			decimal = E[decimal];
+			return Math.round( number * decimal ) / decimal;
+		},
+		upToDecimal: function( number, decimal ) {
+			decimal = E[decimal];
+			return Math.ceil( number * decimal ) / decimal;
+		},
+		downToDecimal: function( number, decimal ) {
+			decimal = E[decimal];
+			return Math.floor( number * decimal ) / decimal;
+		}
+	};
+
+	scope.Round = Round;
+} )( window );
 
 // -------------------------------------- //
 // ----------- Handy routines ----------- //
@@ -36,7 +68,7 @@ function chance()
 /**
  * Randomly selects and returns one of the arguments
  */
-function pick_random()
+function pickRandom()
 {
 	var pick = random( 0, arguments.length - 1 );
 	return arguments[pick];
@@ -91,7 +123,7 @@ function average()
 /**
  * Return a rounded whole number average of all numerical arguments
  */
-function whole_average()
+function roundedAverage()
 {
 	return Math.round( average.apply( null, arguments ) );
 }
@@ -107,7 +139,7 @@ function lerp( value1, value2, factor )
 /**
  * Determines whether a number is in between two others
  */
-function is_in_between( value, low, high )
+function isInBetween( value, low, high )
 {
 	return ( value > low && value < high );
 }
@@ -115,7 +147,7 @@ function is_in_between( value, low, high )
 /**
  * Returns 0 if 1 and vice versa
  */
-function bit_flip( bit )
+function bitFlip( bit )
 {
 	return !bit ? 1 : 0;
 }
@@ -127,7 +159,6 @@ function rgb( r, g, b )
 {
 	return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
-
 
 // --------------------------------------------- //
 // ----------- Miscellaneous classes ----------- //

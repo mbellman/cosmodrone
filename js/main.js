@@ -22,6 +22,7 @@ include(
 		'js/core/Background.js',
 		'js/core/LevelLoader.js',
 		'js/core/Drone.js',
+		'js/core/fx/Effects.js',
 		'js/core/fx/Sphere.js',
 		'js/core/ui/Fonts.js',
 		'js/core/ui/Text.js',
@@ -113,7 +114,7 @@ function loadGame()
 	} )
 	.then( function() {
 		var controller = new Controller();
-		controller.showGame();
+		controller.showTitle();
 	} );
 }
 

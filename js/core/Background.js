@@ -46,8 +46,8 @@
 			TEXTURE_W = texture.width;
 			TEXTURE_H = texture.height;
 
-			CHUNK_W = TEXTURE_W / divisions;
-			CHUNK_H = TEXTURE_H / divisions;
+			CHUNK_W = Round.toDecimal( TEXTURE_W / divisions, 2 );
+			CHUNK_H = Round.toDecimal( TEXTURE_H / divisions, 2 );
 
 			var clip, chunk;
 
@@ -89,6 +89,9 @@
 			region_W = region_W || canvas.getSize().width;
 			region_H = region_H || canvas.getSize().height;
 
+			clip_X = Round.toDecimal( clip_X, 2 );
+			clip_Y = Round.toDecimal( clip_Y, 2 );
+
 			var pixel = {
 				x: 0,
 				y: 0
@@ -115,6 +118,9 @@
 					break;
 				}
 
+				pixel.x = Round.upToDecimal( pixel.x, 2 );
+				pixel.y = Round.upToDecimal( pixel.y, 2 );
+
 				coords.x = mod( pixel.x + clip_X, TEXTURE_W );
 				coords.y = mod( pixel.y + clip_Y, TEXTURE_H );
 
@@ -130,8 +136,8 @@
 
 				// Clip width/height should stop either at the edge
 				// of the chunk or the edge of the draw region
-				clip.width = Math.min( CHUNK_W - clip.x, region_W - draw.x );
-				clip.height = Math.min( CHUNK_H - clip.y, region_H - draw.y );
+				clip.width = Round.upToDecimal( Math.min( CHUNK_W - clip.x, region_W - draw.x ), 2 );
+				clip.height = Round.upToDecimal( Math.min( CHUNK_H - clip.y, region_H - draw.y ), 2 );
 
 				canvas.draw.image(
 					chunk.texture,
@@ -583,9 +589,9 @@
 					if ( is_large_cyclone ) {
 						type = (
 							( i === 0 ) ?
-								pick_random( 'cumulus', 'heavy_cumulus' )
+								pickRandom( 'cumulus', 'heavy_cumulus' )
 							:
-								pick_random( 'cumulus', 'small_cumulus' )
+								pickRandom( 'cumulus', 'small_cumulus' )
 						);
 					} else {
 						type = ( i === 0 ? 'cumulus' : 'small_cumulus' );
@@ -624,7 +630,7 @@
 			var type, index, position = {};
 
 			for ( var c = 0 ; c < 30 ; c++ ) {
-				type = pick_random( 'cumulus', 'heavy_cumulus', 'small_cumulus', 'cirrus', 'cirrus' );
+				type = pickRandom( 'cumulus', 'heavy_cumulus', 'small_cumulus', 'cirrus', 'cirrus' );
 				index = random_cloud_index( type );
 
 				position.x = random( -600, Viewport.width + 600 );
@@ -667,7 +673,7 @@
 			if ( Math.random() > 0.02 ) {
 				// 98% chance of generating a normal cloud
 				// (higher chance of picking cirrus clouds)
-				type = pick_random( 'cumulus', 'heavy_cumulus', 'small_cumulus', 'cirrus', 'cirrus', 'cirrus' );
+				type = pickRandom( 'cumulus', 'heavy_cumulus', 'small_cumulus', 'cirrus', 'cirrus', 'cirrus' );
 				index = random_cloud_index( type );
 				size = renders.clouds[index].getSize();
 
@@ -675,7 +681,7 @@
 				spawn_offset.y = 0;
 			} else {
 				// 2% chance of generating a cyclone
-				index = pick_random( 'large', 'small' );
+				index = pickRandom( 'large', 'small' );
 
 				size = {
 					width: 0,

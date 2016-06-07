@@ -63,12 +63,12 @@ function Terrain()
 				if ( e >= 80 ) return 0;
 				if ( e > tree_line ) return -55;
 				if ( e > sea_line + 5 ) {
-					if ( is_in_between( t, desert_line, desert_line + 5 ) ) return -10 + Math.round( 0.75 * t );
+					if ( isInBetween( t, desert_line, desert_line + 5 ) ) return -10 + Math.round( 0.75 * t );
 					if ( t > arid_line ) return -20 + Math.round( 0.75 * t );
 					if ( t > jungle_line ) return -70 + t;
 					return -90 + t;
 				}
-				if ( e > sea_line && is_in_between( t, shore_line, shore_line + 4 ) ) return -235 + t + e;
+				if ( e > sea_line && isInBetween( t, shore_line, shore_line + 4 ) ) return -235 + t + e;
 				if ( e < sea_line ) return 20 - t - ( sea_line - e );
 				return -55;
 			},
@@ -76,12 +76,12 @@ function Terrain()
 				if ( e >= 80 ) return 0;
 				if ( e > tree_line ) return -50;
 				if ( e > sea_line + 5 ) {
-					if ( is_in_between( t, desert_line, desert_line + 5 ) ) return 10 + Math.round( -2.5 * e ) + Math.round( t / 2 );
+					if ( isInBetween( t, desert_line, desert_line + 5 ) ) return 10 + Math.round( -2.5 * e ) + Math.round( t / 2 );
 					if ( t > arid_line ) return 30 + Math.round( -2.5 * e ) + Math.round( t / 2 );
 					if ( t > jungle_line ) return -130 + t;
 					return -120 + t;
 				}
-				if ( e > sea_line && is_in_between( t, shore_line, shore_line + 4 ) ) return -180 + t + e;
+				if ( e > sea_line && isInBetween( t, shore_line, shore_line + 4 ) ) return -180 + t + e;
 				if ( e < sea_line) return 50 - Math.round( t / 2 ) - ( sea_line - e );
 				return -55;
 			},
@@ -93,7 +93,7 @@ function Terrain()
 					if ( t > jungle_line ) return -30 + Math.round( t / 25 );
 					return -50 + Math.round( t / 25 );
 				}
-				if ( e > sea_line && is_in_between( t, shore_line, shore_line + 4 ) ) return -265 + t + e;
+				if ( e > sea_line && isInBetween( t, shore_line, shore_line + 4 ) ) return -265 + t + e;
 				if ( e < sea_line ) return 30 - Math.round( t / 3 ) - ( sea_line - e );
 				return -65;
 			}
@@ -693,12 +693,12 @@ function Terrain()
 					green: ( is_city ? city_RGB.green : terrain_RGB.green ),
 					blue: ( is_city ? city_RGB.blue : terrain_RGB.blue )
 				};
-				var RGB_average = whole_average( RGB.red, RGB.green, RGB.blue );
+				var RGB_average = roundedAverage( RGB.red, RGB.green, RGB.blue );
 				var rgb_modifier = RGB_average - EVENING_LIGHT_MODIFIER;
 				var time_color = {
-					red: ( is_twilight ? whole_average( RGB.red, rgb_modifier ) : ( is_night ? rgb_modifier : RGB.red ) ),
-					green: ( is_twilight ? whole_average( RGB.green, rgb_modifier ) : ( is_night ? rgb_modifier : RGB.green ) ),
-					blue: ( is_twilight ? whole_average( RGB.blue, rgb_modifier ) : ( is_night ? rgb_modifier : RGB.blue ) )
+					red: ( is_twilight ? roundedAverage( RGB.red, rgb_modifier ) : ( is_night ? rgb_modifier : RGB.red ) ),
+					green: ( is_twilight ? roundedAverage( RGB.green, rgb_modifier ) : ( is_night ? rgb_modifier : RGB.green ) ),
+					blue: ( is_twilight ? roundedAverage( RGB.blue, rgb_modifier ) : ( is_night ? rgb_modifier : RGB.blue ) )
 				};
 
 				composite_RGB.red = LIGHT_COLOR.red + time_color.red;
