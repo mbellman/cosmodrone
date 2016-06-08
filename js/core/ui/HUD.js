@@ -9,42 +9,35 @@ function HUD()
 {
 	// -- Private: --
 	var _ = this;
-	var graphics = {
+	var GRAPHICS = {
 		droneHUD: Assets.getImage( 'game/ui/drone.png' )
 	};
 	var UI = {
 		droneHUD: {
 			x: 10,
-			y: Viewport.height - 10 - graphics.droneHUD.height
+			y: Viewport.height - 10 - GRAPHICS.droneHUD.height
 		},
 		meters: {
+			health: {
+				x: 56,
+				y: 52,
+				width: 232,
+				height: 10,
+				color: '#00ff30'
+			},
 			power: {
 				x: 56,
-				y: 58,
-				width: 178,
-				height: 10,
+				y: 70,
+				width: 640,
+				height: 18,
 				color: '#00e4ff'
 			},
 			fuel: {
 				x: 56,
-				y: 61,
-				width: 178,
-				height: 4,
-				color: '#eed800'
-			},
-			health: {
-				x: 56,
-				y: 82,
-				width: 178,
-				height: 10,
-				color: '#00ff30'
-			},
-			hardware: {
-				x: 56,
-				y: 85,
-				width: 178,
-				height: 4,
-				color: '#3d584c'
+				y: 76,
+				width: 640,
+				height: 6,
+				color: '#ccd'
 			}
 		},
 		indicators: {
@@ -62,8 +55,8 @@ function HUD()
 		screen.HUD.clear(
 			UI.droneHUD.x,
 			UI.droneHUD.y,
-			graphics.droneHUD.width,
-			graphics.droneHUD.height
+			GRAPHICS.droneHUD.width,
+			GRAPHICS.droneHUD.height
 		);
 
 		// TODO: Remaining clear operations
@@ -90,7 +83,7 @@ function HUD()
 	function redraw_drone_HUD( system )
 	{
 		// Draw drone stat meters
-		var meters = ['power', 'fuel', 'health', 'hardware'];
+		var meters = ['power', 'fuel', 'health'];
 		var meter, ratio, width;
 
 		for ( var m = 0 ; m < meters.length ; m++ )
@@ -103,7 +96,7 @@ function HUD()
 		}
 
 		// Draw the static frame over the meters
-		screen.HUD.draw.image( graphics.droneHUD, UI.droneHUD.x, UI.droneHUD.y );
+		screen.HUD.draw.image( GRAPHICS.droneHUD, UI.droneHUD.x, UI.droneHUD.y );
 
 		// Draw system indicators
 		var indicators = ['stabilizing', 'docking'];

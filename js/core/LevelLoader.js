@@ -17,18 +17,23 @@
 			parts: {
 				0: {
 					1: [
-						{side: 'left', index: 1, name: 'SATELLITE_1'},
+						{side: 'left', index: 1, name: 'RECHARGER'},
 					],
 				},
 				1: {
 					1: [
-						{side: 'left', index: 1, name: 'SATELLITE_1'},
+						{side: 'left', index: 1, name: 'RECHARGER'},
 						{side: 'right', index: 2, name: 'SATELLITE_1'},
+					],
+					3: [
+						{side: 'right', index: 1, name: 'RECHARGER'}
 					]
 				},
 				2: {
 					0: [
 						{side: 'top', index: 1, name: 'SATELLITE_1'},
+						{side: 'top', index: 2, name: 'RECHARGER'},
+						{side: 'bottom', index: 1, name: 'RECHARGER'},
 						{side: 'bottom', index: 2, name: 'SATELLITE_1'}
 					]
 				}
@@ -68,6 +73,8 @@
 
 			var specs = HardwareParts[part];
 			var rotated_specs = {};
+
+			specs.file = 'game/station/parts/' + part + '/';
 
 			switch ( side ) {
 				case 'top':
@@ -120,6 +127,7 @@
 
 				if ( module.terminals.hasOwnProperty( terminal ) ) {
 					specs = get_part_specs( part.name, part.side );
+					specs.name = part.name;
 					specs.orientation = part.side;
 
 					position.x = module.terminals[terminal].x + specs.x;
@@ -148,12 +156,11 @@
 		// ------------------------------------------- //
 
 		/**
-		 * Returns module properties based on a number ID
+		 * Returns module properties based on a number [id] (see: Objects.js -> ModuleNames)
 		 */
 		function get_module_specs( id )
 		{
-			var name = ModuleNames[id];
-			return Modules[name];
+			return Modules[ModuleNames[id]];
 		}
 
 		/**
@@ -169,15 +176,18 @@
 		}
 
 		/**
-		 * Creates and returns a station module as an entity
+		 * Creates and returns a station module as an entity based on [specs]
 		 */
-		function create_module( specs, positionX, positionY )
+		function create_module( specs, position_X, position_Y )
 		{
 			var module = new Entity()
-				.add( new Point().setPosition( positionX, positionY ) )
-				.add( new Sprite( Assets.getImage( specs.file ) ) );
-
-			entities.push( module );
+				.add(
+					new Point()
+						.setPosition( position_X, position_Y )
+				)
+				.add(
+					new Sprite( Assets.getImage( specs.file ) )
+				);
 
 			return module;
 		}
@@ -231,7 +241,7 @@
 		/**
 		 * Build a station module and its offshoot modules
 		 */
-		function build_module_recursive( y, x, positionX, positionY )
+		function build_module_recursive( y, x, position_X, position_Y )
 		{
 			if ( is_built[y][x] ) {
 				return;
@@ -240,9 +250,11 @@
 			is_built[y][x] = true;
 
 			var specs = get_module_specs( data.layout[y][x] );
-			var module = create_module( specs, positionX, positionY );
+			var module = create_module( specs, position_X, position_Y );
 			var offshoots = get_offshoot_modules( y, x );
 			var offshoot = {}, dock = {};
+
+			entities.push( module );
 
 			if ( !!data.parts[y] && !!data.parts[y][x] ) {
 				var parts = create_hardware_parts( y, x );
@@ -284,8 +296,8 @@
 					build_module_recursive(
 						offshoot.index.y,
 						offshoot.index.x,
-						positionX + dock.x,
-						positionY + dock.y
+						position_X + dock.x,
+						position_Y + dock.y
 					);
 				}
 			}

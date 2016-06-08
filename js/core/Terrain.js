@@ -364,9 +364,9 @@ function Terrain()
 	{
 		var map = height_map.data();
 		var total = 0;
-		var chunk_size = 100;
+		var CHUNK_SIZE = 100;
 
-		city_chunks = map_to_chunks( chunk_size );
+		city_chunks = map_to_chunks( CHUNK_SIZE );
 
 		while ( total <= city_count ) {
 			// Pick a random spot for the city
@@ -433,11 +433,12 @@ function Terrain()
 								var glow_R = hue.r - 5;
 								var glow_G = hue.g - 5;
 								var glow_B = hue.b - 5;
+								var glow_RGB = rgb( glow_R, glow_G, glow_B );
 
-								city_canvas.draw.rectangle( ( tile.x - 1), tile.y, 1, 1 ).fill( rgb( glow_R, glow_G, glow_B ) );
-								city_canvas.draw.rectangle( ( tile.x + 1), tile.y, 1, 1 ).fill( rgb( glow_R, glow_G, glow_B ) );
-								city_canvas.draw.rectangle( tile.x, ( tile.y - 1), 1, 1 ).fill( rgb( glow_R, glow_G, glow_B ) );
-								city_canvas.draw.rectangle( tile.x, ( tile.y + 1), 1, 1 ).fill( rgb( glow_R, glow_G, glow_B ) );
+								city_canvas.draw.rectangle( ( tile.x - 1), tile.y, 1, 1 ).fill( glow_RGB );
+								city_canvas.draw.rectangle( ( tile.x + 1), tile.y, 1, 1 ).fill( glow_RGB );
+								city_canvas.draw.rectangle( tile.x, ( tile.y - 1), 1, 1 ).fill( glow_RGB );
+								city_canvas.draw.rectangle( tile.x, ( tile.y + 1), 1, 1 ).fill( glow_RGB );
 							}
 						}
 					}
@@ -445,18 +446,18 @@ function Terrain()
 			}
 
 			// Store city location in its respective chunk
-			var city_y = location.y + Math.round( city_size / 2 );
-			var city_x = location.x + Math.round( city_size / 2 );
+			var city_Y = location.y + Math.round( city_size / 2 );
+			var city_X = location.x + Math.round( city_size / 2 );
 
 			var chunk = {
-				y: Math.floor( city_y / chunk_size ),
-				x: Math.floor( city_x / chunk_size )
+				y: Math.floor( city_Y / CHUNK_SIZE ),
+				x: Math.floor( city_X / CHUNK_SIZE )
 			};
 
 			city_chunks[chunk.y][chunk.x].push(
 				{
-					y: city_y,
-					x: city_x,
+					y: city_Y,
+					x: city_X,
 					size: city_size
 				}
 			);
@@ -543,7 +544,7 @@ function Terrain()
 								city2.x > city1.x &&
 								(
 									// Cities must also be close in relative size...
-									Math.abs( city2.size - city1.size ) < 10 ||
+									Math.abs( city2.size - city1.size ) < 15 ||
 									// ...80% of the time
 									Generator.random() < 0.2
 								)

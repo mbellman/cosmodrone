@@ -58,7 +58,7 @@ function GameScene( controller )
 	 */
 	function DEBUG_run_update()
 	{
-		drone.get( Drone ).restoreEnergy();
+		// ...
 	}
 
 	// ------------------------------------------ //
@@ -257,6 +257,9 @@ function GameScene( controller )
 
 		// Docking mode
 		input.on( 'D', function() {
+			if ( drone.get( Drone ).isDocked() ) {
+				drone.get( Drone ).undock();
+			} else
 			if ( !drone.get( Drone ).isDocking() ) {
 				enter_docking_mode();
 			} else {
@@ -336,6 +339,7 @@ function GameScene( controller )
 		_.unload();
 
 		add_background();
+		//init_complete();
 		return _;
 	};
 

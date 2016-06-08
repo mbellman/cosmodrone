@@ -17,7 +17,6 @@ function Drone()
 	var power = 500;
 	var fuel = 350;
 	var health = 100;
-	var hardware = 100;
 	var stabilizing = false;
 
 	// Flags for automatic spin maneuvering
@@ -42,6 +41,8 @@ function Drone()
 		phase: 1
 	};
 
+	var docked = false;
+
 	// Flags which determine whether the drone can operate
 	var out_of_power = false;
 	var out_of_fuel = false;
@@ -51,7 +52,23 @@ function Drone()
 	var MAX_POWER = 500;
 	var MAX_FUEL = 350;
 	var MAX_HEALTH = 100;
-	var MAX_HARDWARE = 100;
+
+	/**
+	 * Check to see whether the drone can still run
+	 */
+	function is_operational()
+	{
+		return !out_of_power && !out_of_fuel;
+	}
+
+	/**
+	 * Invoked upon power/fuel loss
+	 */
+	function system_shutdown()
+	{
+		stabilizing = false;
+		docking.on = false;
+	}
 
 	/**
 	 * Returns one of 4 angles depending
@@ -177,10 +194,6 @@ function Drone()
 				target.x += ( -specs.x + DRONE_W / 2 );
 				target.y -= DRONE_H / 2;
 				break;
-			case 'left':
-				target.x -= DRONE_W / 2;
-				target.y += DRONE_H;
-				break;
 			case 'right':
 				target.x += ( specs.width + DRONE_W / 2 );
 				target.y += DRONE_H;
@@ -189,19 +202,14 @@ function Drone()
 				target.x += DRONE_W;
 				target.y += ( specs.height + DRONE_H / 2 );
 				break;
+			case 'left':
+				target.x -= DRONE_W / 2;
+				target.y += DRONE_H;
+				break;
 		}
 
 		docking.distance.x = player.x - target.x;
 		docking.distance.y = player.y - target.y;
-	}
-
-	/**
-	 * Invoked upon power/fuel loss
-	 */
-	function system_shutdown()
-	{
-		stabilizing = false;
-		docking.on = false;
 	}
 
 	/**
@@ -440,6 +448,7 @@ function Drone()
 					// Docked!
 					_.owner.get( Point ).setVelocity( 0, 0 );
 					docking.on = false;
+					docked = true;
 				}
 
 				break;
@@ -492,20 +501,30 @@ function Drone()
 	// -- Public: --
 	this.update = function( dt )
 	{
-		if ( docking.on && !out_of_power && !out_of_fuel ) {
+		if ( docking.on && is_operational() ) {
 			control_docking_procedure( dt );
 		}
 
-		if ( stabilizing && !docking.on && !out_of_power && !out_of_fuel ) {
-			stabilize_spin();
+		if ( stabilizing && is_operational() ) {
+			// Docking procedure invokes [stabilize_spin()] by
+			// default, so ensure it isn't running already
+			if ( !docking.on ) {
+				stabilize_spin();
+			}
+
+			consume_fuel( dt );
 		}
 
 		_.owner.get( Sprite ).rotation._ += ( spin * dt );
-
 		consume_power( dt );
 
-		if ( stabilizing ) {
-			consume_fuel( dt );
+		// Custom dock mode actions for hardware parts
+		if ( docked ) {
+			switch ( docking.target.get( HardwarePart ).getSpecs().name ) {
+				case 'RECHARGER':
+					power = Math.min( power + 10 * dt, MAX_POWER );
+					break;
+			}
 		}
 	};
 
@@ -529,11 +548,9 @@ function Drone()
 			power: power,
 			fuel: fuel,
 			health: health,
-			hardware: hardware,
 			MAX_POWER: MAX_POWER,
 			MAX_FUEL: MAX_FUEL,
 			MAX_HEALTH: MAX_HEALTH,
-			MAX_HARDWARE: MAX_HARDWARE
 		};
 	};
 
@@ -544,15 +561,6 @@ function Drone()
 	{
 		consume_fuel( dt );
 		return _;
-	};
-
-	/**
-	 * Restore power and fuel back to full capacity
-	 */
-	this.restoreEnergy = function()
-	{
-		power = MAX_POWER;
-		fuel = MAX_FUEL;
 	};
 
 	/**
@@ -588,7 +596,7 @@ function Drone()
 	 */
 	this.stabilize = function()
 	{
-		if ( !out_of_power && !out_of_fuel ) {
+		if ( is_operational() ) {
 			stabilizing = true;
 		}
 
@@ -605,6 +613,17 @@ function Drone()
 	};
 
 	/**
+	 * Detach from currently docked terminal
+	 */
+	this.undock = function()
+	{
+		if ( docked ) {
+			_.addVelocity( 2 * -MAX_SPEED );
+			docked = false;
+		}
+	};
+
+	/**
 	 * Stop docking procedure
 	 */
 	this.abortDocking = function()
@@ -618,7 +637,7 @@ function Drone()
 	 */
 	this.isControllable = function()
 	{
-		return ( !out_of_power && !out_of_fuel && !docking.on );
+		return ( is_operational() && !docking.on && !docked);
 	};
 
 	/**
@@ -627,5 +646,13 @@ function Drone()
 	this.isDocking = function()
 	{
 		return docking.on;
+	};
+
+	/**
+	 * Check to see if Drone is currently docked to a terminal
+	 */
+	this.isDocked = function()
+	{
+		return docked;
 	};
 }

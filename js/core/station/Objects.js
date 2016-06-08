@@ -59,7 +59,9 @@ var Modules =
 };
 
 /**
- * Conversions for level layout data loader
+ * Shorthand IDs for station modules,
+ * used for level layout construction
+ * (see: LevelLoader.js -> LevelData)
  */
 var ModuleNames = {
 	1: 'MODULE_GENERAL_HORIZONTAL_LARGE',
@@ -68,11 +70,20 @@ var ModuleNames = {
 };
 
 /**
- * List of various station hardware parts and their specifications
+ * List of various station hardware parts and
+ * their specifications based on the default
+ * top-facing graphic. For left/right/bottom
+ * ends the specs are automatically adjusted
+ * (see: LevelLoader.js -> get_part_specs())
  */
 var HardwareParts = {
+	RECHARGER: {
+		width: 76,
+		height: 36,
+		x: -18,
+		y: 2
+	},
 	SATELLITE_1: {
-		file: 'game/station/parts/satellite1/',
 		width: 80,
 		height: 76,
 		x: -20,
