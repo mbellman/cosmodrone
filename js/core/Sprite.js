@@ -108,7 +108,7 @@ function Sprite( _source )
 		if ( _.rotation._ > 0 ) {
 			screen.game
 				.translate( bounds.x + origin.x, bounds.y + origin.y )
-				.rotate( _.rotation._ * Math.PI_RAD );
+				.rotate( _.rotation._ * Math.DEG_TO_RAD );
 		}
 	}
 

@@ -356,8 +356,8 @@
 		function set_shadow_offset()
 		{
 			shadow_offset = {
-				x: configuration.tileSize * 8 * Math.cos( configuration.lightAngle * Math.PI_RAD ) * -1,
-				y: configuration.tileSize * 8 * Math.sin( configuration.lightAngle * Math.PI_RAD )
+				x: configuration.tileSize * 8 * Math.cos( configuration.lightAngle * Math.DEG_TO_RAD ) * -1,
+				y: configuration.tileSize * 8 * Math.sin( configuration.lightAngle * Math.DEG_TO_RAD )
 			};
 		}
 

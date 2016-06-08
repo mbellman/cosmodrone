@@ -139,7 +139,7 @@ function Oscillation( width, height, is_reversed )
 	 */
 	this.setRotation = function( _angle )
 	{
-		_angle = mod( _angle, 360 ) * Math.PI_RAD;
+		_angle = mod( _angle, 360 ) * Math.DEG_TO_RAD;
 		angle.sine = Math.sin( _angle );
 		angle.cosine = Math.cos( _angle );
 		return _;

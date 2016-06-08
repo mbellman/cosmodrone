@@ -2,8 +2,8 @@
 // ----------- Static resources ----------- //
 // ---------------------------------------- //
 
-Math.PI_RAD = Math.PI / 180;
-Math.RAD_PI = 180 / Math.PI;
+Math.DEG_TO_RAD = Math.PI / 180;
+Math.RAD_TO_DEG = 180 / Math.PI;
 Math.TAU = 2 * Math.PI;
 
 ( function( scope ) {

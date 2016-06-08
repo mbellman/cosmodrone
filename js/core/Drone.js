@@ -96,7 +96,7 @@ function Drone()
 	function update_retrograde_angle()
 	{
 		var velocity = _.owner.get( Point ).getVelocity();
-		retrograde_angle =  mod( Math.RAD_PI * -1 * Math.atan2( velocity.x, velocity.y ), 360 );
+		retrograde_angle =  mod( -1 * Math.atan2( velocity.x, velocity.y ) * Math.RAD_TO_DEG, 360 );
 	}
 
 	/**
@@ -186,25 +186,27 @@ function Drone()
 
 		var DRONE_W = _.owner.get( Sprite ).width();
 		var DRONE_H = _.owner.get( Sprite ).height();
+		var TERMINAL_HALF_W = 20;
+		var overlap = 8;
 
-		// Align distance vector to terminal based
+		// Align distance units to terminal based
 		// on the hardware sprite's orientation
 		switch ( specs.orientation ) {
 			case 'top':
-				target.x += ( -specs.x + DRONE_W / 2 );
-				target.y -= DRONE_H / 2;
+				target.x += ( -specs.x + TERMINAL_HALF_W );
+				target.y -= ( DRONE_H / 2 - overlap );
 				break;
 			case 'right':
-				target.x += ( specs.width + DRONE_W / 2 );
-				target.y += DRONE_H;
+				target.x += ( specs.width + DRONE_W / 2 - overlap );
+				target.y += ( -specs.y + TERMINAL_HALF_W );
 				break;
 			case 'bottom':
-				target.x += DRONE_W;
-				target.y += ( specs.height + DRONE_H / 2 );
+				target.x += ( -specs.x + TERMINAL_HALF_W );
+				target.y += ( specs.height + DRONE_H / 2 - overlap );
 				break;
 			case 'left':
-				target.x -= DRONE_W / 2;
-				target.y += DRONE_H;
+				target.x -= ( DRONE_W / 2 - overlap );
+				target.y += ( -specs.y + TERMINAL_HALF_W );
 				break;
 		}
 
@@ -221,8 +223,8 @@ function Drone()
 		spin *= 0.9;
 
 		if ( Math.abs( spin ) < 1 ) {
-			spin = 0;
 			stabilizing = false;
+			spin = 0;
 		}
 	}
 
@@ -522,7 +524,7 @@ function Drone()
 		if ( docked ) {
 			switch ( docking.target.get( HardwarePart ).getSpecs().name ) {
 				case 'RECHARGER':
-					power = Math.min( power + 10 * dt, MAX_POWER );
+					power = Math.min( power + 30 * dt, MAX_POWER );
 					break;
 			}
 		}
@@ -569,8 +571,8 @@ function Drone()
 	this.addVelocity = function( amount )
 	{
 		var rotation = _.owner.get( Sprite ).rotation._;
-		var x = Math.sin( rotation * Math.PI_RAD );
-		var y = Math.cos( rotation * Math.PI_RAD ) * -1;
+		var x = Math.sin( rotation * Math.DEG_TO_RAD );
+		var y = Math.cos( rotation * Math.DEG_TO_RAD ) * -1;
 
 		_.owner.get( Point ).setVelocity(
 			x * amount,
