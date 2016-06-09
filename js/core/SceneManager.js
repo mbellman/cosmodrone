@@ -27,14 +27,19 @@ function SceneManager()
 		var bounds;
 
 		scenes[active_scene].forAllComponentsOfType( Sprite, function( sprite ) {
-			if ( cleared || sprite.getProperAlpha() === 0 || !sprite.isOnScreen() ) {
+			if (cleared || sprite.getProperAlpha() === 0 || !sprite.isOnScreen() ) {
 				return;
 			}
 
 			sprite.erase();
 			bounds = sprite.getBoundingBox();
 
-			if ( bounds.x === 0 && bounds.y === 0 && bounds.width === Viewport.width && bounds.height === Viewport.height ) {
+			if (
+				bounds.x === 0 &&
+				bounds.y === 0 &&
+				bounds.width === Viewport.width &&
+				bounds.height === Viewport.height
+			) {
 				// Last clear region took up whole screen
 				// area, so no need to clear any more sprites
 				cleared = true;
@@ -53,8 +58,7 @@ function SceneManager()
 				var dt = ( now - time );
 
 				time = now - ( dt % FRAME_TIME );
-				dt /= 1000;
-				dt = Math.min( dt, MAX_DT );
+				dt = Math.min( dt / 1000, MAX_DT );
 			} else {
 				var dt = FRAME_TIME / 1000;
 			}
