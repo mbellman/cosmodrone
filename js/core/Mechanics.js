@@ -177,3 +177,50 @@ function HardwarePart()
 		return _;
 	};
 }
+
+/**
+ * --------------------
+ * Component: Countdown
+ * --------------------
+ *
+ * Runs custom events after an elapsed duration
+ */
+function Countdown()
+{
+	Component.call( this );
+
+	// -- Private: --
+	var _ = this;
+	var timer = 0;
+	var fire = function() {};
+
+	// -- Public: --
+	this.update = function( dt )
+	{
+		if ( timer > 0 ) {
+			timer -= dt;
+
+			if ( timer <= 0 ) {
+				fire();
+			}
+		}
+	};
+
+	/**
+	 * Set the countdown time in [seconds]
+	 */
+	this.wait = function( seconds )
+	{
+		timer = seconds;
+		return _;
+	};
+
+	/**
+	 * Set the countdown completion [handler]
+	 */
+	this.fire = function( handler )
+	{
+		fire = handler;
+		return _;
+	};
+}

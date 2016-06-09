@@ -33,12 +33,17 @@ function Drone()
 		on: false,
 		// Docking target hardware part
 		target: null,
+		// Target hardware type
+		hardware: null,
 		// Orientation for docking (see: get_docking_angle())
 		angle: 0,
 		// Coordinate distance to the docking terminal
 		distance: {},
 		// Docking procedure phase (see: control_docking_procedure())
-		phase: 1
+		phase: 1,
+		// Handler for docking completion; automatically receives
+		// the target HardwarePart component instance as an argument
+		complete: function() {}
 	};
 
 	var docked = false;
@@ -100,9 +105,9 @@ function Drone()
 	}
 
 	/**
-	 * Returns the distance in degrees between two angles
+	 * Returns the shortest distance in degrees between two angles
 	 */
-	function get_rotation_distance( angle1, angle2 )
+	function get_spin_distance( angle1, angle2 )
 	{
 		var high = Math.max( angle1, angle2 );
 		var low = Math.min( angle1, angle2 );
@@ -114,20 +119,20 @@ function Drone()
 	}
 
 	/**
-	 * Returns +/- depending on the shortest rotation to [angle]
+	 * Returns +/-1 depending on the shortest rotation to [angle]
 	 */
-	function get_rotation_direction( angle )
+	function get_spin_direction( angle )
 	{
 		var rotation = _.owner.get( Sprite ).rotation._;
 
 		var high = Math.max( rotation, angle );
 		var low = Math.min( rotation, angle );
 
-		var forward = ( 360 - high ) + low;
-		var back = high - low;
+		var cw = ( 360 - high ) + low;
+		var ccw = high - low;
 
 		return (
-			forward > back ?
+			cw > ccw ?
 				( rotation > angle ? -1 : 1 )
 			:
 				( rotation > angle ? 1 : -1 )
@@ -135,41 +140,44 @@ function Drone()
 	}
 
 	/**
-	 * Checks the offset between the drone and
-	 * the target docking terminal and returns
-	 * -/+ for both axes depending on direction
+	 * Docking alignment is defined as stopping at a
+	 * fixed point "in front" of a docking terminal
+	 * before final approach. This method returns +/-1
+	 * indicating the direction to the alignment point
+	 * along either x or y from the drone's position
+	 * (the axis depends on the terminal's orientation).
+	 * [track_target_distance()] should be called before
+	 * this method in order to set [docking.distance].
 	 */
 	function get_docking_alignment_direction()
 	{
-		var direction = {
-			x: 0,
-			y: 0
-		};
-
 		if ( docking.angle === 0 || docking.angle === 180 ) {
-			// Align along the x-axis
-			direction.x = ( docking.distance.x > 0 ? -1 : 1 );
-		} else {
-			// Align along the y-axis
-			direction.y = ( docking.distance.y > 0 ? -1 : 1 );
+			// x direction for horizontal alignment approach
+			return ( docking.distance.x > 0 ? -1 : 1 );
 		}
 
-		return direction;
+		if ( docking.angle === 90 || docking.angle === 270 ) {
+			// y direction for vertical alignment approach
+			return ( docking.distance.y > 0 ? -1 : 1 );
+		}
 	}
 
 	/**
-	 * Returns the angle necessary to approach the docking
-	 * alignment position from the drone's current location
+	 * Returns the directional angle needed to
+	 * approach docking alignment, ascertained
+	 * via [get_docking_alignment_direction()]
 	 */
 	function get_docking_alignment_angle()
 	{
 		var direction = get_docking_alignment_direction();
 
-		var ax = ( direction.x < 0 ? 270 : 90 );
-		var ay = ( direction.y < 0 ? 0 : 180 );
+		if ( docking.angle === 0 || docking.angle === 180 ) {
+			return ( direction < 0 ? 270 : 90 );
+		}
 
-		if ( docking.angle === 0 || docking.angle === 180 ) return ax;
-		if ( docking.angle === 90 || docking.angle === 270 ) return ay;
+		if ( docking.angle === 90 || docking.angle === 270 ) {
+			return ( direction < 0 ? 0 : 180 );
+		}
 	}
 
 	/**
@@ -244,11 +252,11 @@ function Drone()
 	{
 		consume_fuel( dt );
 
-		var distance = get_rotation_distance( _.owner.get( Sprite ).rotation._, angle );
-		var direction = get_rotation_direction( angle );
+		var distance = get_spin_distance( _.owner.get( Sprite ).rotation._, angle );
+		var direction = get_spin_direction( angle );
+		var SPIN_VELOCITY = Math.abs( spin );
 
 		if ( angle_slow ) {
-			// Reduce angular velocity
 			stabilize_spin();
 
 			if ( spin === 0 || distance < 1 )
@@ -261,20 +269,21 @@ function Drone()
 			return;
 		}
 
-		if ( angle_approach && Math.abs( spin ) < 200 ) {
-			// Accelerate toward [angle]
+		if ( angle_approach && SPIN_VELOCITY < 200 ) {
 			_.addSpin( MAX_SPEED * direction );
 		}
 
-		if ( distance < ( 10 * Math.abs( spin ) * dt ) ) {
-			// Getting close to [angle], so start slowing down
+		if ( distance < ( 10 * SPIN_VELOCITY * dt ) ) {
 			angle_slow = true;
 			return;
 		}
 
 		// For slower angular velocities...
-		if ( spin < 75 ) {
-			if ( ( direction < 0 && spin > 0 ) || ( direction > 0 && spin < 0 ) ) {
+		if ( SPIN_VELOCITY < 75 ) {
+			if (
+				( direction < 0 && spin > 0 ) ||
+				( direction > 0 && spin < 0 )
+			) {
 				// ...if we're spinning "away" from [angle],
 				// slow down and prepare to spin the other way...
 				stabilize_spin();
@@ -295,11 +304,14 @@ function Drone()
 	 */
 	function launch_docking_procedure( target )
 	{
+		var specs = target.get( HardwarePart ).getSpecs();
+
 		stabilizing = false;
 
 		docking.on = true;
 		docking.target = target;
-		docking.angle = get_docking_angle( docking.target.get( HardwarePart ).getSpecs().orientation );
+		docking.hardware = specs.name;
+		docking.angle = get_docking_angle( specs.orientation );
 		docking.phase = 1;
 
 		// Update [retrograde_angle] for docking phase 1
@@ -319,7 +331,6 @@ function Drone()
 	 *  5. Slow drone to 0 velocity at docking alignment position
 	 *  6. Spin to [docking.angle]
 	 *  7. Thrust toward docking terminal
-	 *
 	 */
 	function control_docking_procedure( dt )
 	{
@@ -390,15 +401,15 @@ function Drone()
 			case 5:
 				track_target_distance();
 
-				// Only use distance along the relevant axis
-				var distance = (
+				// Only check distance along the relevant axis
+				var distance = Math.abs(
 					( docking.angle === 0 || docking.angle === 180 ) ?
 						docking.distance.x
 					:
 						docking.distance.y
 				);
 
-				if ( Math.abs( distance ) < 1 ) {
+				if ( distance < 1 ) {
 					if ( _.owner.get( Point ).getAbsoluteVelocity() > MAX_SPEED ) {
 						// Fire thrusters retrograde
 						_.addVelocity( MAX_SPEED );
@@ -412,7 +423,7 @@ function Drone()
 				} else {
 					if (
 						_.owner.get( Sprite ).rotation._ === get_docking_alignment_angle() &&
-						Math.abs( distance ) > 30
+						distance > 30
 					) {
 						// Overshot target; reset to phase 2
 						docking.phase = 2;
@@ -449,6 +460,8 @@ function Drone()
 				{
 					// Docked!
 					_.owner.get( Point ).setVelocity( 0, 0 );
+					docking.complete( docking.target.get( HardwarePart ).getSpecs() );
+
 					docking.on = false;
 					docked = true;
 				}
@@ -508,9 +521,9 @@ function Drone()
 		}
 
 		if ( stabilizing && is_operational() ) {
-			// Docking procedure invokes [stabilize_spin()] by
-			// default, so ensure it isn't running already
 			if ( !docking.on ) {
+				// Only run stabilization here if the docking
+				// mode procedure isn't already managing it
 				stabilize_spin();
 			}
 
@@ -520,11 +533,13 @@ function Drone()
 		_.owner.get( Sprite ).rotation._ += ( spin * dt );
 		consume_power( dt );
 
-		// Custom dock mode actions for hardware parts
 		if ( docked ) {
-			switch ( docking.target.get( HardwarePart ).getSpecs().name ) {
+			switch ( docking.hardware ) {
 				case 'RECHARGER':
 					power = Math.min( power + 30 * dt, MAX_POWER );
+					break;
+				case 'REFUELER':
+					fuel = Math.min( fuel + 20 * dt, MAX_FUEL );
 					break;
 			}
 		}
@@ -631,6 +646,17 @@ function Drone()
 	this.abortDocking = function()
 	{
 		docking.on = false;
+		return _;
+	};
+
+	/**
+	 * Set a handler to be run on docking completion.
+	 * The handler automatically receives the docking
+	 * target HardwarePart instance as an argument.
+	 */
+	this.onDocking = function( handler )
+	{
+		docking.complete = handler;
 		return _;
 	};
 

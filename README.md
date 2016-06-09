@@ -9,12 +9,9 @@ A game about space station maintenance!
 * Loading bar/indicator of some kind
 
 ##### GAME
-* Print debug text using TextString component
 * New drone sprite
-* Dynamic dialogue
-* Recharging/refueling terminal
 * Radio signal reception mechanic
-* More modules and hardware parts (with correct lighting based on orientation)
+* More modules and hardware parts
 * Collisions/drone damage
 * Components with update cycles/architecture for various hardware parts
 * Icons next to vulnerable hardware parts

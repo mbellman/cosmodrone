@@ -23,7 +23,6 @@ function TitleScene( controller )
 	/**
 	 * Level select menu
 	 */
-
 	// Current zone
 	var mission_zone = 'earth';
 
@@ -301,6 +300,7 @@ function TitleScene( controller )
 	function add_level_menu()
 	{
 		var LIGHT_SOURCE = new Vector( -100, 30, -100 );
+
 		var STATION_ICON = Assets.getImage( 'title/level-select/station-icon.png' );
 		var STATION_ICON_SELECTED = Assets.getImage( 'title/level-select/station-icon-selected.png' );
 		var EARTH_TEXTURE = Assets.getImage( 'title/level-select/earth.png' );
@@ -350,17 +350,20 @@ function TitleScene( controller )
 			var half_H = ( height / 2 );
 			var glow = 6;
 
-			orbit.sprite.setSize( width + 2 * glow, height + 2 * glow );
+			var sprite_W = width + 2 * glow;
+			var sprite_H = height + 2 * glow;
+
+			orbit.sprite.setSize( sprite_W, sprite_H );
 			orbit.sprite.setShadow( '#0ff', glow );
 			orbit.sprite.draw
 				.ellipse( half_W + glow, half_H + glow, width, height )
 				.stroke( '#0ff', 2 );
 
-			orbit_BG = new Canvas().setSize( orbit.width(), orbit.height() / 2 );
-			orbit_FG = new Canvas().setSize( orbit.width(), orbit.height() / 2 );
+			orbit_BG = new Canvas().setSize( sprite_W, sprite_H / 2 );
+			orbit_FG = new Canvas().setSize( sprite_W, sprite_H / 2 );
 
 			orbit_BG.draw.image( orbit.sprite.element );
-			orbit_FG.draw.image( orbit.sprite.element, 0, -orbit.height() / 2 );
+			orbit_FG.draw.image( orbit.sprite.element, 0, -sprite_H / 2 );
 
 			return {
 				BG: orbit_BG.element,
@@ -411,11 +414,17 @@ function TitleScene( controller )
 							.setRotation( orbit.inclination )
 							.setStart( Math.random() * 2 * Math.PI )
 							.whileMoving( function( sprite, angle ) {
+								// Check station icon while it's moving
+								// along the back of its orbital path
 								if ( angle > Math.PI ) {
-									var is_hidden = ( Vec2.distance( sprite.x._, sprite.y._, planet.x, planet.y ) < planet.radius );
+									var is_occluded = ( Vec2.distance( sprite.x._, sprite.y._, planet.x, planet.y ) < planet.radius );
 
 									if ( !sprite.alpha.isTweening() ) {
-										sprite.alpha.tweenTo( ( is_hidden ? 0.2 : 1 ), 0.15, Ease.quad.out );
+										sprite.alpha.tweenTo(
+											( is_occluded ? 0.2 : 1 ),
+											0.15,
+											Ease.quad.out
+										);
 									}
 								}
 							} )
@@ -624,7 +633,10 @@ function TitleScene( controller )
 			)
 			.add(
 				new TextPrinter( 'MonitorMini' )
-					.setSound( Assets.getAudio( 'ui/blip1.wav' ), Assets.getAudio( 'ui/blip2.wav' ) )
+					.setSound(
+						Assets.getAudio( 'ui/blip1.wav' ),
+						Assets.getAudio( 'ui/blip2.wav' )
+					)
 					.setInterval( 25 )
 					.setStyle( {spaceSize: 6} )
 			)
@@ -667,16 +679,16 @@ function TitleScene( controller )
 							},
 							// Option focus handler
 							onFocus: function( entity, i, direction ) {
-								icons.$( 'icon-' + ( i + 1 ) ).get( Sprite ).alpha
-									.tweenTo( 1, 0.25, Ease.quad.out );
-
 								INTERNAL_set_orbit_alpha( i, 1 );
 
 								space_stations.child( i ).get( Sprite )
 									.setSource( STATION_ICON_SELECTED )
 									.centerOrigin();
 
-								INTERNAL_update_level_text( ++i );
+								icons.$( 'icon-' + ( ++i ) ).get( Sprite ).alpha
+									.tweenTo( 1, 0.25, Ease.quad.out );
+
+								INTERNAL_update_level_text( i );
 								INTERNAL_update_level_arrows( i, direction );
 
 								if ( station_orbits[i].zone !== mission_zone ) {

@@ -264,7 +264,7 @@
 	 * Replace all pixels of [color1] RGB
 	 * value with that of [color2] value
 	 */
-	Canvas.prototype.replace = function( color1, color2 )
+	Canvas.prototype.recolor = function( color1, color2 )
 	{
 		var self = this.data.get();
 		var pixel, color;

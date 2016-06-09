@@ -19,12 +19,18 @@ function GameScene( controller )
 	var keys = new Keys();
 	var camera;
 	var drone;
-	var speed;
+	var DRONE_SPEED;
 	var background = new Entity();
 	var hud;
 	var stage = new Entity();
 
+	var textbox;
+	var textbox_timer = 0;
+
+	var FLAGS = {};
+
 	var DEBUG_MODE = false;
+	var DEBUG_text;
 	var DEBUG_stats_cycle = 0;
 
 	// ------------------------------------- //
@@ -49,7 +55,7 @@ function GameScene( controller )
 				'X: ' + player.x + ', Y:' + player.y
 			];
 
-			DEBUG.innerHTML = data.join( '<br />' );
+			DEBUG_text.get( TextString).setString( '[rgb=#f00]' + data.join( '[br]' ) );
 		}
 	}
 
@@ -79,6 +85,7 @@ function GameScene( controller )
 		// Halt loop during generation/prerendering
 		_.pause();
 
+		// TODO: Load background configuration options from level data
 		background.add(
 			new Background()
 				.configure(
@@ -133,7 +140,7 @@ function GameScene( controller )
 	}
 
 	/**
-	 * Load level layout from data
+	 * Load level layout, adding returned entities to the [stage]
 	 */
 	function load_level()
 	{
@@ -153,7 +160,7 @@ function GameScene( controller )
 	}
 
 	/**
-	 * Finish initialization and start game
+	 * Finish initialization (background generation) and start game
 	 */
 	function init_complete()
 	{
@@ -165,30 +172,61 @@ function GameScene( controller )
 
 		camera = new Entity().add( new Point() );
 		drone = new Entity()
-			.add( new Drone() )
 			.add( new Point() )
+			.add(
+				new Drone()
+					.onDocking( handle_docking )
+			)
 			.add(
 				new Sprite( Assets.getImage( 'game/drone/drone.png' ) )
 					.setOffset( Viewport.width / 2, Viewport.height / 2 )
 					.setPivot( camera.get( Point ) )
 					.centerOrigin()
 			);
-		speed = drone.get( Drone ).getMaxSpeed();
+		DRONE_SPEED = drone.get( Drone ).getMaxSpeed();
 
-		load_level();
-
-		stage.addChild( camera );
-		stage.addChild( drone );
+		textbox = new Entity()
+			.add(
+				new Sprite( Assets.getImage( 'game/ui/textbox.png' ) )
+					.setXY( 100, -200 )
+			)
+			.addChild(
+				new Entity()
+					.add(
+						new Sprite().setXY( 30, 30 )
+					)
+					.add(
+						new TextPrinter( 'Monitor' )
+							.setSound(
+								Assets.getAudio( 'ui/blip1.wav' ),
+								Assets.getAudio( 'ui/blip2.wav' )
+							)
+							.setInterval( 30 )
+					)
+					.add(
+						new Countdown().fire( hide_dialogue )
+					)
+			);
 
 		hud = new HUD();
 
+		load_level();
+		stage.addChild( camera, drone, textbox );
 		update_camera();
 		_.start();
+
+		print_dialogue( 'Dialogue test. Testing. 1234567890. +!-_-!+' );
+
+		if ( DEBUG_MODE ) {
+			DEBUG_text = new Entity()
+				.add( new TextString( 'Monitor' ) )
+				.addToParent( stage );
+		}
 	}
 
-	// ----------------------------------------------------- //
-	// ------------- INTERNAL GAMEPLAY METHODS ------------- //
-	// ----------------------------------------------------- //
+	// -------------------------------------------- //
+	// ------------- GAMEPLAY METHODS ------------- //
+	// -------------------------------------------- //
 
 	/**
 	 * Looks for HardwarePart instances close in proximity
@@ -221,6 +259,55 @@ function GameScene( controller )
 		}
 	}
 
+	/**
+	 * Docking event handler
+	 */
+	function handle_docking( part )
+	{
+		switch ( part.name ) {
+			case 'RECHARGER':
+				print_dialogue( 'This is a recharger unit. Use it to recharge your power!' );
+				break;
+			case 'REFUELER':
+				print_dialogue( 'This is a refueler unit. Use it to refuel your propellant!' );
+				break;
+			default:
+				break;
+		}
+	}
+
+	/**
+	 * Swivel the dialogue box into view
+	 */
+	function show_dialogue()
+	{
+		textbox.get( Sprite ).y.tweenTo( 0, 0.75, Ease.quad.inOut );
+	}
+
+	/**
+	 * Swivel the dialogue box out of view
+	 */
+	function hide_dialogue()
+	{
+		textbox.get( Sprite ).y.tweenTo( -200, 0.75, Ease.quad.inOut );
+	}
+
+	/**
+	 * Print new dialogue into the text box,
+	 * bringing it into view if it isn't already
+	 */
+	function print_dialogue( string )
+	{
+		if ( textbox.get( Sprite ).y._ === -200 ) {
+			show_dialogue();
+		}
+
+		var timer = 10 + ( string.length * 30 ) / 1000;
+
+		textbox.find( TextPrinter ).print( string );
+		textbox.find( Countdown ).wait( timer );
+	}
+
 	// ----------------------------------------- //
 	// ------------- INPUT ACTIONS ------------- //
 	// ----------------------------------------- //
@@ -232,15 +319,15 @@ function GameScene( controller )
 	{
 		if ( drone.get( Drone ).isControllable() ) {
 			if ( keys.holding( 'UP' ) ) {
-				drone.get( Drone ).consumeFuel( 3 * dt ).addVelocity( speed );
+				drone.get( Drone ).consumeFuel( 3 * dt ).addVelocity( DRONE_SPEED );
 			}
 
 			if ( keys.holding( 'LEFT' ) ) {
-				drone.get( Drone ).consumeFuel( 2 * dt ).addSpin( -speed );
+				drone.get( Drone ).consumeFuel( 2 * dt ).addSpin( -DRONE_SPEED );
 			}
 
 			if ( keys.holding( 'RIGHT' ) ) {
-				drone.get( Drone ).consumeFuel( 2 * dt ).addSpin( speed );
+				drone.get( Drone ).consumeFuel( 2 * dt ).addSpin( DRONE_SPEED );
 			}
 		}
 	}

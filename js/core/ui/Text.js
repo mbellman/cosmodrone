@@ -26,13 +26,27 @@ function TextString( _font )
 	var size = {width: 0, height: 0};
 	var instructions = [' ', '[br]', '[rgb='];
 
+	load_default_bitmap();
+
 	/**
 	 * Load first font bitmap (default #fff color)
 	 */
-	bitmaps[color] = new Canvas();
-	bitmaps[color]
-		.setSize( bitmap.width, bitmap.height )
-		.draw.image( bitmap );
+	function load_default_bitmap()
+	{
+		bitmaps['#fff'] = new Canvas().setSize( bitmap.width, bitmap.height );
+		bitmaps['#fff'].draw.image( bitmap );
+	}
+
+	/**
+	 * Load a new font color by [hex] value
+	 */
+	function load_color_bitmap( hex )
+	{
+		bitmaps[hex] = bitmaps['#fff'].copy().recolor(
+			{red: 255, green: 255, blue: 255},
+			Canvas.hexToRGB( hex )
+		);
+	}
 
 	/**
 	 * Get the clipping region for a character
@@ -106,11 +120,7 @@ function TextString( _font )
 				var new_color = parse_special_instruction();
 
 				if ( !bitmaps.hasOwnProperty( new_color ) ) {
-					// Create the new text color bitmap on the fly
-					bitmaps[new_color] = bitmaps['#fff'].copy().replace(
-						{red: 255, green: 255, blue: 255},
-						Canvas.hexToRGB( new_color )
-					);
+					load_color_bitmap( new_color );
 				}
 
 				if ( is_printing ) {
@@ -274,16 +284,11 @@ function TextString( _font )
 	 */
 	this.loadColors = function()
 	{
-		var white = {red: 255, green: 255, blue: 255};
-		var hex, RGB, variant;
-
 		for ( var a = 0 ; a < arguments.length ; a++ ) {
-			hex = arguments[a];
+			var hex = arguments[a];
 
 			if ( !bitmaps.hasOwnProperty( hex ) ) {
-				RGB = Canvas.hexToRGB( hex );
-				variant = bitmaps['#fff'].copy().replace( white, RGB );
-				bitmaps[hex] = variant;
+				load_color_bitmap( hex );
 			}
 		}
 

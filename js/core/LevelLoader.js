@@ -18,6 +18,7 @@
 				0: {
 					1: [
 						{side: 'left', index: 1, name: 'RECHARGER'},
+						{side: 'right', index: 1, name: 'REFUELER'},
 					],
 				},
 				1: {
@@ -31,10 +32,10 @@
 				},
 				2: {
 					0: [
-						{side: 'top', index: 1, name: 'SATELLITE_1'},
-						{side: 'top', index: 2, name: 'RECHARGER'},
+						{side: 'top', index: 1, name: 'RECHARGER'},
+						{side: 'top', index: 2, name: 'REFUELER'},
 						{side: 'bottom', index: 1, name: 'RECHARGER'},
-						{side: 'bottom', index: 2, name: 'SATELLITE_1'}
+						{side: 'bottom', index: 2, name: 'REFUELER'},
 					]
 				}
 			},

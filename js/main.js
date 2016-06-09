@@ -40,15 +40,12 @@ var Viewport = {
 	height: 650
 };
 var screen = {};
-var DEBUG;
 
 /**
  * Initialization
  */
 function main()
 {
-	DEBUG = document.getElementById( 'debug' );
-
 	createScreens();
 	centerGameStage();
 	loadGame();
@@ -114,7 +111,7 @@ function loadGame()
 	} )
 	.then( function() {
 		var controller = new Controller();
-		controller.showGame();
+		controller.showTitle();
 	} );
 }
 

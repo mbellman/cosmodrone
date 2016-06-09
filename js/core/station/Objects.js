@@ -16,8 +16,8 @@ var Modules =
 			bottom: {x: 248, y: 298}
 		},
 		terminals: {
-			top1: {x: 60, y: 10},
-			top2: {x: 500, y: 10},
+			top1: {x: 60, y: 12},
+			top2: {x: 500, y: 12},
 			bottom1: {x: 60, y: 286},
 			bottom2: {x: 500, y: 286}
 		}
@@ -53,7 +53,7 @@ var Modules =
 		},
 		terminals: {
 			left1: {x: 4, y: 70},
-			right1: {x: 184, y: 70}
+			right1: {x: 186, y: 70}
 		}
 	}
 };
@@ -80,6 +80,12 @@ var HardwareParts = {
 	RECHARGER: {
 		width: 76,
 		height: 36,
+		x: -18,
+		y: 2
+	},
+	REFUELER: {
+		width: 76,
+		height: 40,
 		x: -18,
 		y: 2
 	},
