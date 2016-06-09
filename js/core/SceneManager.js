@@ -27,7 +27,7 @@ function SceneManager()
 		var bounds;
 
 		scenes[active_scene].forAllComponentsOfType( Sprite, function( sprite ) {
-			if (cleared || sprite.getProperAlpha() === 0 || !sprite.isOnScreen() ) {
+			if ( cleared || sprite.getProperAlpha() === 0 || !sprite.isOnScreen() ) {
 				return;
 			}
 
