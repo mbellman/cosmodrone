@@ -41,8 +41,8 @@ function Drone()
 		distance: {},
 		// Docking procedure phase (see: control_docking_procedure())
 		phase: 1,
-		// Handler for docking completion; automatically receives
-		// the target HardwarePart component instance as an argument
+		// Docking completion handler; automatically receives
+		// the target HardwarePart specs as an argument
 		complete: function() {}
 	};
 
@@ -652,7 +652,7 @@ function Drone()
 	/**
 	 * Set a handler to be run on docking completion.
 	 * The handler automatically receives the docking
-	 * target HardwarePart instance as an argument.
+	 * target HardwarePart specs as an argument.
 	 */
 	this.onDocking = function( handler )
 	{
