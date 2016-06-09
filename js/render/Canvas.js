@@ -66,8 +66,8 @@
 	};
 
 	/**
-	 * Draw an ellipse to the Canvas context at [x, y]
-	 * with horizontal radius [a] and vertical radius [b]
+	 * Draw an ellipse to the Canvas context
+	 * at [x, y] with custom dimensions
 	 */
 	DrawOperation.prototype.ellipse = function( x, y, width, height )
 	{
