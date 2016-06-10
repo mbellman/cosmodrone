@@ -30,7 +30,7 @@ function HUD()
 				y: 70,
 				width: 640,
 				height: 18,
-				color: '#00e4ff'
+				color: '#00b4cc'
 			},
 			fuel: {
 				x: 56,

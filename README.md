@@ -9,7 +9,6 @@ A game about space station maintenance!
 * Loading bar/indicator of some kind
 
 ##### GAME
-* New drone sprite
 * Radio signal reception mechanic
 * More modules and hardware parts
 * Collisions/drone damage
@@ -35,4 +34,3 @@ A game about space station maintenance!
 ##### CODE
 * Consolidate major framework elements (Canvas, WebAudio, AssetLoader, Entity/Component, Sprite, Text, etc.)
 * Terrain and HeightMap classes need some tidying
-* Child Sprite coordinate system transformations (rotation, scaling, etc.)

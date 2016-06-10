@@ -629,7 +629,7 @@
 			var map_size = terrain.getSize();
 			var type, index, position = {};
 
-			for ( var c = 0 ; c < 30 ; c++ ) {
+			for ( var c = 0 ; c < 25 ; c++ ) {
 				type = pickRandom( 'cumulus', 'heavy_cumulus', 'small_cumulus', 'cirrus', 'cirrus' );
 				index = random_cloud_index( type );
 
@@ -649,7 +649,7 @@
 			var BG_speed = camera.getAbsoluteVelocity();
 			var screen_area = Viewport.width * Viewport.height;
 			var screen_area_ratio = screen_area / 720000;
-			var spawn_probability = screen_area_ratio * 0.00015 * BG_speed;
+			var spawn_probability = screen_area_ratio * 0.00012 * BG_speed;
 
 			// Don't generate a new cloud if...
 			if (

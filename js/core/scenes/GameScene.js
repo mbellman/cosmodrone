@@ -55,7 +55,7 @@ function GameScene( controller )
 				'X: ' + player.x + ', Y:' + player.y
 			];
 
-			DEBUG_text.get( TextString).setString( '[rgb=#f00]' + data.join( '[br]' ) );
+			DEBUG_text.get( TextString ).setString( '[rgb=#f00]' + data.join( '[br]' ) );
 		}
 	}
 
@@ -74,7 +74,7 @@ function GameScene( controller )
 	/**
 	 * Sets up a scrolling planetary background
 	 */
-	function add_background()
+	function create_background()
 	{
 		if ( background.has( Background ) ) {
 			return;
@@ -129,8 +129,7 @@ function GameScene( controller )
 	}
 
 	/**
-	 * Halts the scrolling background instance and
-	 * dereferences its contents for garbage collection
+	 * Purge the scrolling background via component removal
 	 */
 	function destroy_background()
 	{
@@ -140,9 +139,10 @@ function GameScene( controller )
 	}
 
 	/**
-	 * Load level layout, adding returned entities to the [stage]
+	 * Load and create level layout, adding
+	 * returned entities to the [stage]
 	 */
-	function load_level()
+	function create_level()
 	{
 		var entities = new LevelLoader()
 			.buildLevel( level )
@@ -160,31 +160,34 @@ function GameScene( controller )
 	}
 
 	/**
-	 * Finish initialization (background generation) and start game
+	 * Create the player drone entity and accompanying camera
 	 */
-	function init_complete()
+	function create_player()
 	{
-		initialized = true;
-
-		input.listen();
-		keys.listen();
-		bind_input_handlers();
-
 		camera = new Entity().add( new Point() );
+
 		drone = new Entity()
 			.add( new Point() )
+			.add( new Countdown() )
 			.add(
 				new Drone()
 					.onDocking( handle_docking )
 			)
 			.add(
-				new Sprite( Assets.getImage( 'game/drone/drone.png' ) )
+				new Sprite( Assets.getImage( 'game/drone/1.png' ) )
 					.setOffset( Viewport.width / 2, Viewport.height / 2 )
 					.setPivot( camera.get( Point ) )
 					.centerOrigin()
 			);
-		DRONE_SPEED = drone.get( Drone ).getMaxSpeed();
 
+		DRONE_SPEED = drone.get( Drone ).getMaxSpeed();
+	}
+
+	/**
+	 * Set up the dialogue textbox entity
+	 */
+	function create_textbox()
+	{
 		textbox = new Entity()
 			.add(
 				new Sprite( Assets.getImage( 'game/ui/textbox.png' ) )
@@ -207,12 +210,28 @@ function GameScene( controller )
 						new Countdown().fire( hide_dialogue )
 					)
 			);
+	}
+
+	/**
+	 * Finish initialization (background generation) and start game
+	 */
+	function init_complete()
+	{
+		initialized = true;
+
+		input.listen();
+		keys.listen();
+		bind_input_handlers();
 
 		hud = new HUD();
 
-		load_level();
+		create_player();
+		create_level();
+		create_textbox();
 		stage.addChild( camera, drone, textbox );
+
 		update_camera();
+		set_drone_light_off();
 		_.start();
 
 		print_dialogue( 'Dialogue test. Testing. 1234567890. +!-_-!+' );
@@ -227,6 +246,30 @@ function GameScene( controller )
 	// -------------------------------------------- //
 	// ------------- GAMEPLAY METHODS ------------- //
 	// -------------------------------------------- //
+
+	/**
+	 * Make the drone's light blink for 1/5 of a second
+	 */
+	function set_drone_light_on()
+	{
+		drone.get( Sprite ).setSource( Assets.getImage( 'game/drone/2.png' ) );
+
+		drone.get( Countdown )
+			.wait( 0.2 )
+			.fire( set_drone_light_off );
+	}
+
+	/**
+	 * Keep the drone's light off for 1.5 seconds
+	 */
+	function set_drone_light_off()
+	{
+		drone.get( Sprite ).setSource( Assets.getImage( 'game/drone/1.png' ) );
+
+		drone.get( Countdown )
+			.wait( 1.5 )
+			.fire( set_drone_light_on );
+	}
 
 	/**
 	 * Looks for HardwarePart instances close in proximity
@@ -425,7 +468,7 @@ function GameScene( controller )
 		// again on a loaded instance
 		_.unload();
 
-		add_background();
+		create_background();
 		//init_complete();
 		return _;
 	};

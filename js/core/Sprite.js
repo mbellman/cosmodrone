@@ -16,26 +16,26 @@ function Sprite( _source )
 	var offset = {x: 0, y: 0};             // A persistent offset as specified via Sprite.setOffset(x, y)
 	var origin = {x: 0, y: 0};             // Origin point of the Sprite (for positioning, rotations, scaling, etc.)
 	var parent = null;                     // Parent or ancestor entity Sprite
-	var pivot;                             // Target Point for movement pivoting (motion opposite to)
-	var alpha = 1;                         // Proper Sprite alpha, influenced by parent Sprite alpha (update internally)
-	var bounds = {                         // Sprite's bounding rectangle (updated internally)
+	var pivot;                             // A Point component for movement pivoting (motion away from)
+
+	var alpha = 1;                         // Proper Sprite alpha, influenced by parent sprite alpha (update internally)
+	var rotation = 0;                      // Proper Sprite rotation, influenced by parent sprite rotation (updated internally)
+
+	var T = {                              // Transformed coordinates/origin based on parent sprite's coordinate system
+		x: 0,
+		y: 0,
+		origin: {
+			x: 0,
+			y: 0
+		}
+	};
+
+	var bounds = {                         // Sprite's on-screen bounding rectangle (updated internally)
 		x: 0,
 		y: 0,
 		width: 0,
 		height: 0
 	};
-
-	/**
-	 * Update all Tweenable instances
-	 */
-	function update_tweens( dt )
-	{
-		_.x.update( dt );
-		_.y.update( dt );
-		_.scale.update( dt );
-		_.rotation.update( dt );
-		_.alpha.update( dt );
-	}
 
 	/**
 	 * Search for a parent/ancestor entity Sprite and save one if found
@@ -48,18 +48,51 @@ function Sprite( _source )
 	}
 
 	/**
+	 * Update all Tweenable properties
+	 */
+	function update_tweens( dt )
+	{
+		_.x.update( dt );
+		_.y.update( dt );
+		_.scale.update( dt );
+		_.rotation.update( dt );
+		_.alpha.update( dt );
+	}
+
+	/**
+	 * Recalculate transformed [T] offsets based on parent coordinate system
+	 */
+	function update_transform()
+	{
+		if ( parent !== null && parent.getProperRotation() !== 0 ) {
+			var theta = parent.getProperRotation() * Math.DEG_TO_RAD;
+			var SIN_THETA = Math.sin( theta );
+			var COS_THETA = Math.cos( theta );
+
+			T.origin.x = origin.x + parent.getProperOrigin().x;
+			T.origin.y = origin.y + parent.getProperOrigin().y;
+			T.x = ( _.x._ * COS_THETA - _.y._ * SIN_THETA ) + parent.getProperOrigin().x;
+			T.y = ( _.x._ * SIN_THETA + _.y._ * COS_THETA ) + parent.getProperOrigin().y;
+			return;
+		}
+
+		T.x = _.x._;
+		T.y = _.y._;
+		T.origin.x = origin.x;
+		T.origin.y = origin.y;
+	}
+
+	/**
 	 * Recalculate the Sprite's global (on-screen) coordinates/visible size
 	 */
 	function update_bounding_box()
 	{
-		check_parent();
-
 		if ( parent !== null ) {
 			parent_offset = parent.getBoundingBox();
 		}
 
-		bounds.x = _.x._ - ( !!pivot ? pivot.getPosition().x : 0 ) + parent_offset.x + offset.x - origin.x;
-		bounds.y = _.y._ - ( !!pivot ? pivot.getPosition().y : 0 ) + parent_offset.y + offset.y - origin.y;
+		bounds.x = T.x - ( !!pivot ? pivot.getPosition().x : 0 ) + parent_offset.x + offset.x - T.origin.x;
+		bounds.y = T.y - ( !!pivot ? pivot.getPosition().y : 0 ) + parent_offset.y + offset.y - T.origin.y;
 
 		if ( source !== null ) {
 			bounds.width = _.scale._ * source.width;
@@ -74,12 +107,10 @@ function Sprite( _source )
 
 	/**
 	 * Updates the Sprite's true [alpha]
-	 * as influenced by parent Sprites
+	 * as influenced by parent Sprite
 	 */
 	function update_proper_alpha()
 	{
-		check_parent();
-
 		if ( parent !== null ) {
 			alpha = _.alpha._ * parent.getProperAlpha();
 			return;
@@ -89,7 +120,23 @@ function Sprite( _source )
 	}
 
 	/**
-	 * Sets globalAlpha of [screen.game]
+	 * Updates the Sprite's true [rotation]
+	 * as influenced by parent Sprite
+	 */
+	function update_proper_rotation()
+	{
+		_.rotation._ = mod( _.rotation._, 360 );
+
+		if ( parent !== null ) {
+			rotation = mod( _.rotation._ + parent.getProperRotation(), 360 );
+			return;
+		}
+
+		rotation = mod( _.rotation._, 360 );
+	}
+
+	/**
+	 * Sets globalAlpha of [screen.game] context
 	 */
 	function apply_alpha()
 	{
@@ -99,16 +146,14 @@ function Sprite( _source )
 	}
 
 	/**
-	 * Sets rotation of [screen.game]
+	 * Sets rotation of [screen.game] context
 	 */
 	function apply_rotation()
 	{
-		_.rotation._ = mod( _.rotation._, 360 );
-
-		if ( _.rotation._ > 0 ) {
+		if ( rotation > 0 ) {
 			screen.game
-				.translate( bounds.x + origin.x, bounds.y + origin.y )
-				.rotate( _.rotation._ * Math.DEG_TO_RAD );
+				.translate( bounds.x + T.origin.x, bounds.y + T.origin.y )
+				.rotate( rotation * Math.DEG_TO_RAD );
 		}
 	}
 
@@ -117,7 +162,7 @@ function Sprite( _source )
 	 */
 	function has_effects()
 	{
-		return ( alpha < 1 || _.rotation._ != 0 );
+		return ( alpha < 1 || rotation != 0 );
 	}
 
 	// -- Public: --
@@ -130,9 +175,12 @@ function Sprite( _source )
 
 	this.update = function( dt )
 	{
+		check_parent();
 		update_tweens( dt );
-		update_bounding_box();
+		update_transform();
 		update_proper_alpha();
+		update_proper_rotation();
+		update_bounding_box();
 
 		if (source === null || alpha === 0 || !_.isOnScreen() ) {
 			return;
@@ -145,8 +193,8 @@ function Sprite( _source )
 
 		screen.game.draw.image(
 			source,
-			( _.rotation._ > 0 ? ( -origin.x * _.scale._ ) : bounds.x ),
-			( _.rotation._ > 0 ? ( -origin.y * _.scale._ ) : bounds.y ),
+			( rotation > 0 ? ( -T.origin.x * _.scale._ ) : bounds.x ),
+			( rotation > 0 ? ( -T.origin.y * _.scale._ ) : bounds.y ),
 			bounds.width,
 			bounds.height
 		);
@@ -211,7 +259,23 @@ function Sprite( _source )
 	};
 
 	/**
-	 * Returns the width of the Sprite
+	 * Returns the transformed parent-influenced [rotation] of the Sprite
+	 */
+	this.getProperRotation = function()
+	{
+		return rotation;
+	};
+
+	/**
+	 * Returns the Sprite's transformed origin
+	 */
+	this.getProperOrigin = function()
+	{
+		return T.origin;
+	};
+
+	/**
+	 * Returns the natural width of the Sprite asset
 	 */
 	this.width = function()
 	{
@@ -219,7 +283,7 @@ function Sprite( _source )
 	};
 
 	/**
-	 * Returns the height of the Sprite
+	 * Returns the natural height of the Sprite asset
 	 */
 	this.height = function()
 	{

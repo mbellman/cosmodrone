@@ -12,7 +12,8 @@ function Drone()
 	// -- Private: --
 	var _ = this;
 
-	// Real-time drone properties
+	var thrusters = new Entity();
+
 	var spin = 0;
 	var power = 500;
 	var fuel = 350;
@@ -46,13 +47,11 @@ function Drone()
 		complete: function() {}
 	};
 
-	var docked = false;
+	var is_docked = false;
 
-	// Flags which determine whether the drone can operate
 	var out_of_power = false;
 	var out_of_fuel = false;
 
-	// Drone property limits
 	var MAX_SPEED = 3;
 	var MAX_POWER = 500;
 	var MAX_FUEL = 350;
@@ -463,7 +462,7 @@ function Drone()
 					docking.complete( docking.target.get( HardwarePart ).getSpecs() );
 
 					docking.on = false;
-					docked = true;
+					is_docked = true;
 				}
 
 				break;
@@ -480,7 +479,7 @@ function Drone()
 		power -= dt;
 
 		if ( stabilizing ) power -= dt;
-		if ( docking.on ) power -= 3 * dt;
+		if ( docking.on ) power -= 2 * dt;
 
 		if ( power < 0 ) {
 			power = 0;
@@ -513,6 +512,28 @@ function Drone()
 		}
 	}
 
+	/**
+	 * Animate thruster lights on
+	 */
+	function set_thrusters_on()
+	{
+		var sprite = thrusters.get( Sprite );
+
+		if ( sprite.alpha._ === 0 ) {
+			thrusters.get( Sprite ).alpha.tweenTo( 1, 0.5, Ease.quad.out );
+		}
+
+		thrusters.get( Countdown ).wait( 0.5 );
+	}
+
+	/**
+	 * Animate thruster lights off
+	 */
+	function set_thrusters_off()
+	{
+		thrusters.get( Sprite ).alpha.tweenTo( 0, 0.5, Ease.quad.out );
+	}
+
 	// -- Public: --
 	this.update = function( dt )
 	{
@@ -533,7 +554,7 @@ function Drone()
 		_.owner.get( Sprite ).rotation._ += ( spin * dt );
 		consume_power( dt );
 
-		if ( docked ) {
+		if ( is_docked ) {
 			switch ( docking.hardware ) {
 				case 'RECHARGER':
 					power = Math.min( power + 30 * dt, MAX_POWER );
@@ -543,6 +564,22 @@ function Drone()
 					break;
 			}
 		}
+	};
+
+	this.onAdded = function()
+	{
+		thrusters
+			.add(
+				new Sprite( Assets.getImage( 'game/drone/thrusters.png' ) )
+					.setXY( 12, 52 )
+					.setAlpha( 0 )
+			)
+			.add(
+				new Countdown()
+					.fire( set_thrusters_off )
+			);
+
+		_.owner.addChild( thrusters );
 	};
 
 	/**
@@ -586,6 +623,7 @@ function Drone()
 	this.addVelocity = function( amount )
 	{
 		var rotation = _.owner.get( Sprite ).rotation._;
+
 		var x = Math.sin( rotation * Math.DEG_TO_RAD );
 		var y = Math.cos( rotation * Math.DEG_TO_RAD ) * -1;
 
@@ -594,6 +632,8 @@ function Drone()
 			y * amount,
 			true
 		);
+
+		set_thrusters_on();
 
 		return _;
 	};
@@ -634,9 +674,9 @@ function Drone()
 	 */
 	this.undock = function()
 	{
-		if ( docked ) {
+		if ( is_docked ) {
 			_.addVelocity( 2 * -MAX_SPEED );
-			docked = false;
+			is_docked = false;
 		}
 	};
 
@@ -665,7 +705,7 @@ function Drone()
 	 */
 	this.isControllable = function()
 	{
-		return ( is_operational() && !docking.on && !docked);
+		return ( is_operational() && !docking.on && !is_docked);
 	};
 
 	/**
@@ -681,6 +721,6 @@ function Drone()
 	 */
 	this.isDocked = function()
 	{
-		return docked;
+		return is_docked;
 	};
 }
