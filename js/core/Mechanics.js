@@ -176,6 +176,30 @@ function HardwarePart()
 		moving = boolean;
 		return _;
 	};
+
+	/**
+	 * Fade in hardware part's alert icon graphic
+	 */
+	this.showAlert = function()
+	{
+		var alert = _.owner.$( 'alert' );
+
+		if ( alert.has( Sprite ) ) {
+			alert.get( Sprite ).alpha.tweenTo( 1, 0.5, Ease.quad.out );
+		}
+	};
+
+	/**
+	 * Fade out hardware part's alert icon graphic
+	 */
+	this.hideAlert = function()
+	{
+		var alert = _.owner.$( 'alert' );
+
+		if ( alert.has( Sprite ) ) {
+			alert.get( Sprite ).alpha.tweenTo( 0, 0.5, Ease.quad.out );
+		}
+	};
 }
 
 /**

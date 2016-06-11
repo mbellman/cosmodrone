@@ -5,6 +5,8 @@
 	 * -----------------
 	 *
 	 * Layouts for the various levels
+	 *
+	 * TODO: Move this to its own file
 	 */
 	var LevelData = {
 		1: {
@@ -144,6 +146,9 @@
 							.add(
 								new Sprite( Assets.getImage( specs.file ) )
 									.setXY( position.x, position.y )
+							)
+							.addChild(
+								new Entity( 'alert' )
 							)
 					);
 				}

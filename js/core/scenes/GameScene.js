@@ -27,6 +27,10 @@ function GameScene( controller )
 	var textbox;
 	var textbox_timer = 0;
 
+	var ALERT_RECHARGE = 'game/ui/alert/recharger.png';
+	var ALERT_REFUEL = 'game/ui/alert/refueler.png';
+	var ALERT_MALFUNCTION = 3;
+
 	var FLAGS = {};
 
 	var DEBUG_MODE = false;
@@ -139,6 +143,29 @@ function GameScene( controller )
 	}
 
 	/**
+	 * Create the player drone entity and accompanying camera
+	 */
+	function create_player()
+	{
+		camera = new Entity().add( new Point() );
+
+		drone = new Entity()
+			.add( new Point() )
+			.add( new Countdown() )
+			.add(
+				new Drone().onDocking( handle_docking )
+			)
+			.add(
+				new Sprite( Assets.getImage( 'game/drone/1.png' ) )
+					.setOffset( Viewport.width / 2, Viewport.height / 2 )
+					.setPivot( camera.get( Point ) )
+					.centerOrigin()
+			);
+
+		DRONE_SPEED = drone.get( Drone ).getMaxSpeed();
+	}
+
+	/**
 	 * Load and create level layout, adding
 	 * returned entities to the [stage]
 	 */
@@ -160,27 +187,22 @@ function GameScene( controller )
 	}
 
 	/**
-	 * Create the player drone entity and accompanying camera
+	 * Set up persistent alert icons near recharging/refueling ports
 	 */
-	function create_player()
+	function create_static_alerts()
 	{
-		camera = new Entity().add( new Point() );
+		var container, side;
 
-		drone = new Entity()
-			.add( new Point() )
-			.add( new Countdown() )
-			.add(
-				new Drone()
-					.onDocking( handle_docking )
-			)
-			.add(
-				new Sprite( Assets.getImage( 'game/drone/1.png' ) )
-					.setOffset( Viewport.width / 2, Viewport.height / 2 )
-					.setPivot( camera.get( Point ) )
-					.centerOrigin()
-			);
-
-		DRONE_SPEED = drone.get( Drone ).getMaxSpeed();
+		stage.forAllComponentsOfType( HardwarePart, function( part ) {
+			switch( part.getSpecs().name ) {
+				case 'RECHARGER':
+					create_alert_icon( part, ALERT_RECHARGE );
+					break;
+				case 'REFUELER':
+					create_alert_icon( part, ALERT_REFUEL );
+					break;
+			}
+		} );
 	}
 
 	/**
@@ -227,6 +249,7 @@ function GameScene( controller )
 
 		create_player();
 		create_level();
+		create_static_alerts();
 		create_textbox();
 		stage.addChild( camera, drone, textbox );
 
@@ -305,9 +328,9 @@ function GameScene( controller )
 	/**
 	 * Docking event handler
 	 */
-	function handle_docking( part )
+	function handle_docking( specs )
 	{
-		switch ( part.name ) {
+		switch ( specs.name ) {
 			case 'RECHARGER':
 				print_dialogue( 'This is a recharger unit. Use it to recharge your power!' );
 				break;
@@ -351,6 +374,81 @@ function GameScene( controller )
 		textbox.find( Countdown ).wait( timer );
 	}
 
+	/**
+	 * Set up a bouncing alert icon next to a hardware [part],
+	 * occupying its accompanying 'alert' child entity
+	 */
+	function create_alert_icon( part, graphic )
+	{
+		var specs =  part.getSpecs();
+		var icon = part.owner.$( 'alert' );
+		var arrow, arrow_offset = {};
+		var icon_offset = {}, oscillation = {};
+		var margin = 50;
+
+		switch( specs.orientation ) {
+			case 'top':
+				arrow = Assets.getImage( 'game/ui/alert/arrow-B.png' );
+				arrow_offset.x = 16;
+				arrow_offset.y = 44;
+				icon_offset.x = specs.width / 2;
+				icon_offset.y = -margin;
+				oscillation.W = 0;
+				oscillation.H = 10;
+				break;
+			case 'right':
+				arrow = Assets.getImage( 'game/ui/alert/arrow-L.png' );
+				arrow_offset.x = -8;
+				arrow_offset.y = 16;
+				icon_offset.x = specs.width + margin;
+				icon_offset.y = specs.height / 2;
+				oscillation.W = -10;
+				oscillation.H = 0;
+				break;
+			case 'bottom':
+				arrow = Assets.getImage( 'game/ui/alert/arrow-T.png' );
+				arrow_offset.x = 16;
+				arrow_offset.y = -8;
+				icon_offset.x = specs.width / 2;
+				icon_offset.y = specs.height + margin;
+				oscillation.W = 0;
+				oscillation.H = -10;
+				break;
+			case 'left':
+				arrow = Assets.getImage( 'game/ui/alert/arrow-R.png' );
+				arrow_offset.x = 44;
+				arrow_offset.y = 16;
+				icon_offset.x = -margin;
+				icon_offset.y = specs.height / 2;
+				oscillation.W = 10;
+				oscillation.H = 0;
+				break;
+		}
+
+		icon
+			.disposeChildren()
+			.add(
+				new Sprite( Assets.getImage( 'game/ui/alert/alert-box.png' ) )
+					.setXY( icon_offset.x, icon_offset.y )
+					.centerOrigin()
+			)
+			.add(
+				new Oscillation( oscillation.W, oscillation.H )
+					.setPeriod( 1 )
+			)
+			.addChild(
+				new Entity().add(
+					new Sprite( arrow )
+						.setXY( arrow_offset.x, arrow_offset.y )
+				),
+				new Entity().add(
+					new Sprite( Assets.getImage( graphic ) )
+						.setXY( 26, 26 )
+						.centerOrigin()
+				)
+			);
+	}
+
 	// ----------------------------------------- //
 	// ------------- INPUT ACTIONS ------------- //
 	// ----------------------------------------- //
@@ -362,21 +460,27 @@ function GameScene( controller )
 	{
 		if ( drone.get( Drone ).isControllable() ) {
 			if ( keys.holding( 'UP' ) ) {
-				drone.get( Drone ).consumeFuel( 3 * dt ).addVelocity( DRONE_SPEED );
+				drone.get( Drone )
+					.consumeFuel( 3 * dt )
+					.addVelocity( DRONE_SPEED );
 			}
 
 			if ( keys.holding( 'LEFT' ) ) {
-				drone.get( Drone ).consumeFuel( 2 * dt ).addSpin( -DRONE_SPEED );
+				drone.get( Drone )
+					.consumeFuel( 2 * dt )
+					.addSpin( -DRONE_SPEED );
 			}
 
 			if ( keys.holding( 'RIGHT' ) ) {
-				drone.get( Drone ).consumeFuel( 2 * dt ).addSpin( DRONE_SPEED );
+				drone.get( Drone )
+					.consumeFuel( 2 * dt )
+					.addSpin( DRONE_SPEED );
 			}
 		}
 	}
 
 	/**
-	 * One-time bindings for single-press inputs
+	 * Bindings for single-press inputs
 	 */
 	function bind_input_handlers()
 	{
@@ -403,7 +507,7 @@ function GameScene( controller )
 	// --------------------------------------- //
 
 	/**
-	 * Have the camera follow the player drone
+	 * Have the camera follow the player drone with a slight delay
 	 */
 	function update_camera()
 	{
@@ -516,7 +620,7 @@ function GameScene( controller )
 	};
 
 	/**
-	 * Check to see whether the game is loaded
+	 * Check to see whether the game has initialized
 	 */
 	this.isLoaded = function()
 	{

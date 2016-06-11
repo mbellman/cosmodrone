@@ -12,8 +12,6 @@ function Drone()
 	// -- Private: --
 	var _ = this;
 
-	var thrusters = new Entity();
-
 	var spin = 0;
 	var power = 500;
 	var fuel = 350;
@@ -21,11 +19,11 @@ function Drone()
 	var stabilizing = false;
 
 	// Flags for automatic spin maneuvering
-	var angle_approach = false;
-	var angle_slow = false;
+	var spin_accelerate = false;
+	var spin_decelerate = false;
 
 	// Saved value for the angle retrograde to the drone's
-	// motion; recalculated via update_retrograde_angle()
+	// motion; recalculated via [update_retrograde_angle()]
 	var retrograde_angle = 180;
 
 	// Values/flags for automatic docking
@@ -56,6 +54,8 @@ function Drone()
 	var MAX_POWER = 500;
 	var MAX_FUEL = 350;
 	var MAX_HEALTH = 100;
+
+	var thrusters = new Entity();
 
 	/**
 	 * Check to see whether the drone can still run
@@ -240,8 +240,8 @@ function Drone()
 	 */
 	function reset_spin_procedure()
 	{
-		angle_approach = false;
-		angle_slow = false;
+		spin_accelerate = false;
+		spin_decelerate = false;
 	}
 
 	/**
@@ -255,7 +255,7 @@ function Drone()
 		var direction = get_spin_direction( angle );
 		var SPIN_VELOCITY = Math.abs( spin );
 
-		if ( angle_slow ) {
+		if ( spin_decelerate ) {
 			stabilize_spin();
 
 			if ( spin === 0 || distance < 1 )
@@ -268,12 +268,12 @@ function Drone()
 			return;
 		}
 
-		if ( angle_approach && SPIN_VELOCITY < 200 ) {
+		if ( spin_accelerate && SPIN_VELOCITY < 200 ) {
 			_.addSpin( MAX_SPEED * direction );
 		}
 
 		if ( distance < ( 10 * SPIN_VELOCITY * dt ) ) {
-			angle_slow = true;
+			spin_decelerate = true;
 			return;
 		}
 
@@ -288,12 +288,12 @@ function Drone()
 				stabilize_spin();
 
 				if ( spin === 0 ) {
-					angle_approach = true;
+					spin_accelerate = true;
 					return;
 				}
 			} else {
 				// ...otherwise, speed up for [angle] approach
-				angle_approach = true;
+				spin_accelerate = true;
 			}
 		}
 	}
@@ -479,7 +479,7 @@ function Drone()
 		power -= dt;
 
 		if ( stabilizing ) power -= dt;
-		if ( docking.on ) power -= 2 * dt;
+		if ( docking.on ) power -= dt;
 
 		if ( power < 0 ) {
 			power = 0;
@@ -500,7 +500,7 @@ function Drone()
 
 		fuel -= dt;
 
-		if ( stabilizing ) fuel -= 2 * dt;
+		if ( stabilizing ) fuel -= dt;
 
 		if ( fuel < 0 ) {
 			fuel = 0;
@@ -520,7 +520,7 @@ function Drone()
 		var sprite = thrusters.get( Sprite );
 
 		if ( sprite.alpha._ === 0 ) {
-			thrusters.get( Sprite ).alpha.tweenTo( 1, 0.5, Ease.quad.out );
+			sprite.alpha.tweenTo( 1, 0.5, Ease.quad.out );
 		}
 
 		thrusters.get( Countdown ).wait( 0.5 );
@@ -665,6 +665,7 @@ function Drone()
 	 */
 	this.dockWith = function( target )
 	{
+		target.get( HardwarePart ).hideAlert();
 		launch_docking_procedure( target );
 		return _;
 	};
@@ -675,6 +676,7 @@ function Drone()
 	this.undock = function()
 	{
 		if ( is_docked ) {
+			docking.target.get( HardwarePart ).showAlert();
 			_.addVelocity( 2 * -MAX_SPEED );
 			is_docked = false;
 		}
@@ -685,6 +687,7 @@ function Drone()
 	 */
 	this.abortDocking = function()
 	{
+		docking.target.get( HardwarePart ).showAlert();
 		docking.on = false;
 		return _;
 	};

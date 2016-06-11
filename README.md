@@ -25,6 +25,7 @@ A game about space station maintenance!
 ##### HUD
 * "Autospin" system indicator
 * Indicate when docking mode is usable
+* Show data readout for docking target
 * Radar/local area map
 
 ##### BACKGROUND/TERRAIN

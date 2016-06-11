@@ -85,7 +85,7 @@ function Oscillation( width, height, is_reversed )
 		x: ( width / 2 ),
 		y: ( height / 2 )
 	};
-	var while_moving = function() {};
+	var onMove = function() {};
 
 	// -- Public: --
 	this.update = function( dt )
@@ -99,7 +99,7 @@ function Oscillation( width, height, is_reversed )
 			sprite.x._ = anchor.x + ( radius.x * COS_t * angle.cosine ) - ( radius.y * SIN_t * angle.sine );
 			sprite.y._ = anchor.y + ( radius.y * SIN_t * angle.cosine ) + ( radius.x * COS_t * angle.sine );
 
-			while_moving( sprite, mod( t, Math.TAU ) );
+			onMove( sprite, mod( t, Math.TAU ) );
 		}
 	};
 
@@ -159,7 +159,7 @@ function Oscillation( width, height, is_reversed )
 	 */
 	this.whileMoving = function( handler )
 	{
-		while_moving = handler;
+		onMove = handler;
 		return _;
 	}
 }
