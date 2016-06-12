@@ -47,6 +47,7 @@ var AssetManifest =
 			'game/shadows/small-cumulus-3.png',
 			'game/shadows/small-cumulus-4.png',
 			'game/shadows/small-cyclone-1.png',
+			'game/station/modules/communications.png',
 			'game/station/modules/general-large.png',
 			'game/station/modules/general-small.png',
 			'game/station/modules/power.png',

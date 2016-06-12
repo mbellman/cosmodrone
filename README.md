@@ -10,12 +10,14 @@ A game about space station maintenance!
 
 ##### GAME
 * Radio signal reception mechanic
-* More modules and hardware parts
+* Truss modules
+* Solar panels
+* Additional modules/parts as seen fit
 * Collisions/drone damage
 * Components with update cycles/architecture for various hardware parts
-* Icons next to vulnerable hardware parts
 * Alerts screen with ability to select hardware maintenance jobs
 * Hardware repair interface - needs various ideas for maintenance 'minigames'
+* First-level tutorial
 * Handler for drone running out of power/fuel
 * Ability to move drone above or below the station
 * Moving docking targets (later-stage development) (?)

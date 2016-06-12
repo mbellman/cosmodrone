@@ -201,6 +201,8 @@ function GameScene( controller )
 				case 'REFUELER':
 					create_alert_icon( part, ALERT_REFUEL );
 					break;
+				default:
+					break;
 			}
 		} );
 	}
@@ -295,17 +297,14 @@ function GameScene( controller )
 	}
 
 	/**
-	 * Looks for HardwarePart instances close in proximity
-	 * to the player Drone and docks with the nearest
+	 * Check for nearby hardware parts and dock with
+	 * any close enough in proximity to the drone
 	 */
 	function enter_docking_mode()
 	{
 		var player = drone.get( Point ).getPosition();
 		var minimum_distance = Number.POSITIVE_INFINITY;
-		var position, distance, entity;
-
-		player.x += drone.get( Sprite ).width() / 2;
-		player.y += drone.get( Sprite ).height() / 2;
+		var position, distance, target;
 
 		stage.forAllComponentsOfType( HardwarePart, function( part ) {
 			position = part.getPosition();
@@ -315,13 +314,16 @@ function GameScene( controller )
 			distance = Vec2.distance( player.x, player.y, position.x, position.y );
 
 			if ( distance < minimum_distance ) {
-				entity = part.owner;
+				target = part.owner;
 				minimum_distance = distance;
 			}
 		} );
 
-		if ( minimum_distance < 200 && drone.get( Point ).getAbsoluteVelocity() < 50 ) {
-			drone.get( Drone ).dockWith( entity );
+		if (
+			minimum_distance < 200 &&
+			drone.get( Point ).getAbsoluteVelocity() < 50
+		) {
+			drone.get( Drone ).dockWith( target );
 		}
 	}
 

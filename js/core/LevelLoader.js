@@ -11,8 +11,8 @@
 	var LevelData = {
 		1: {
 			layout: [
-				[0, 3, 0, 1, 0],
-				[0, 2, 0, 2, 0],
+				[0, 3, 0, 2, 0],
+				[0, 2, 0, 4, 0],
 				[1, 1, 1, 1, 1],
 				[0, 2, 0, 3, 0]
 			],
@@ -22,22 +22,31 @@
 						{side: 'left', index: 1, name: 'RECHARGER'},
 						{side: 'right', index: 1, name: 'REFUELER'},
 					],
+					3: [
+						{side: 'left', index: 2, name: 'SATELLITE_1'}
+					]
 				},
 				1: {
 					1: [
 						{side: 'left', index: 1, name: 'RECHARGER'},
-						{side: 'right', index: 2, name: 'SATELLITE_1'},
+						{side: 'right', index: 2, name: 'REFUELER'},
+						{side: 'left', index: 3, name: 'SATELLITE_1'},
+						{side: 'right', index: 3, name: 'SATELLITE_1'},
 					],
 					3: [
-						{side: 'right', index: 1, name: 'RECHARGER'}
+						{side: 'left', index: 1, name: 'SATELLITE_1'},
+						{side: 'right', index: 1, name: 'SATELLITE_1'}
 					]
 				},
 				2: {
 					0: [
 						{side: 'top', index: 1, name: 'RECHARGER'},
-						{side: 'top', index: 2, name: 'REFUELER'},
+						{side: 'top', index: 2, name: 'SATELLITE_1'},
 						{side: 'bottom', index: 1, name: 'RECHARGER'},
 						{side: 'bottom', index: 2, name: 'REFUELER'},
+					],
+					1: [
+						{side: 'bottom', index: 2, name: 'SATELLITE_1'}
 					]
 				}
 			},

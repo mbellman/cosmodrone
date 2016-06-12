@@ -55,6 +55,21 @@ var Modules =
 			left1: {x: 4, y: 70},
 			right1: {x: 186, y: 70}
 		}
+	},
+	MODULE_COMMUNICATIONS: {
+		file: 'game/station/modules/communications.png',
+		size: {
+			width: 232,
+			height: 240
+		},
+		docking: {
+			top: {x: 64, y: 0},
+			bottom: {x: 64, y: 240}
+		},
+		terminals: {
+			left1: {x: 6, y: 100},
+			right1: {x: 224, y: 100}
+		}
 	}
 };
 
@@ -66,7 +81,8 @@ var Modules =
 var ModuleNames = {
 	1: 'MODULE_GENERAL_HORIZONTAL_LARGE',
 	2: 'MODULE_GENERAL_VERTICAL_SMALL',
-	3: 'MODULE_POWER'
+	3: 'MODULE_POWER',
+	4: 'MODULE_COMMUNICATIONS'
 };
 
 /**
@@ -90,9 +106,9 @@ var HardwareParts = {
 		y: 2
 	},
 	SATELLITE_1: {
-		width: 80,
-		height: 76,
-		x: -20,
-		y: -6
+		width: 76,
+		height: 86,
+		x: -18,
+		y: 2
 	}
 };
