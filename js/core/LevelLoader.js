@@ -148,16 +148,16 @@
 					entities.push(
 						new Entity()
 							.add(
+								new Sprite( Assets.getImage( specs.file ) )
+									.setXY( position.x, position.y )
+							)
+							.add(
 								new HardwarePart()
 									.setSpecs( specs )
 									.setMoving( data.moving )
 							)
 							.add(
-								new Sprite( Assets.getImage( specs.file ) )
-									.setXY( position.x, position.y )
-							)
-							.addChild(
-								new Entity( 'alert' )
+								new AlertIcon()
 							)
 					);
 				}

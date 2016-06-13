@@ -93,7 +93,7 @@ function Entity( name )
 	this.add = function( component )
 	{
 		if ( !is_component( component ) ) {
-			console.warn('Entity: attempted to add a non-Component instance to entity');
+			console.warn( 'Invalid Component: Attempted to add \'' + component.constructor.name + '\' instance to an entity!' );
 			return;
 		}
 

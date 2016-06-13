@@ -344,7 +344,7 @@ function TitleScene( controller )
 		 */
 		function INTERNAL_build_orbit_path( width, height )
 		{
-			var orbit = new VectorSprite();
+			var orbit = new RasterSprite();
 			var orbit_BG, orbit_FG;
 			var half_W = ( width / 2 );
 			var half_H = ( height / 2 );

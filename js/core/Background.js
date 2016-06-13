@@ -128,8 +128,8 @@
 				chunk.y = Math.floor( coords.y / CHUNK_H );
 				chunk.texture = chunks[chunk.y][chunk.x];
 
-				clip.x = coords.x % CHUNK_W;
-				clip.y = coords.y % CHUNK_H;
+				clip.x = ( coords.x % CHUNK_W ) - 1;
+				clip.y = ( coords.y % CHUNK_H ) - 1;
 
 				draw.x = x + pixel.x,
 				draw.y = y + pixel.y;

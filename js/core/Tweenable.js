@@ -95,7 +95,7 @@ function Tweenable( value )
 		tween.end = value;
 		tween.progress = 0;
 		tween.duration = seconds;
-		tween.onComplete = callback || tween.onComplete;
+		tween.onComplete = callback || function() {};
 		tween.easing = easing;
 		return _;
 	};

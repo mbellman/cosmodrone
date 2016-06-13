@@ -451,13 +451,13 @@ FillSprite.prototype.constructor = FillSprite;
 
 /**
  * -----------------------
- * Component: VectorSprite
+ * Component: RasterSprite
  * -----------------------
  *
  * A special Sprite variant which allows
- * for custom vector graphics rendering
+ * for custom raster graphics rendering
  */
-function VectorSprite()
+function RasterSprite()
 {
 	/**
 	 * Public Canvas instance for custom control
@@ -470,5 +470,5 @@ function VectorSprite()
 	Sprite.call( this , this.sprite.element );
 }
 
-VectorSprite.prototype = Object.create(Sprite.prototype);
-VectorSprite.prototype.constructor = VectorSprite;
+RasterSprite.prototype = Object.create(Sprite.prototype);
+RasterSprite.prototype.constructor = RasterSprite;

@@ -70,16 +70,8 @@ function createScreens()
 	screen.game = createScreen();
 	screen.game.element.style.zIndex = '2';
 
-	// UI screen overlaying everything else
-	screen.HUD = createScreen();
-	screen.HUD.element.style.zIndex = '3';
-
 	$( '#game' )
 		.append( screen.game.element )
-		.append( screen.HUD.element );
-
-	// Apply CSS to various screens
-	$( '#game' )
 		.find( 'canvas' )
 		.addClass( 'fill' );
 }

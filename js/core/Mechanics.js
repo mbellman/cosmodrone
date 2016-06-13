@@ -178,24 +178,173 @@ function HardwarePart()
 	};
 
 	/**
-	 * Fade in hardware part's alert icon graphic
+	 * Update the hardware part's alert icon [graphic]
+	 */
+	this.setAlert = function( graphic )
+	{
+		_.owner.get( AlertIcon ).rebuild( graphic );
+		return _;
+	};
+
+	/**
+	 * Fade in hardware part's alert icon
 	 */
 	this.showAlert = function()
 	{
-		var alert = _.owner.$( 'alert' );
+		_.owner.get( AlertIcon ).show();
+		return _;
+	};
 
+	/**
+	 * Fade out hardware part's alert icon
+	 */
+	this.hideAlert = function()
+	{
+		_.owner.get( AlertIcon ).hide();
+		return _;
+	};
+}
+
+/**
+ * --------------------
+ * Component: AlertIcon
+ * --------------------
+ *
+ * A bouncing alert icon coupled with station hardware
+ */
+function AlertIcon()
+{
+	Component.call( this );
+
+	// -- Private: --
+	var _ = this;
+	var alert = new Entity();
+
+	/**
+	 * Calculates and returns offsets for the
+	 * icon based on the owner hardware specs
+	 */
+	function get_offsets()
+	{
+		var specs = _.owner.get( HardwarePart ).getSpecs();
+		var position = {x: 0, y: 0};
+		var arrow = {x: 0, y: 0};
+		var oscillation = {W: 0, H: 0};
+		var margin = 50;
+
+		switch( specs.orientation ) {
+			case 'top':
+				position.x = specs.width / 2;
+				position.y = -margin;
+				arrow.x = 16;
+				arrow.y = 44;
+				oscillation.H = 10;
+				break;
+			case 'right':
+				position.x = specs.width + margin;
+				position.y = specs.height / 2;
+				arrow.x = -8;
+				arrow.y = 16;
+				oscillation.W = -10;
+				break;
+			case 'bottom':
+				position.x = specs.width / 2;
+				position.y = specs.height + margin;
+				arrow.x = 16;
+				arrow.y = -8;
+				oscillation.H = -10;
+				break;
+			case 'left':
+				position.x = -margin;
+				position.y = specs.height / 2;
+				arrow.x = 44;
+				arrow.y = 16;
+				oscillation.W = 10;
+				break;
+		}
+
+		return {
+			POSITION: position,
+			ARROW: arrow,
+			OSCILLATION: oscillation
+		};
+	}
+
+	/**
+	 * Returns the appropriate arrow asset for an alert
+	 * icon based on the owner hardware orientation
+	 */
+	function get_arrow_graphic()
+	{
+		var specs = _.owner.get( HardwarePart ).getSpecs();
+
+		switch( specs.orientation ) {
+			case 'top':
+				return Assets.getImage( 'game/ui/alert/arrow-B.png' );
+			case 'right':
+				return Assets.getImage( 'game/ui/alert/arrow-L.png' );
+			case 'bottom':
+				return Assets.getImage( 'game/ui/alert/arrow-T.png' );
+			case 'left':
+				return Assets.getImage( 'game/ui/alert/arrow-R.png' );
+			default:
+				return null;
+		}
+	}
+
+	// -- Public: --
+	this.onAdded = function()
+	{
+		_.owner.addChild( alert );
+	};
+
+	/**
+	 * Reconstruct a hardware part's alert
+	 * icon with a new [graphic] indicator
+	 */
+	this.rebuild = function( graphic )
+	{
+		if ( _.owner === null || !_.owner.has( HardwarePart ) ) {
+			return;
+		}
+
+		var offsets = get_offsets();
+		var arrow = get_arrow_graphic();
+
+		alert
+			.disposeChildren()
+			.remove( Oscillation )
+			.add(
+				new Sprite( Assets.getImage( 'game/ui/alert/alert-box.png' ) )
+					.setXY( offsets.POSITION.x, offsets.POSITION.y )
+					.centerOrigin()
+			)
+			.add(
+				new Oscillation( offsets.OSCILLATION.W, offsets.OSCILLATION.H )
+					.setPeriod( 1 )
+			)
+			.addChild(
+				new Entity().add(
+					new Sprite( arrow )
+						.setXY( offsets.ARROW.x, offsets.ARROW.y )
+				),
+				new Entity().add(
+					new Sprite( graphic )
+						.setXY( 26, 26 )
+						.centerOrigin()
+				)
+			);
+	};
+
+	this.show = function()
+	{
 		if ( alert.has( Sprite ) ) {
 			alert.get( Sprite ).alpha.tweenTo( 1, 0.5, Ease.quad.out );
 		}
 	};
 
-	/**
-	 * Fade out hardware part's alert icon graphic
-	 */
-	this.hideAlert = function()
+	this.hide = function()
 	{
-		var alert = _.owner.$( 'alert' );
-
 		if ( alert.has( Sprite ) ) {
 			alert.get( Sprite ).alpha.tweenTo( 0, 0.5, Ease.quad.out );
 		}

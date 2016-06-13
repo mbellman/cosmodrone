@@ -27,8 +27,8 @@ function GameScene( controller )
 	var textbox;
 	var textbox_timer = 0;
 
-	var ALERT_RECHARGE = 'game/ui/alert/recharger.png';
-	var ALERT_REFUEL = 'game/ui/alert/refueler.png';
+	var ALERT_RECHARGE = Assets.getImage( 'game/ui/alert/recharger.png' );
+	var ALERT_REFUEL = Assets.getImage( 'game/ui/alert/refueler.png' );
 	var ALERT_MALFUNCTION = 3;
 
 	var FLAGS = {};
@@ -194,12 +194,12 @@ function GameScene( controller )
 		var container, side;
 
 		stage.forAllComponentsOfType( HardwarePart, function( part ) {
-			switch( part.getSpecs().name ) {
+			switch ( part.getSpecs().name ) {
 				case 'RECHARGER':
-					create_alert_icon( part, ALERT_RECHARGE );
+					part.setAlert( ALERT_RECHARGE );
 					break;
 				case 'REFUELER':
-					create_alert_icon( part, ALERT_REFUEL );
+					part.setAlert( ALERT_REFUEL );
 					break;
 				default:
 					break;
@@ -247,13 +247,19 @@ function GameScene( controller )
 		keys.listen();
 		bind_input_handlers();
 
-		hud = new HUD();
-
 		create_player();
 		create_level();
 		create_static_alerts();
 		create_textbox();
-		stage.addChild( camera, drone, textbox );
+
+		hud = new HUD().watchDrone( drone.get( Drone ) );
+
+		stage.addChild(
+			camera,
+			drone,
+			new Entity().add( hud ),
+			textbox
+		);
 
 		update_camera();
 		set_drone_light_off();
@@ -335,9 +341,11 @@ function GameScene( controller )
 		switch ( specs.name ) {
 			case 'RECHARGER':
 				print_dialogue( 'This is a recharger unit. Use it to recharge your power!' );
+				hud.showChargeMeter();
 				break;
 			case 'REFUELER':
 				print_dialogue( 'This is a refueler unit. Use it to refuel your propellant!' );
+				hud.showChargeMeter();
 				break;
 			default:
 				break;
@@ -374,81 +382,6 @@ function GameScene( controller )
 
 		textbox.find( TextPrinter ).print( string );
 		textbox.find( Countdown ).wait( timer );
-	}
-
-	/**
-	 * Set up a bouncing alert icon next to a hardware [part],
-	 * occupying its accompanying 'alert' child entity
-	 */
-	function create_alert_icon( part, graphic )
-	{
-		var specs =  part.getSpecs();
-		var icon = part.owner.$( 'alert' );
-		var arrow, arrow_offset = {};
-		var icon_offset = {}, oscillation = {};
-		var margin = 50;
-
-		switch( specs.orientation ) {
-			case 'top':
-				arrow = Assets.getImage( 'game/ui/alert/arrow-B.png' );
-				arrow_offset.x = 16;
-				arrow_offset.y = 44;
-				icon_offset.x = specs.width / 2;
-				icon_offset.y = -margin;
-				oscillation.W = 0;
-				oscillation.H = 10;
-				break;
-			case 'right':
-				arrow = Assets.getImage( 'game/ui/alert/arrow-L.png' );
-				arrow_offset.x = -8;
-				arrow_offset.y = 16;
-				icon_offset.x = specs.width + margin;
-				icon_offset.y = specs.height / 2;
-				oscillation.W = -10;
-				oscillation.H = 0;
-				break;
-			case 'bottom':
-				arrow = Assets.getImage( 'game/ui/alert/arrow-T.png' );
-				arrow_offset.x = 16;
-				arrow_offset.y = -8;
-				icon_offset.x = specs.width / 2;
-				icon_offset.y = specs.height + margin;
-				oscillation.W = 0;
-				oscillation.H = -10;
-				break;
-			case 'left':
-				arrow = Assets.getImage( 'game/ui/alert/arrow-R.png' );
-				arrow_offset.x = 44;
-				arrow_offset.y = 16;
-				icon_offset.x = -margin;
-				icon_offset.y = specs.height / 2;
-				oscillation.W = 10;
-				oscillation.H = 0;
-				break;
-		}
-
-		icon
-			.disposeChildren()
-			.add(
-				new Sprite( Assets.getImage( 'game/ui/alert/alert-box.png' ) )
-					.setXY( icon_offset.x, icon_offset.y )
-					.centerOrigin()
-			)
-			.add(
-				new Oscillation( oscillation.W, oscillation.H )
-					.setPeriod( 1 )
-			)
-			.addChild(
-				new Entity().add(
-					new Sprite( arrow )
-						.setXY( arrow_offset.x, arrow_offset.y )
-				),
-				new Entity().add(
-					new Sprite( Assets.getImage( graphic ) )
-						.setXY( 26, 26 )
-						.centerOrigin()
-				)
-			);
 	}
 
 	// ----------------------------------------- //
@@ -495,6 +428,7 @@ function GameScene( controller )
 		input.on( 'D', function() {
 			if ( drone.get( Drone ).isDocked() ) {
 				drone.get( Drone ).undock();
+				hud.hideChargeMeter();
 			} else
 			if ( !drone.get( Drone ).isDocking() ) {
 				enter_docking_mode();
@@ -522,22 +456,12 @@ function GameScene( controller )
 		);
 	}
 
-	/**
-	 * Pass game state information to HUD and refresh it
-	 */
-	function update_HUD()
-	{
-		hud.clear();
-		hud.updateDroneStats( drone.get( Drone ) );
-	}
-
 	// Public:
 	this.update = function( dt )
 	{
 		if ( initialized && running ) {
 			poll_input( dt );
 			update_camera();
-			update_HUD();
 
 			if ( DEBUG_MODE ) {
 				DEBUG_show_stats( dt );
@@ -565,13 +489,11 @@ function GameScene( controller )
 	 */
 	this.init = function()
 	{
-		// Stop requestAnimationFrame() in the
-		// SceneManager loop from causing script
-		// hangs in tandem with level generation
+		// Stop requestAnimationFrame() in the SceneManager loop from
+		// causing script hangs in tandem with level generation
 		controller.scenes.pause();
 
-		// Safeguard for calling init()
-		// again on a loaded instance
+		// Safeguard for calling init() again on a loaded instance
 		_.unload();
 
 		create_background();

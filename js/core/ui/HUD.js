@@ -1,23 +1,40 @@
 /**
- * ----------
- * Class: HUD
- * ----------
+ * --------------
+ * Component: HUD
+ * --------------
  *
  * An instance of the game's HUD interface
  */
 function HUD()
 {
+	Component.call( this );
+
 	// -- Private: --
 	var _ = this;
+
+	var DRONE_DATA;
+	var stage = new Entity();
+	var drone_HUD;
+	var charge_meter;
+
+	var charging = {
+		on: false,
+		timer: 0,
+		speed: 8
+	};
 	var GRAPHICS = {
 		droneHUD: Assets.getImage( 'game/ui/drone.png' )
 	};
 	var UI = {
 		droneHUD: {
 			x: 10,
-			y: Viewport.height - 10 - GRAPHICS.droneHUD.height
+			y: Viewport.height - GRAPHICS.droneHUD.height - 20
 		},
-		meters: {
+		drone_system: {
+			stabilizing: {x: 50, y: -4},
+			docking: {x: 80, y: 1}
+		},
+		drone_meters: {
 			health: {
 				x: 56,
 				y: 52,
@@ -39,97 +56,147 @@ function HUD()
 				height: 6,
 				color: '#ccd'
 			}
-		},
-		indicators: {
-			stabilizing: {x: 50, y: -4},
-			docking: {x: 80, y: 1}
 		}
 	};
 
 	/**
-	 * Clears [screen.HUD] where the HUD is displayed
+	 * Redraws drone system information
+	 * to the [drone_HUD] RasterSprite
 	 */
-	function clear_HUD()
+	function redraw_drone_HUD()
 	{
-		// Clear drone HUD
-		screen.HUD.clear(
-			UI.droneHUD.x,
-			UI.droneHUD.y,
-			GRAPHICS.droneHUD.width,
-			GRAPHICS.droneHUD.height
-		);
+		var system = DRONE_DATA.getSystem();
 
-		// TODO: Remaining clear operations
-	}
+		drone_HUD.sprite
+			.clear()
+			.draw.image( GRAPHICS.droneHUD );
 
-	/**
-	 * Draws a stat meter from a specific offset
-	 */
-	function draw_meter( meter, offsetX, offsetY, width )
-	{
-		screen.HUD.draw
-			.rectangle(
-				offsetX + UI.meters[meter].x,
-				offsetY + UI.meters[meter].y,
-				clamp( width, 0, UI.meters[meter].width ),
-				UI.meters[meter].height
-			)
-			.fill( UI.meters[meter].color );
-	}
-
-	/**
-	 * Redraws the drone HUD on [screen.HUD]
-	 */
-	function redraw_drone_HUD( system )
-	{
-		// Draw drone stat meters
-		var meters = ['power', 'fuel', 'health'];
-		var meter, ratio, width;
-
-		for ( var m = 0 ; m < meters.length ; m++ )
+		for ( var indicator in UI.drone_system )
 		{
-			meter = meters[m];
-			ratio = system[meter] / system['MAX_' + meter.toUpperCase()];
-			width = Math.round( ratio * UI.meters[meter].width );
+			var state = ( system[indicator] ? 'on.png' : 'off.png' );
+			var file = 'game/ui/indicators/' + indicator + '-' + state;
 
-			draw_meter( meter, UI.droneHUD.x, UI.droneHUD.y, width );
+			drone_HUD.sprite
+				.draw.image(
+					Assets.getImage( file ),
+					UI.drone_system[indicator].x,
+					UI.drone_system[indicator].y
+				);
 		}
 
-		// Draw the static frame over the meters
-		screen.HUD.draw.image( GRAPHICS.droneHUD, UI.droneHUD.x, UI.droneHUD.y );
-
-		// Draw system indicators
-		var indicators = ['stabilizing', 'docking'];
-
-		for ( var i = 0 ; i < indicators.length ; i++ )
+		for ( var meter in UI.drone_meters )
 		{
-			// Get indicator name
-			var indicator = indicators[i];
-			// Get correct indicator graphic for on/off state
-			var file = 'game/ui/indicators/' + indicator + '-' + (system[indicator] ? 'on.png' : 'off.png');
+			var draw = UI.drone_meters[meter];
+			var depletion = ( system[meter] / system['MAX_' + meter.toUpperCase()] );
+			var width = Math.round( depletion * draw.width );
 
-			screen.HUD.draw.image(
-				Assets.getImage( file ),
-				UI.droneHUD.x + UI.indicators[indicator].x,
-				UI.droneHUD.y + UI.indicators[indicator].y
+			drone_HUD.sprite
+				.draw.rectangle( draw.x, draw.y, width, draw.height )
+				.fill( draw.color );
+		}
+	}
+
+	/**
+	 * Sets up the drone charging meter
+	 */
+	function create_charge_meter()
+	{
+		charge_meter = new Entity()
+			.add(
+				new Sprite()
+					.setXY(
+						62 + UI.droneHUD.x,
+						UI.droneHUD.y + GRAPHICS.droneHUD.height - 2
+					)
+					.setAlpha( 0 )
+			);
+
+		for ( var i = 0 ; i < 35 ; i++ ) {
+			charge_meter.addChild(
+				new Entity()
+					.add(
+						new Sprite( Assets.getImage( 'game/ui/charge.png' ) )
+							.setXY( i * 18, 0 )
+					)
 			);
 		}
 	}
 
-	// -- Public: --
 	/**
-	 * Erase everything for next render cycle
+	 * Set up the HUD structure
 	 */
-	this.clear = function()
+	function generate_HUD_layout()
 	{
-		clear_HUD();
+		drone_HUD = new RasterSprite()
+			.setXY(
+				UI.droneHUD.x,
+				UI.droneHUD.y
+			);
+
+		drone_HUD.sprite.setSize(
+				GRAPHICS.droneHUD.width,
+				GRAPHICS.droneHUD.height
+			);
+
+		create_charge_meter();
+
+		stage.addChild(
+			new Entity().add( drone_HUD ),
+			charge_meter
+		);
+	}
+
+	// -- Public: --
+	this.update = function( dt )
+	{
+		redraw_drone_HUD();
+
+		if ( charging.on ) {
+			charging.timer += dt;
+
+			for ( var i = 0 ; i < 35 ; i++ ) {
+				var modifier = 3 * Math.PI * ( ( 35 - i ) / 35 );
+				var alpha = clamp( Math.sin( charging.speed * charging.timer + modifier ), 0, 1 );
+
+				charge_meter.child( i ).get( Sprite ).alpha._ = alpha;
+			}
+		}
+	};
+
+	this.onAdded = function()
+	{
+		generate_HUD_layout();
+		_.owner.addChild( stage );
 	};
 
 	/**
-	 * Rerender drone stats to HUD
+	 * Save a reference to the [drone] component instance
 	 */
-	this.updateDroneStats = function( drone )
+	this.watchDrone = function( drone )
 	{
-		redraw_drone_HUD( drone.getSystem() );
+		DRONE_DATA = drone;
+		return _;
+	};
+
+	/**
+	 * Fade charge meter in
+	 */
+	this.showChargeMeter = function()
+	{
+		charging.on = true;
+		charging.timer = 0;
+		charge_meter.get( Sprite ).alpha.tweenTo( 1, 0.75, Ease.quad.out );
+		return _;
+	};
+
+	/**
+	 * Fade charge meter out
+	 */
+	this.hideChargeMeter = function()
+	{
+		charge_meter.get( Sprite ).alpha.tweenTo( 0, 0.75, Ease.quad.out, function() {
+			charging.on = false;
+		} );
+		return _;
 	};
 }
