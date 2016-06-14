@@ -76,6 +76,8 @@ var AssetManifest =
 			'game/ui/indicators/docking-on.png',
 			'game/ui/indicators/stabilizing-off.png',
 			'game/ui/indicators/stabilizing-on.png',
+			'game/ui/radio-base.png',
+			'game/ui/radio.png',
 			'game/ui/textbox.png',
 			'title/ground.png',
 			'title/letters/c.png',

@@ -163,3 +163,73 @@ function Oscillation( width, height, is_reversed )
 		return _;
 	}
 }
+
+/**
+ * -------------------------
+ * Component: SpriteSequence
+ * -------------------------
+ *
+ * Plays an animated image sequence using
+ * clippings from a sprite sheet asset
+ */
+function SpriteSequence( asset )
+{
+	Component.call( this );
+
+	// -- Private: --
+	var _ = this;
+	var spritesheet = asset;
+	var vertical = false;
+	var animation;
+	var timer = 0;
+	var frame = {
+		speed: 50,
+		width: 0,
+		height: 0,
+		current: 0,
+		MAX: 0
+	};
+
+	// -- Public: --
+	this.update = function( dt )
+	{
+		timer += ( dt * 1000 );
+
+		if ( timer > frame.speed ) {
+			timer = 0;
+			frame.current = ( frame.current + 1 ) % frame.MAX;
+
+			var clip_X = ( vertical ? 0 : frame.current * frame.width );
+			var clip_Y = ( vertical ? frame.current * frame.height : 0 );
+
+			animation.sprite
+				.clear()
+				.draw.image(
+					spritesheet,
+					clip_X, clip_Y, frame.width, frame.height,
+					0, 0, frame.width, frame.height
+				);
+		}
+	};
+
+	this.onAdded = function()
+	{
+		animation = new RasterSprite();
+		animation.sprite.setSize( frame.width, frame.height );
+
+		_.owner.add( animation );
+	};
+
+	/**
+	 * Configure animation/spritesheet properties
+	 */
+	this.setOptions = function( options )
+	{
+		frame.speed = options.speed || 50;
+		frame.width = options.frameWidth || 0;
+		frame.height = options.frameHeight || 0;
+		frame.MAX = options.frames || 0;
+		vertical = !!options.vertical;
+		return _;
+	};
+}

@@ -15,6 +15,7 @@ function HUD()
 	var DRONE_DATA;
 	var stage = new Entity();
 	var drone_HUD;
+	var radio_meter;
 	var charge_meter;
 
 	var charging = {
@@ -26,6 +27,10 @@ function HUD()
 		droneHUD: Assets.getImage( 'game/ui/drone.png' )
 	};
 	var UI = {
+		radio: {
+			x: 75,
+			y: Viewport.height - GRAPHICS.droneHUD.height - 60
+		},
 		droneHUD: {
 			x: 10,
 			y: Viewport.height - GRAPHICS.droneHUD.height - 20
@@ -97,6 +102,36 @@ function HUD()
 	}
 
 	/**
+	 * Set up the radio signal indicator
+	 */
+	function create_radio_meter()
+	{
+		radio_meter = new Entity()
+			.add(
+				new Sprite()
+					.setXY( UI.radio.x, UI.radio.y )
+			)
+			.addChild(
+				new Entity().add(
+					new Sprite( Assets.getImage( 'game/ui/radio-base.png' ) )
+						.setXY( 10, 16 )
+				),
+				new Entity().add(
+					new SpriteSequence( Assets.getImage( 'game/ui/radio.png' ) )
+						.setOptions(
+							{
+								frames: 8,
+								frameWidth: 28,
+								frameHeight: 22,
+								speed: 100,
+								vertical: true
+							}
+						)
+				)
+			);
+	}
+
+	/**
 	 * Sets up the drone charging meter
 	 */
 	function create_charge_meter()
@@ -138,10 +173,12 @@ function HUD()
 				GRAPHICS.droneHUD.height
 			);
 
+		create_radio_meter();
 		create_charge_meter();
 
 		stage.addChild(
 			new Entity().add( drone_HUD ),
+			radio_meter,
 			charge_meter
 		);
 	}
