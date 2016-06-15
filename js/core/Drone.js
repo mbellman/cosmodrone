@@ -260,6 +260,11 @@ function Drone()
 
 			if ( spin === 0 || distance < 1 )
 			{
+				if ( SPIN_VELOCITY > 25 || distance > 3 ) {
+					reset_spin_procedure();
+					return;
+				}
+
 				spin = 0;
 				stabilizing = false;
 				_.owner.get( Sprite ).rotation._ = angle;
@@ -277,24 +282,24 @@ function Drone()
 			return;
 		}
 
-		// For slower angular velocities...
-		if ( SPIN_VELOCITY < 75 ) {
-			if (
-				( direction < 0 && spin > 0 ) ||
-				( direction > 0 && spin < 0 )
-			) {
-				// ...if we're spinning "away" from [angle],
-				// slow down and prepare to spin the other way...
+		// If the drone spinning "away" from [angle]...
+		if (
+			( direction < 0 && spin > 0 ) ||
+			( direction > 0 && spin < 0 )
+		) {
+			// ...and if it is spinning slowly enough,
+			// slow down and prepare to spin the other way
+			if ( SPIN_VELOCITY < 75 ) {
 				stabilize_spin();
 
 				if ( spin === 0 ) {
 					spin_accelerate = true;
 					return;
 				}
-			} else {
-				// ...otherwise, speed up for [angle] approach
-				spin_accelerate = true;
 			}
+		} else {
+			// ...otherwise, speed up for [angle] approach
+			spin_accelerate = true;
 		}
 	}
 

@@ -12,104 +12,81 @@ function HUD()
 	// -- Private: --
 	var _ = this;
 
+	var GRAPHICS = {
+		droneHUD: Assets.getImage( 'game/ui/drone.png' )
+	};
+
 	var DRONE_DATA;
 	var stage = new Entity();
-	var drone_HUD;
-	var radio_meter;
-	var charge_meter;
 
 	var charging = {
 		on: false,
 		timer: 0,
-		speed: 8
+		speed: 15
 	};
-	var GRAPHICS = {
-		droneHUD: Assets.getImage( 'game/ui/drone.png' )
-	};
-	var UI = {
+
+	var COORDINATES = {
 		radio: {
 			x: 75,
 			y: Viewport.height - GRAPHICS.droneHUD.height - 60
 		},
-		droneHUD: {
-			x: 10,
-			y: Viewport.height - GRAPHICS.droneHUD.height - 20
-		},
-		drone_system: {
-			stabilizing: {x: 50, y: -4},
-			docking: {x: 80, y: 1}
-		},
-		drone_meters: {
-			health: {
-				x: 56,
-				y: 52,
-				width: 232,
-				height: 10,
-				color: '#00ff30'
+		drone: {
+			HUD: {
+				x: 10,
+				y: Viewport.height - GRAPHICS.droneHUD.height - 20
 			},
-			power: {
-				x: 56,
-				y: 70,
-				width: 640,
-				height: 18,
-				color: '#00b4cc'
+			system: {
+				stabilizing: {x: 50, y: -4},
+				docking: {x: 80, y: 1}
 			},
-			fuel: {
-				x: 56,
-				y: 76,
-				width: 640,
-				height: 6,
-				color: '#ccd'
+			meters: {
+				health: {
+					x: 56,
+					y: 52,
+					width: 232,
+					height: 10,
+					color: '#00ff30'
+				},
+				power: {
+					x: 56,
+					y: 70,
+					width: 640,
+					height: 18,
+					color: '#00b4cc'
+				},
+				charge: {
+					x: 56,
+					y: 70,
+					width: 640,
+					height: 18,
+					color: '#fff'
+				},
+				fuel: {
+					x: 56,
+					y: 76,
+					width: 640,
+					height: 6,
+					color: '#ccd'
+				}
 			}
 		}
 	};
 
-	/**
-	 * Redraws drone system information
-	 * to the [drone_HUD] RasterSprite
-	 */
-	function redraw_drone_HUD()
-	{
-		var system = DRONE_DATA.getSystem();
-
-		drone_HUD.sprite
-			.clear()
-			.draw.image( GRAPHICS.droneHUD );
-
-		for ( var indicator in UI.drone_system )
-		{
-			var state = ( system[indicator] ? 'on.png' : 'off.png' );
-			var file = 'game/ui/indicators/' + indicator + '-' + state;
-
-			drone_HUD.sprite
-				.draw.image(
-					Assets.getImage( file ),
-					UI.drone_system[indicator].x,
-					UI.drone_system[indicator].y
-				);
-		}
-
-		for ( var meter in UI.drone_meters )
-		{
-			var draw = UI.drone_meters[meter];
-			var depletion = ( system[meter] / system['MAX_' + meter.toUpperCase()] );
-			var width = Math.round( depletion * draw.width );
-
-			drone_HUD.sprite
-				.draw.rectangle( draw.x, draw.y, width, draw.height )
-				.fill( draw.color );
-		}
-	}
+	var ELEMENTS = {
+		radio: null,
+		drone: null,
+		charger: null
+	};
 
 	/**
 	 * Set up the radio signal indicator
 	 */
 	function create_radio_meter()
 	{
-		radio_meter = new Entity()
+		ELEMENTS.radio = new Entity()
 			.add(
 				new Sprite()
-					.setXY( UI.radio.x, UI.radio.y )
+					.setXY( COORDINATES.radio.x, COORDINATES.radio.y )
 			)
 			.addChild(
 				new Entity().add(
@@ -132,71 +109,95 @@ function HUD()
 	}
 
 	/**
-	 * Sets up the drone charging meter
+	 * Set up the drone stats HUD
 	 */
-	function create_charge_meter()
+	function create_drone_HUD()
 	{
-		charge_meter = new Entity()
+		var display;
+
+		ELEMENTS.drone = new Entity()
 			.add(
-				new Sprite()
-					.setXY(
-						62 + UI.droneHUD.x,
-						UI.droneHUD.y + GRAPHICS.droneHUD.height - 2
-					)
-					.setAlpha( 0 )
+				new Sprite( GRAPHICS.droneHUD )
+					.setXY( COORDINATES.drone.HUD.x, COORDINATES.drone.HUD.y )
 			);
 
-		for ( var i = 0 ; i < 35 ; i++ ) {
-			charge_meter.addChild(
+		for ( var indicator in COORDINATES.drone.system ) {
+			display = COORDINATES.drone.system[indicator];
+
+			ELEMENTS.drone.addChild(
 				new Entity()
 					.add(
-						new Sprite( Assets.getImage( 'game/ui/charge.png' ) )
-							.setXY( i * 18, 0 )
+						new Sprite()
+							.setXY( display.x, display.y )
 					)
 			);
 		}
+
+		for ( var meter in COORDINATES.drone.meters )
+		{
+			display = COORDINATES.drone.meters[meter];
+
+			ELEMENTS.drone.addChild(
+				new Entity( meter )
+					.add(
+						new FillSprite( display.color, display.width, display.height )
+							.setXY( display.x, display.y )
+					)
+			);
+		}
+
+		// Charge meter is invisible by default
+		ELEMENTS.drone.$( 'charge' ).get( FillSprite ).setAlpha( 0 );
 	}
 
 	/**
-	 * Set up the HUD structure
+	 * Set up the full HUD structure
 	 */
 	function generate_HUD_layout()
 	{
-		drone_HUD = new RasterSprite()
-			.setXY(
-				UI.droneHUD.x,
-				UI.droneHUD.y
-			);
-
-		drone_HUD.sprite.setSize(
-				GRAPHICS.droneHUD.width,
-				GRAPHICS.droneHUD.height
-			);
-
 		create_radio_meter();
-		create_charge_meter();
+		create_drone_HUD();
 
 		stage.addChild(
-			new Entity().add( drone_HUD ),
-			radio_meter,
-			charge_meter
+			ELEMENTS.radio,
+			ELEMENTS.drone
 		);
 	}
 
 	// -- Public: --
 	this.update = function( dt )
 	{
-		redraw_drone_HUD();
+		var system = DRONE_DATA.getSystem();
+		var i = 0;
+
+		for ( var indicator in COORDINATES.drone.system ) {
+			var state = ( system[indicator] ? 'on.png' : 'off.png' );
+			var file = 'game/ui/indicators/' + indicator + '-' + state;
+
+			ELEMENTS.drone.child( i++ ).get( Sprite )
+				.setSource( Assets.getImage( file ) );
+		}
+
+		for ( var meter in COORDINATES.drone.meters ) {
+			if ( meter === 'charge' ) {
+				meter = 'power';
+			}
+
+			var display = COORDINATES.drone.meters[meter];
+			var depletion = ( system[meter] / system['MAX_' + meter.toUpperCase()] );
+			var width = Math.round( depletion * display.width );
+
+			ELEMENTS.drone.child( i++ ).get( FillSprite )
+				.setSize( width, display.height )
+		}
 
 		if ( charging.on ) {
 			charging.timer += dt;
 
-			for ( var i = 0 ; i < 35 ; i++ ) {
-				var modifier = 3 * Math.PI * ( ( 35 - i ) / 35 );
-				var alpha = clamp( Math.sin( charging.speed * charging.timer + modifier ), 0, 1 );
+			var flash = ( 1 + Math.sin( charging.speed * charging.timer ) ) / 2;
 
-				charge_meter.child( i ).get( Sprite ).alpha._ = alpha;
-			}
+			ELEMENTS.drone.$( 'charge' ).get( FillSprite )
+				.setAlpha( flash );
 		}
 	};
 
@@ -222,7 +223,6 @@ function HUD()
 	{
 		charging.on = true;
 		charging.timer = 0;
-		charge_meter.get( Sprite ).alpha.tweenTo( 1, 0.75, Ease.quad.out );
 		return _;
 	};
 
@@ -231,9 +231,11 @@ function HUD()
 	 */
 	this.hideChargeMeter = function()
 	{
-		charge_meter.get( Sprite ).alpha.tweenTo( 0, 0.75, Ease.quad.out, function() {
-			charging.on = false;
-		} );
+		charging.on = false;
+
+		ELEMENTS.drone.$( 'charge' ).get( Sprite )
+			.alpha.tweenTo( 0, 0.5, Ease.quad.out);
+
 		return _;
 	};
 }

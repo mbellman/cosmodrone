@@ -432,18 +432,44 @@ Sprite.isOnScreen = function( x, y, width, height )
 function FillSprite( color, width, height )
 {
 	// -- Private: --
+	var _ = this;
 	var sprite = new Canvas().setSize( width, height );
+	var size = {
+		width: width,
+		height: height
+	};
 
 	/**
-	 * Create a [width] x [height] Canvas
-	 * and fill it with a solid [color]
+	 * Draw the fill effect across the whole [sprite] canvas
 	 */
-	sprite.draw.rectangle( 0, 0, width, height ).fill( color );
+	function redraw_fill()
+	{
+		sprite.draw.rectangle( 0, 0, size.width, size.height ).fill( color );
+	}
 
 	/**
 	 * Inherit Sprite and set its source to this instance's Canvas
 	 */
 	Sprite.call( this, sprite.element );
+
+	// -- Public: --
+	this.onAdded = function()
+	{
+		redraw_fill();
+	};
+
+	/**
+	 * Update the [width] and [height] of the FillSprite
+	 */
+	this.setSize = function( width, height )
+	{
+		size.width = width;
+		size.height = height;
+
+		sprite.setSize( width, height );
+		redraw_fill();
+		return _;
+	};
 }
 
 FillSprite.prototype = Object.create(Sprite.prototype);

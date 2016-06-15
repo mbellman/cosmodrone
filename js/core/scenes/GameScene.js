@@ -345,7 +345,6 @@ function GameScene( controller )
 				break;
 			case 'REFUELER':
 				print_dialogue( 'This is a refueler unit. Use it to refuel your propellant!' );
-				hud.showChargeMeter();
 				break;
 			default:
 				break;
