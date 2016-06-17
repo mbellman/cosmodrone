@@ -6,37 +6,6 @@ Math.DEG_TO_RAD = Math.PI / 180;
 Math.RAD_TO_DEG = 180 / Math.PI;
 Math.TAU = 2 * Math.PI;
 
-( function( scope ) {
-	/**
-	 * A list of 10^x, from x = [0 - 11]
-	 */
-	var E = [];
-
-	for ( var e = 0 ; e < 12 ; e++ ) {
-		E.push( Math.pow( 10, e ) );
-	}
-
-	/**
-	 * Methods for rounding to a specific decimal
-	 */
-	var Round = {
-		toDecimal: function( number, decimal ) {
-			decimal = E[decimal];
-			return Math.round( number * decimal ) / decimal;
-		},
-		upToDecimal: function( number, decimal ) {
-			decimal = E[decimal];
-			return Math.ceil( number * decimal ) / decimal;
-		},
-		downToDecimal: function( number, decimal ) {
-			decimal = E[decimal];
-			return Math.floor( number * decimal ) / decimal;
-		}
-	};
-
-	scope.Round = Round;
-} )( window );
-
 // -------------------------------------- //
 // ----------- Handy routines ----------- //
 // -------------------------------------- //
@@ -158,6 +127,73 @@ function bitFlip( bit )
 function rgb( r, g, b )
 {
 	return 'rgb(' + r + ',' + g + ',' + b + ')';
+}
+
+( function( scope ) {
+	/**
+	 * A list of 10^x, from x = [0 - 11]
+	 */
+	var E = [];
+
+	for ( var e = 0 ; e < 12 ; e++ ) {
+		E.push( Math.pow( 10, e ) );
+	}
+
+	/**
+	 * -------------
+	 * Object: Round
+	 * -------------
+	 *
+	 * Methods for rounding to a specific decimal
+	 */
+	var Round = {
+		toDecimal: function( number, decimal ) {
+			decimal = E[decimal] || 15;
+			return Math.round( number * decimal ) / decimal;
+		},
+		upToDecimal: function( number, decimal ) {
+			decimal = E[decimal] || 15;
+			return Math.ceil( number * decimal ) / decimal;
+		},
+		downToDecimal: function( number, decimal ) {
+			decimal = E[decimal] || 15;
+			return Math.floor( number * decimal ) / decimal;
+		}
+	};
+
+	scope.Round = Round;
+} )( window );
+
+/**
+ * ------------
+ * Object: Ease
+ * ------------
+ *
+ * Unit easing functions. Inputs should be
+ * between 0 and 1. Any additional scaling
+ * should be done with the returned value.
+ */
+var Ease = {
+	linear: function( t ) {
+		return t;
+	},
+	quad: {
+		out: function( t ) {
+			return t * ( 2 - t );
+		},
+		in: function( t ) {
+			return t * t;
+		},
+	    inOut: function( t ) {
+	        t *= 2;
+	        t -= 1;
+
+	        if ( t < 0 )
+	        	return ( 1 + t * ( 2 + t ) ) / 2;
+	        else
+	        	return ( 1 + t * ( 2 - t ) ) / 2;
+	    }
+	}
 }
 
 // --------------------------------------------- //

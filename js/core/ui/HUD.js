@@ -74,8 +74,7 @@ function HUD()
 
 	var ELEMENTS = {
 		radio: null,
-		drone: null,
-		charger: null
+		drone: null
 	};
 
 	/**

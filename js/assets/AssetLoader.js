@@ -261,7 +261,7 @@
 		// -- Private: --
 		var _ = this;
 		var root = '';
-		var assets;
+		var assets = {};
 		var onProgress = function(){};
 		var onError = function(){};
 		var onComplete = function(){};

@@ -16,7 +16,7 @@ A game about space station maintenance!
 * Collisions/drone damage
 * Components with update cycles/architecture for various hardware parts
 * Alerts screen with ability to select hardware maintenance jobs
-* Hardware repair interface - needs various ideas for maintenance 'minigames'
+* Hardware interface panels
 * First-level tutorial
 * Handler for drone running out of power/fuel
 * Ability to move drone above or below the station

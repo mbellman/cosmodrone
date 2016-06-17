@@ -402,7 +402,7 @@
 			// 3-character hex color
 			red = hex.charAt( 0 );
 			green = hex.charAt( 1 );
-			blue = hex.charAt( 2);
+			blue = hex.charAt( 2 );
 
 			red += red;
 			green += green;

@@ -261,6 +261,9 @@ function Drone()
 			if ( spin === 0 || distance < 1 )
 			{
 				if ( SPIN_VELOCITY > 25 || distance > 3 ) {
+					// Either distance to angle is < 1 and spin velocity is too high,
+					// or the angle was overshot - either way, reset the spin procedure
+					// so it can continue running on the next cycle and self-correct
 					reset_spin_procedure();
 					return;
 				}
@@ -282,7 +285,7 @@ function Drone()
 			return;
 		}
 
-		// If the drone spinning "away" from [angle]...
+		// If the drone is spinning "away" from [angle]...
 		if (
 			( direction < 0 && spin > 0 ) ||
 			( direction > 0 && spin < 0 )
