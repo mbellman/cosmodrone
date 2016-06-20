@@ -23,22 +23,18 @@ function GameScene( controller )
 	var DRONE_SPEED;                          // Drone acceleration rate
 	var background = new Entity();            // Background scene entity
 	var hud;                                  // HUD component
-	var stage = new Entity();                 // Game stage entity
-
-	// Radio signal check cycle
-	var SIGNAL_CYCLE = 30;                    // Number of [update()] cycles before re-triggering signal strength check
-	var signal_counter = 1;                   // Counts up to [SIGNAL_CYCLE] until triggering the next signal check (approximately twice per second)
-
-	// Dialogue box
+	var frames;                               // FrameCounter component for periodic callbacks
 	var textbox;                              // Dialogue box entity
+	var stage = new Entity();                 // Game stage entity
+	var FLAGS = {};                           // Event flags
 
-	// Event flags
-	var FLAGS = {};                           // Event flags object
+	// Cycle counter limits
+	var SIGNAL_CYCLE = 30;                    // Number of frames before updating radio signal strength
+	var DEBUG_STATS_CYCLE = 3;                // Number of frames before updating debug information
 
 	// Debug variables
 	var DEBUG_MODE = false;                   // Boolean for debug mode state
 	var DEBUG_text;                           // Debug text entity
-	var DEBUG_stats_counter = 0;              // Counts up to 3 before updating debug text (approximately 20 times per second)
 
 	// HardwarePart alert icon graphics
 	var ALERT_RECHARGE = Assets.getImage( 'game/ui/alert/recharger.png' );
@@ -54,27 +50,26 @@ function GameScene( controller )
 	 */
 	function DEBUG_show_stats( dt )
 	{
-		if ( ++DEBUG_stats_counter > 2 ) {
-			DEBUG_stats_counter = 0;
+		dt = Round.toDecimal( dt, 4 );
 
-			var DT_RATIO = ( 1 / 60 ) / dt;
-			var fps = Math.round( 60 * DT_RATIO );
-			var player = drone.get( Point ).getPosition( true );
+		var DT_RATIO = ( 1 / 60 ) / dt;
+		var fps = Math.round( 60 * DT_RATIO );
+		var player = drone.get( Point ).getPosition( true );
 
-			var data = [
-				Viewport.width + ' x ' + Viewport.height,
-				fps + 'fps, ' + dt,
-				'X: ' + player.x + ', Y:' + player.y
-			];
+		var data = [
+			Viewport.width + ' x ' + Viewport.height,
+			fps + 'fps, ' + dt,
+			'X: ' + player.x + ', Y:' + player.y
+		];
 
-			DEBUG_text.get( TextString ).setString( '[rgb=#f00]' + data.join( '[br]' ) );
-		}
+		DEBUG_text.get( TextString )
+			.setString( '[rgb=#f00]' + data.join( '[br]' ) );
 	}
 
 	/**
 	 * Debug-mode-specific cycle updates
 	 */
-	function DEBUG_run_update()
+	function DEBUG_run_updates()
 	{
 		// ...
 	}
@@ -245,6 +240,21 @@ function GameScene( controller )
 	}
 
 	/**
+	 * Set up functions to run periodically
+	 */
+	function register_cycles()
+	{
+		frames = new FrameCounter()
+			.every( SIGNAL_CYCLE, check_radio_signal );
+
+		if ( DEBUG_MODE ) {
+			frames.every( DEBUG_STATS_CYCLE, DEBUG_show_stats );
+		}
+
+		stage.add( frames );
+	}
+
+	/**
 	 * Finish initialization (background generation) and start game
 	 */
 	function init_complete()
@@ -269,6 +279,7 @@ function GameScene( controller )
 		);
 
 		bind_input_handlers();
+		register_cycles();
 		update_camera();
 		set_drone_light_off();
 		_.start();
@@ -349,17 +360,13 @@ function GameScene( controller )
 	 */
 	function check_radio_signal()
 	{
-		if ( ++signal_counter > SIGNAL_CYCLE ) {
-			signal_counter = 1;
+		var radio = find_closest_hardware( 'COMM_DISH' );
 
-			var radio = find_closest_hardware( 'COMM_DISH' );
+		if ( typeof radio.part !== 'undefined' ) {
+			var signal = 4 - Math.floor( clamp( radio.distance, 0, 4000 ) / 1000 );
+			drone.get( Drone ).signal = signal;
 
-			if ( typeof radio.part !== 'undefined' ) {
-				var signal = 4 - Math.floor( clamp( radio.distance, 0, 4000 ) / 1000 );
-				drone.get( Drone ).signal = signal;
-
-				hud.updateRadioSignal( signal );
-			}
+			hud.updateRadioSignal( signal );
 		}
 	}
 
@@ -516,8 +523,7 @@ function GameScene( controller )
 			check_radio_signal();
 
 			if ( DEBUG_MODE ) {
-				DEBUG_show_stats( dt );
-				DEBUG_run_update();
+				DEBUG_run_updates();
 			}
 		}
 	};

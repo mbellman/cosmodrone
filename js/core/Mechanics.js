@@ -356,7 +356,7 @@ function AlertIcon()
  * Component: Countdown
  * --------------------
  *
- * Runs custom events after an elapsed duration
+ * Run a custom handler after an elapsed duration
  */
 function Countdown()
 {
@@ -394,6 +394,51 @@ function Countdown()
 	this.fire = function( handler )
 	{
 		fire = handler;
+		return _;
+	};
+}
+
+/**
+ * -----------------------
+ * Component: FrameCounter
+ * -----------------------
+ *
+ * Run custom handlers after a specific number of frames
+ */
+function FrameCounter()
+{
+	Component.call( this );
+
+	// -- Private: --
+	var _ = this;
+	var cycles = [];
+
+	// -- Public: --
+	this.update = function( dt )
+	{
+		for ( var i = 0 ; i < cycles.length ; i++ ) {
+			var cycle = cycles[i];
+
+			if ( ++cycle.counter > cycle.frames ) {
+				cycle.counter = 0;
+				cycle.handler( dt );
+			}
+		}
+	};
+
+	/**
+	 * Register a [handler] function to fire every number of [frames]
+	 */
+	this.every = function( frames, handler )
+	{
+		cycles.push(
+			{
+				frames: frames,
+				counter: 0,
+				handler: handler
+			}
+		);
+
 		return _;
 	};
 }
