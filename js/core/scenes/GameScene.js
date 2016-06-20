@@ -12,30 +12,38 @@ function GameScene( controller )
 	// -- Private: --
 	var _ = this;
 
-	var running = true;
-	var initialized = false;
-	var level = 1;
-	var input = new InputHandler();
-	var keys = new Keys();
-	var camera;
-	var drone;
-	var DRONE_SPEED;
-	var background = new Entity();
-	var hud;
-	var stage = new Entity();
+	// General variables
+	var running = true;                       // Boolean for game active state
+	var initialized = false;                  // Boolean for game session loaded state
+	var level = 1;                            // Current level
+	var input = new InputHandler();           // Input event manager
+	var keys = new Keys();                    // Key state manager
+	var camera;                               // Game camera object entity
+	var drone;                                // Player drone entity
+	var DRONE_SPEED;                          // Drone acceleration rate
+	var background = new Entity();            // Background scene entity
+	var hud;                                  // HUD component
+	var stage = new Entity();                 // Game stage entity
 
-	var textbox;
-	var textbox_timer = 0;
+	// Radio signal check cycle
+	var SIGNAL_CYCLE = 30;                    // Number of [update()] cycles before re-triggering signal strength check
+	var signal_counter = 1;                   // Counts up to [SIGNAL_CYCLE] until triggering the next signal check (approximately twice per second)
 
+	// Dialogue box
+	var textbox;                              // Dialogue box entity
+
+	// Event flags
+	var FLAGS = {};                           // Event flags object
+
+	// Debug variables
+	var DEBUG_MODE = false;                   // Boolean for debug mode state
+	var DEBUG_text;                           // Debug text entity
+	var DEBUG_stats_counter = 0;              // Counts up to 3 before updating debug text (approximately 20 times per second)
+
+	// HardwarePart alert icon graphics
 	var ALERT_RECHARGE = Assets.getImage( 'game/ui/alert/recharger.png' );
 	var ALERT_REFUEL = Assets.getImage( 'game/ui/alert/refueler.png' );
 	var ALERT_MALFUNCTION = 3;
-
-	var FLAGS = {};
-
-	var DEBUG_MODE = false;
-	var DEBUG_text;
-	var DEBUG_stats_cycle = 0;
 
 	// ------------------------------------- //
 	// ------------- DEBUGGING ------------- //
@@ -46,8 +54,8 @@ function GameScene( controller )
 	 */
 	function DEBUG_show_stats( dt )
 	{
-		if ( ++DEBUG_stats_cycle > 2 ) {
-			DEBUG_stats_cycle = 0;
+		if ( ++DEBUG_stats_counter > 2 ) {
+			DEBUG_stats_counter = 0;
 
 			var DT_RATIO = ( 1 / 60 ) / dt;
 			var fps = Math.round( 60 * DT_RATIO );
@@ -245,7 +253,6 @@ function GameScene( controller )
 
 		input.listen();
 		keys.listen();
-		bind_input_handlers();
 
 		create_player();
 		create_level();
@@ -261,6 +268,7 @@ function GameScene( controller )
 			textbox
 		);
 
+		bind_input_handlers();
 		update_camera();
 		set_drone_light_off();
 		_.start();
@@ -277,6 +285,39 @@ function GameScene( controller )
 	// -------------------------------------------- //
 	// ------------- GAMEPLAY METHODS ------------- //
 	// -------------------------------------------- //
+
+	/**
+	 * Ascertains the closest hardware part of [type] and
+	 * returns an object with its owner entity and distance
+	 */
+	function find_closest_hardware( type )
+	{
+		type = type || '';
+
+		var player = drone.get( Point ).getPosition();
+		var minimum_distance = Number.POSITIVE_INFINITY;
+		var position, distance, target;
+
+		stage.forAllComponentsOfType( HardwarePart, function( part ) {
+			if ( type === '' || part.getSpecs().name === type ) {
+				position = part.getPosition();
+				position.x += part.getSpecs().width / 2;
+				position.y += part.getSpecs().height / 2;
+
+				distance = Vec2.distance( player.x, player.y, position.x, position.y );
+
+				if ( distance < minimum_distance ) {
+					target = part.owner;
+					minimum_distance = distance;
+				}
+			}
+		} );
+
+		return {
+			part: target,
+			distance: minimum_distance
+		};
+	}
 
 	/**
 	 * Make the drone's light blink for 1/5 of a second
@@ -303,33 +344,38 @@ function GameScene( controller )
 	}
 
 	/**
+	 * Determine drone signal strength based on
+	 * the closest 'COMM_DISH' hardware part
+	 */
+	function check_radio_signal()
+	{
+		if ( ++signal_counter > SIGNAL_CYCLE ) {
+			signal_counter = 1;
+
+			var radio = find_closest_hardware( 'COMM_DISH' );
+
+			if ( typeof radio.part !== 'undefined' ) {
+				var signal = 4 - Math.floor( clamp( radio.distance, 0, 4000 ) / 1000 );
+				drone.get( Drone ).signal = signal;
+
+				hud.updateRadioSignal( signal );
+			}
+		}
+	}
+
+	/**
 	 * Check for nearby hardware parts and dock with
 	 * any close enough in proximity to the drone
 	 */
 	function enter_docking_mode()
 	{
-		var player = drone.get( Point ).getPosition();
-		var minimum_distance = Number.POSITIVE_INFINITY;
-		var position, distance, target;
-
-		stage.forAllComponentsOfType( HardwarePart, function( part ) {
-			position = part.getPosition();
-			position.x += part.getSpecs().width / 2;
-			position.y += part.getSpecs().height / 2;
-
-			distance = Vec2.distance( player.x, player.y, position.x, position.y );
-
-			if ( distance < minimum_distance ) {
-				target = part.owner;
-				minimum_distance = distance;
-			}
-		} );
+		var hardware = find_closest_hardware();
 
 		if (
-			minimum_distance < 200 &&
+			hardware.distance < 200 &&
 			drone.get( Point ).getAbsoluteVelocity() < 50
 		) {
-			drone.get( Drone ).dockWith( target );
+			drone.get( Drone ).dockWith( hardware.part );
 		}
 	}
 
@@ -418,21 +464,27 @@ function GameScene( controller )
 	 */
 	function bind_input_handlers()
 	{
+		var _drone = drone.get( Drone );
+
 		// Spin stabilization
 		input.on( 'S', function() {
-			drone.get( Drone ).stabilize();
+			if ( _drone.isControllable() ) {
+				_drone.stabilize();
+			}
 		} );
 
 		// Docking mode
 		input.on( 'D', function() {
-			if ( drone.get( Drone ).isDocked() ) {
-				drone.get( Drone ).undock();
-				hud.hideChargeMeter();
-			} else
-			if ( !drone.get( Drone ).isDocking() ) {
-				enter_docking_mode();
-			} else {
-				drone.get( Drone ).abortDocking();
+			if ( _drone.signal > 0 ) {
+				if ( _drone.isDocked() ) {
+					_drone.undock();
+					hud.hideChargeMeter();
+				} else
+				if ( !_drone.isDocking() ) {
+					enter_docking_mode();
+				} else {
+					_drone.abortDocking();
+				}
 			}
 		} );
 	}
@@ -461,6 +513,7 @@ function GameScene( controller )
 		if ( initialized && running ) {
 			poll_input( dt );
 			update_camera();
+			check_radio_signal();
 
 			if ( DEBUG_MODE ) {
 				DEBUG_show_stats( dt );

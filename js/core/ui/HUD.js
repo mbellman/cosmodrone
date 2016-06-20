@@ -27,8 +27,8 @@ function HUD()
 
 	var COORDINATES = {
 		radio: {
-			x: 75,
-			y: Viewport.height - GRAPHICS.droneHUD.height - 60
+			x: 72,
+			y: Viewport.height - GRAPHICS.droneHUD.height + 95
 		},
 		drone: {
 			HUD: {
@@ -36,34 +36,34 @@ function HUD()
 				y: Viewport.height - GRAPHICS.droneHUD.height - 20
 			},
 			system: {
-				stabilizing: {x: 50, y: -4},
-				docking: {x: 80, y: 1}
+				stabilizing: {x: 50, y: 156},
+				docking: {x: 80, y: 162}
 			},
 			meters: {
 				health: {
 					x: 56,
-					y: 52,
+					y: 212,
 					width: 232,
 					height: 10,
 					color: '#00ff30'
 				},
 				power: {
 					x: 56,
-					y: 70,
+					y: 230,
 					width: 640,
 					height: 18,
 					color: '#00b4cc'
 				},
 				charge: {
 					x: 56,
-					y: 70,
+					y: 230,
 					width: 640,
 					height: 18,
 					color: '#fff'
 				},
 				fuel: {
 					x: 56,
-					y: 76,
+					y: 236,
 					width: 640,
 					height: 6,
 					color: '#ccd'
@@ -88,22 +88,29 @@ function HUD()
 					.setXY( COORDINATES.radio.x, COORDINATES.radio.y )
 			)
 			.addChild(
-				new Entity().add(
-					new Sprite( Assets.getImage( 'game/ui/radio-base.png' ) )
-						.setXY( 10, 16 )
-				),
-				new Entity().add(
-					new SpriteSequence( Assets.getImage( 'game/ui/radio.png' ) )
-						.setOptions(
-							{
-								frames: 8,
-								frameWidth: 28,
-								frameHeight: 22,
-								speed: 100,
-								vertical: true
-							}
-						)
-				)
+				new Entity( 'signal' )
+					.add(
+						new Sprite( Assets.getImage( 'game/ui/radio/signal-4.png' ) )
+							.setXY( 30, 2 )
+					),
+				new Entity()
+					.add(
+						new Sprite( Assets.getImage( 'game/ui/radio/base.png' ) )
+							.setXY( 10, 16 )
+					),
+				new Entity()
+					.add(
+						new SpriteSequence( Assets.getImage( 'game/ui/radio/dish.png' ) )
+							.setOptions(
+								{
+									frames: 8,
+									frameWidth: 28,
+									frameHeight: 22,
+									speed: 100,
+									vertical: true
+								}
+							)
+					)
 			);
 	}
 
@@ -158,8 +165,8 @@ function HUD()
 		create_drone_HUD();
 
 		stage.addChild(
-			ELEMENTS.radio,
-			ELEMENTS.drone
+			ELEMENTS.drone,
+			ELEMENTS.radio
 		);
 	}
 
@@ -212,6 +219,17 @@ function HUD()
 	this.watchDrone = function( drone )
 	{
 		DRONE_DATA = drone;
+		return _;
+	};
+
+	/**
+	 * Display radio signal [strength], between 0 - 4
+	 */
+	this.updateRadioSignal = function( strength )
+	{
+		ELEMENTS.radio.$( 'signal' ).get( Sprite )
+			.setSource( Assets.getImage( 'game/ui/radio/signal-' + strength + '.png' ) );
+
 		return _;
 	};
 

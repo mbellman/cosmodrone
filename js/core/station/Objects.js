@@ -105,10 +105,16 @@ var HardwareParts = {
 		x: -18,
 		y: 2
 	},
-	SATELLITE_1: {
+	SMALL_DISH: {
 		width: 76,
 		height: 86,
 		x: -18,
+		y: 2
+	},
+	COMM_DISH: {
+		width: 112,
+		height: 110,
+		x: -36,
 		y: 2
 	}
 };

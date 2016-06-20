@@ -9,7 +9,6 @@ A game about space station maintenance!
 * Loading bar/indicator of some kind
 
 ##### GAME
-* Radio signal reception mechanic
 * Truss modules
 * Solar panels
 * Additional modules/parts as seen fit

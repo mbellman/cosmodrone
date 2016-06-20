@@ -278,7 +278,7 @@ function TitleScene( controller )
 								select: Assets.getAudio( 'ui/select1.wav' ),
 								invalid: Assets.getAudio( 'ui/error1.wav' )
 							},
-							cursor: Assets.getImage( 'ui/drone-cursor.png' ),
+							cursor: Assets.getImage( 'title/ui/drone-cursor.png' ),
 							cursorOffset: {
 								x: -40,
 								y: 2

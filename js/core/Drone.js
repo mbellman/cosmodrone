@@ -543,6 +543,8 @@ function Drone()
 	}
 
 	// -- Public: --
+	this.signal = 4;                  // Radio signal strength
+
 	this.update = function( dt )
 	{
 		if ( docking.on && is_operational() ) {
@@ -712,11 +714,11 @@ function Drone()
 	};
 
 	/**
-	 * Check to see whether Drone can be controlled
+	 * Check to see whether Drone can be player-controlled
 	 */
 	this.isControllable = function()
 	{
-		return ( is_operational() && !docking.on && !is_docked);
+		return ( is_operational() && _.signal > 0 && !docking.on && !is_docked);
 	};
 
 	/**

@@ -23,30 +23,30 @@
 						{side: 'right', index: 1, name: 'REFUELER'},
 					],
 					3: [
-						{side: 'left', index: 2, name: 'SATELLITE_1'}
+						{side: 'left', index: 2, name: 'SMALL_DISH'}
 					]
 				},
 				1: {
 					1: [
 						{side: 'left', index: 1, name: 'RECHARGER'},
 						{side: 'right', index: 2, name: 'REFUELER'},
-						{side: 'left', index: 3, name: 'SATELLITE_1'},
-						{side: 'right', index: 3, name: 'SATELLITE_1'},
+						{side: 'left', index: 3, name: 'SMALL_DISH'},
+						{side: 'right', index: 3, name: 'SMALL_DISH'},
 					],
 					3: [
-						{side: 'left', index: 1, name: 'SATELLITE_1'},
-						{side: 'right', index: 1, name: 'SATELLITE_1'}
+						{side: 'left', index: 1, name: 'COMM_DISH'},
+						{side: 'right', index: 1, name: 'SMALL_DISH'}
 					]
 				},
 				2: {
 					0: [
 						{side: 'top', index: 1, name: 'RECHARGER'},
-						{side: 'top', index: 2, name: 'SATELLITE_1'},
+						{side: 'top', index: 2, name: 'SMALL_DISH'},
 						{side: 'bottom', index: 1, name: 'RECHARGER'},
 						{side: 'bottom', index: 2, name: 'REFUELER'},
 					],
 					1: [
-						{side: 'bottom', index: 2, name: 'SATELLITE_1'}
+						{side: 'bottom', index: 2, name: 'SMALL_DISH'}
 					]
 				}
 			},
