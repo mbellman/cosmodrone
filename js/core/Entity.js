@@ -151,8 +151,7 @@ function Entity( name )
 	this.disposeChildren = function()
 	{
 		for ( var c = 0 ; c < children.length ; c++ ) {
-			children[c].disposeComponents();
-			children[c].disposeChildren();
+			children[c].disposeAll();
 		}
 
 		children.length = 0;
@@ -169,6 +168,16 @@ function Entity( name )
 		}
 
 		components.length = 0;
+		return _;
+	};
+
+	/**
+	 * Get rid of all children and components
+	 */
+	this.disposeAll = function()
+	{
+		_.disposeComponents();
+		_.disposeChildren();
 		return _;
 	};
 

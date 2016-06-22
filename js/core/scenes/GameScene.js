@@ -18,15 +18,16 @@ function GameScene( controller )
 	var level = 1;                            // Current level
 	var input = new InputHandler();           // Input event manager
 	var keys = new Keys();                    // Key state manager
+	var stage = new Entity();                 // Game entity hierarchy
+	var background;                           // Background scene entity
+	var station;                              // Space station entity hierarchy
 	var camera;                               // Game camera object entity
 	var drone;                                // Player drone entity
-	var DRONE_SPEED;                          // Drone acceleration rate
-	var background = new Entity();            // Background scene entity
-	var hud;                                  // HUD component
-	var frames;                               // FrameCounter component for periodic callbacks
+	var hud;                                  // HUD entity
 	var textbox;                              // Dialogue box entity
-	var stage = new Entity();                 // Game stage entity
+	var frames;                               // FrameCounter component for periodic callbacks
 	var FLAGS = {};                           // Event flags
+	var DRONE_SPEED;                          // Drone acceleration rate
 
 	// Cycle counter limits
 	var SIGNAL_CYCLE = 30;                    // Number of frames before updating radio signal strength
@@ -83,7 +84,7 @@ function GameScene( controller )
 	 */
 	function create_background()
 	{
-		if ( background.has( Background ) ) {
+		if ( typeof background !== 'undefined' && background.has( Background ) ) {
 			return;
 		}
 
@@ -93,44 +94,45 @@ function GameScene( controller )
 		_.pause();
 
 		// TODO: Load background configuration options from level data
-		background.add(
-			new Background()
-				.configure(
-					{
-						iterations: 11,
-						elevation: 250,
-						concentration: 35,
-						smoothness: 8,
-						repeat: true,
-						cities: 250,
-						maxCitySize: 45,
-						tileSize: 2,
-						lightAngle: 220,
-						//hours: [12, 19, 20, 0, 4, 6],
-						hours: [12],
-						cycleSpeed: 60,
-						scrollSpeed:
+		background = new Entity()
+			.add(
+				new Background()
+					.configure(
 						{
-							x: -10,
-							y: -2
-						},
-						pixelSnapping: false
-					}
-				)
-				.build(
-					{
-						progress: function( rendered, total )
-						{
-							console.log('Rendering...' + rendered + '/' + total + '...');
-						},
-						complete: function()
-						{
-							console.log('Total init time: ' + ( Date.now() - t ) + 'ms');
-							init_complete();
+							iterations: 11,
+							elevation: 250,
+							concentration: 35,
+							smoothness: 8,
+							repeat: true,
+							cities: 250,
+							maxCitySize: 45,
+							tileSize: 2,
+							lightAngle: 220,
+							hours: [12, 19, 20, 0, 4, 6],
+							//hours: [12],
+							cycleSpeed: 60,
+							scrollSpeed:
+							{
+								x: -10,
+								y: -2
+							},
+							pixelSnapping: false
 						}
-					}
-				)
-		);
+					)
+					.build(
+						{
+							progress: function( rendered, total )
+							{
+								console.log('Rendering...' + rendered + '/' + total + '...');
+							},
+							complete: function()
+							{
+								console.log('Total init time: ' + ( Date.now() - t ) + 'ms');
+								init_complete();
+							}
+						}
+					)
+			);
 
 		stage.addChild( background );
 	}
@@ -140,7 +142,7 @@ function GameScene( controller )
 	 */
 	function destroy_background()
 	{
-		if ( background !== null && background.has( Background ) ) {
+		if ( typeof background !== 'undefined' && background.has( Background ) ) {
 			background.remove( Background );
 		}
 	}
@@ -150,7 +152,8 @@ function GameScene( controller )
 	 */
 	function create_player()
 	{
-		camera = new Entity().add( new Point() );
+		camera = new Entity()
+			.add( new Point() );
 
 		drone = new Entity()
 			.add( new Point() )
@@ -169,11 +172,13 @@ function GameScene( controller )
 	}
 
 	/**
-	 * Load and create level layout, adding
-	 * returned entities to the [stage]
+	 * Create a new [station] entity, load and create a new
+	 * [level] layout, and add the returned entities to [station]
 	 */
 	function create_level()
 	{
+		station = new Entity();
+
 		var entities = new LevelLoader()
 			.buildLevel( level )
 			.getEntities();
@@ -185,18 +190,16 @@ function GameScene( controller )
 				.setOffset( Viewport.width / 2, Viewport.height / 2 )
 				.setPivot( camera.get( Point ) );
 
-			stage.addChild( module );
+			station.addChild( module );
 		}
 	}
 
 	/**
-	 * Set up persistent alert icons near recharging/refueling ports
+	 * Set up persistent alert icons near all hardware parts
 	 */
-	function create_static_alerts()
+	function create_alert_icons()
 	{
-		var container, side;
-
-		stage.forAllComponentsOfType( HardwarePart, function( part ) {
+		station.forAllComponentsOfType( HardwarePart, function( part ) {
 			switch ( part.getSpecs().name ) {
 				case 'RECHARGER':
 					part.setAlert( ALERT_RECHARGE );
@@ -205,6 +208,7 @@ function GameScene( controller )
 					part.setAlert( ALERT_REFUEL );
 					break;
 				default:
+					// TODO: Consider adding a default "docking" alert to remaining hardware
 					break;
 			}
 		} );
@@ -240,6 +244,24 @@ function GameScene( controller )
 	}
 
 	/**
+	 * Set up the HUD entity
+	 */
+	function create_HUD()
+	{
+		hud = new Entity()
+			.add(
+				new HUD()
+					.watch(
+						{
+							drone: drone.get( Drone ),
+							camera: camera.get( Point ),
+							station: station
+						}
+					)
+			);
+	}
+
+	/**
 	 * Set up functions to run periodically
 	 */
 	function register_cycles()
@@ -266,17 +288,11 @@ function GameScene( controller )
 
 		create_player();
 		create_level();
-		create_static_alerts();
+		create_alert_icons();
 		create_textbox();
+		create_HUD();
 
-		hud = new HUD().watchDrone( drone.get( Drone ) );
-
-		stage.addChild(
-			camera,
-			drone,
-			new Entity().add( hud ),
-			textbox
-		);
+		stage.addChild( station, camera, drone, hud, textbox );
 
 		bind_input_handlers();
 		register_cycles();
@@ -284,7 +300,7 @@ function GameScene( controller )
 		set_drone_light_off();
 		_.start();
 
-		print_dialogue( 'Dialogue test. Testing. 1234567890. +!-_-!+' );
+		print_dialogue( 'Welcome! Testing! Test. Testing! 1234567890! : - )' );
 
 		if ( DEBUG_MODE ) {
 			DEBUG_text = new Entity()
@@ -298,6 +314,21 @@ function GameScene( controller )
 	// -------------------------------------------- //
 
 	/**
+	 * Set the [camera] position to a value between
+	 * its current position and the drone position
+	 */
+	function update_camera()
+	{
+		var view = camera.get( Point ).getPosition();
+		var player = drone.get( Point ).getPosition();
+
+		camera.get( Point ).setPosition(
+			lerp( view.x, player.x, 0.075 ),
+			lerp( view.y, player.y, 0.075 )
+		);
+	}
+
+	/**
 	 * Ascertains the closest hardware part of [type] and
 	 * returns an object with its owner entity and distance
 	 */
@@ -309,7 +340,7 @@ function GameScene( controller )
 		var minimum_distance = Number.POSITIVE_INFINITY;
 		var position, distance, target;
 
-		stage.forAllComponentsOfType( HardwarePart, function( part ) {
+		station.forAllComponentsOfType( HardwarePart, function( part ) {
 			if ( type === '' || part.getSpecs().name === type ) {
 				position = part.getPosition();
 				position.x += part.getSpecs().width / 2;
@@ -366,7 +397,7 @@ function GameScene( controller )
 			var signal = 4 - Math.floor( clamp( radio.distance, 0, 4000 ) / 1000 );
 			drone.get( Drone ).signal = signal;
 
-			hud.updateRadioSignal( signal );
+			hud.get( HUD ).updateRadioSignal( signal );
 		}
 	}
 
@@ -394,7 +425,7 @@ function GameScene( controller )
 		switch ( specs.name ) {
 			case 'RECHARGER':
 				print_dialogue( 'This is a recharger unit. Use it to recharge your power!' );
-				hud.showChargeMeter();
+				hud.get( HUD ).showChargeMeter();
 				break;
 			case 'REFUELER':
 				print_dialogue( 'This is a refueler unit. Use it to refuel your propellant!' );
@@ -430,10 +461,10 @@ function GameScene( controller )
 			show_dialogue();
 		}
 
-		var timer = 10 + ( string.length * 30 ) / 1000;
+		var hide_delay = 10 + ( string.length * 30 ) / 1000;
 
 		textbox.find( TextPrinter ).print( string );
-		textbox.find( Countdown ).wait( timer );
+		textbox.find( Countdown ).wait( hide_delay );
 	}
 
 	// ----------------------------------------- //
@@ -485,7 +516,7 @@ function GameScene( controller )
 			if ( _drone.signal > 0 ) {
 				if ( _drone.isDocked() ) {
 					_drone.undock();
-					hud.hideChargeMeter();
+					hud.get( HUD ).hideChargeMeter();
 				} else
 				if ( !_drone.isDocking() ) {
 					enter_docking_mode();
@@ -496,31 +527,12 @@ function GameScene( controller )
 		} );
 	}
 
-	// --------------------------------------- //
-	// ------------- UPDATE LOOP ------------- //
-	// --------------------------------------- //
-
-	/**
-	 * Have the camera follow the player drone with a slight delay
-	 */
-	function update_camera()
-	{
-		var view = camera.get( Point ).getPosition();
-		var player = drone.get( Point ).getPosition();
-
-		camera.get( Point ).setPosition(
-			lerp( view.x, player.x, 0.075 ),
-			lerp( view.y, player.y, 0.075 )
-		);
-	}
-
 	// Public:
 	this.update = function( dt )
 	{
 		if ( initialized && running ) {
 			poll_input( dt );
 			update_camera();
-			check_radio_signal();
 
 			if ( DEBUG_MODE ) {
 				DEBUG_run_updates();
@@ -589,15 +601,12 @@ function GameScene( controller )
 	this.unload = function()
 	{
 		initialized = false;
-		_.pause();
-		destroy_background();
 
+		_.pause();
 		keys.unlisten().reset();
 		input.unlisten().unbindEvents();
-		camera = null;
-		drone = null;
-		stage.disposeChildren();
-
+		destroy_background();
+		stage.disposeAll();
 		return _;
 	};
 

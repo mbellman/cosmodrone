@@ -12,28 +12,34 @@ function HUD()
 	// -- Private: --
 	var _ = this;
 
-	var GRAPHICS = {
+	// Shorthand asset references
+	var Graphics = {
 		droneHUD: Assets.getImage( 'game/ui/drone.png' )
 	};
 
-	var DRONE_DATA;
-	var stage = new Entity();
-
-	var charging = {
-		on: false,
-		timer: 0,
-		speed: 15
+	// Major HUD element groups
+	var Elements = {
+		radar: null,
+		radio: null,
+		drone: null
 	};
 
-	var COORDINATES = {
+	// HUD element group display coordinates
+	var Coordinates = {
+		radar: {
+			x: 72,
+			y: Viewport.height - Graphics.droneHUD.height - 10,
+			width: 150,
+			height: 100
+		},
 		radio: {
 			x: 72,
-			y: Viewport.height - GRAPHICS.droneHUD.height + 95
+			y: Viewport.height - Graphics.droneHUD.height + 95
 		},
 		drone: {
 			HUD: {
 				x: 10,
-				y: Viewport.height - GRAPHICS.droneHUD.height - 20
+				y: Viewport.height - Graphics.droneHUD.height - 20
 			},
 			system: {
 				stabilizing: {x: 50, y: 156},
@@ -72,20 +78,51 @@ function HUD()
 		}
 	};
 
-	var ELEMENTS = {
-		radio: null,
-		drone: null
+	// Important game objects
+	var Data = {
+		// Player Drone component
+		drone: null,
+		// Camera Point component
+		camera: null,
+		// Space station group entity
+		station: null
 	};
 
+	// Power charge meter variables
+	var charging = {
+		on: false,
+		timer: 0,
+		speed: 15
+	};
+
+	// HUD stage
+	var stage = new Entity();
+
 	/**
-	 * Set up the radio signal indicator
+	 * Set up the local radar map entity
+	 */
+	function create_radar_map()
+	{
+		Elements.radar = new Entity()
+			.add(
+				new Sprite()
+					.setXY( Coordinates.radar.x, Coordinates.radar.y )
+			)
+			.add(
+				new Radar()
+					.setSize( Coordinates.radar.width, Coordinates.radar.height )
+			);
+	}
+
+	/**
+	 * Set up the radio signal indicator entity
 	 */
 	function create_radio_meter()
 	{
-		ELEMENTS.radio = new Entity()
+		Elements.radio = new Entity()
 			.add(
 				new Sprite()
-					.setXY( COORDINATES.radio.x, COORDINATES.radio.y )
+					.setXY( Coordinates.radio.x, Coordinates.radio.y )
 			)
 			.addChild(
 				new Entity( 'signal' )
@@ -115,22 +152,22 @@ function HUD()
 	}
 
 	/**
-	 * Set up the drone stats HUD
+	 * Set up the drone stats meter area entity
 	 */
-	function create_drone_HUD()
+	function create_drone_meters()
 	{
 		var display;
 
-		ELEMENTS.drone = new Entity()
+		Elements.drone = new Entity()
 			.add(
-				new Sprite( GRAPHICS.droneHUD )
-					.setXY( COORDINATES.drone.HUD.x, COORDINATES.drone.HUD.y )
+				new Sprite( Graphics.droneHUD )
+					.setXY( Coordinates.drone.HUD.x, Coordinates.drone.HUD.y )
 			);
 
-		for ( var indicator in COORDINATES.drone.system ) {
-			display = COORDINATES.drone.system[indicator];
+		for ( var indicator in Coordinates.drone.system ) {
+			display = Coordinates.drone.system[indicator];
 
-			ELEMENTS.drone.addChild(
+			Elements.drone.addChild(
 				new Entity()
 					.add(
 						new Sprite()
@@ -139,11 +176,11 @@ function HUD()
 			);
 		}
 
-		for ( var meter in COORDINATES.drone.meters )
+		for ( var meter in Coordinates.drone.meters )
 		{
-			display = COORDINATES.drone.meters[meter];
+			display = Coordinates.drone.meters[meter];
 
-			ELEMENTS.drone.addChild(
+			Elements.drone.addChild(
 				new Entity( meter )
 					.add(
 						new FillSprite( display.color, display.width, display.height )
@@ -153,7 +190,7 @@ function HUD()
 		}
 
 		// Charge meter is invisible by default
-		ELEMENTS.drone.$( 'charge' ).get( FillSprite ).setAlpha( 0 );
+		Elements.drone.$( 'charge' ).get( FillSprite ).setAlpha( 0 );
 	}
 
 	/**
@@ -161,39 +198,54 @@ function HUD()
 	 */
 	function generate_HUD_layout()
 	{
+		create_radar_map();
 		create_radio_meter();
-		create_drone_HUD();
+		create_drone_meters();
 
 		stage.addChild(
-			ELEMENTS.drone,
-			ELEMENTS.radio
+			Elements.drone,
+			Elements.radar,
+			Elements.radio
 		);
 	}
 
-	// -- Public: --
-	this.update = function( dt )
+	/**
+	 * Update the local radar
+	 */
+	function refresh_radar()
 	{
-		var system = DRONE_DATA.getSystem();
+		Elements.radar.get( Radar ).scan(
+			Data.station,
+			Data.drone.owner.get( Point )
+		);
+	}
+
+	/**
+	 * Update drone system state icons and stat meters
+	 */
+	function refresh_drone_HUD()
+	{
+		var system = Data.drone.getSystem();
 		var i = 0;
 
-		for ( var indicator in COORDINATES.drone.system ) {
+		for ( var indicator in Coordinates.drone.system ) {
 			var state = ( system[indicator] ? 'on.png' : 'off.png' );
 			var file = 'game/ui/indicators/' + indicator + '-' + state;
 
-			ELEMENTS.drone.child( i++ ).get( Sprite )
+			Elements.drone.child( i++ ).get( Sprite )
 				.setSource( Assets.getImage( file ) );
 		}
 
-		for ( var meter in COORDINATES.drone.meters ) {
+		for ( var meter in Coordinates.drone.meters ) {
 			if ( meter === 'charge' ) {
 				meter = 'power';
 			}
 
-			var display = COORDINATES.drone.meters[meter];
+			var display = Coordinates.drone.meters[meter];
 			var depletion = ( system[meter] / system['MAX_' + meter.toUpperCase()] );
 			var width = Math.round( depletion * display.width );
 
-			ELEMENTS.drone.child( i++ ).get( FillSprite )
+			Elements.drone.child( i++ ).get( FillSprite )
 				.setSize( width, display.height )
 		}
 
@@ -202,9 +254,16 @@ function HUD()
 
 			var flash = ( 1 + Math.sin( charging.speed * charging.timer ) ) / 2;
 
-			ELEMENTS.drone.$( 'charge' ).get( FillSprite )
+			Elements.drone.$( 'charge' ).get( FillSprite )
 				.setAlpha( flash );
 		}
+	}
+
+	// -- Public: --
+	this.update = function( dt )
+	{
+		refresh_radar();
+		refresh_drone_HUD();
 	};
 
 	this.onAdded = function()
@@ -214,11 +273,17 @@ function HUD()
 	};
 
 	/**
-	 * Save a reference to the [drone] component instance
+	 * Save references to important game [objects] so
+	 * their HUD data can be updated in real-time
 	 */
-	this.watchDrone = function( drone )
+	this.watch = function( objects )
 	{
-		DRONE_DATA = drone;
+		for ( var object in objects ) {
+			if ( Data.hasOwnProperty( object ) ) {
+				Data[object] = objects[object];
+			}
+		}
+
 		return _;
 	};
 
@@ -227,7 +292,7 @@ function HUD()
 	 */
 	this.updateRadioSignal = function( strength )
 	{
-		ELEMENTS.radio.$( 'signal' ).get( Sprite )
+		Elements.radio.$( 'signal' ).get( Sprite )
 			.setSource( Assets.getImage( 'game/ui/radio/signal-' + strength + '.png' ) );
 
 		return _;
@@ -250,7 +315,7 @@ function HUD()
 	{
 		charging.on = false;
 
-		ELEMENTS.drone.$( 'charge' ).get( Sprite )
+		Elements.drone.$( 'charge' ).get( Sprite )
 			.alpha.tweenTo( 0, 0.5, Ease.quad.out);
 
 		return _;

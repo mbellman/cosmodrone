@@ -1,4 +1,6 @@
 // Script imports
+//
+// TODO: Eventually compactify all scripts into one and minify it
 include(
 	[
 		'js/dependencies/jquery-2.2.3.js',
@@ -28,6 +30,7 @@ include(
 		'js/core/ui/Text.js',
 		'js/core/ui/Menu.js',
 		'js/core/ui/HUD.js',
+		'js/core/ui/Radar.js',
 		'js/core/station/Objects.js',
 		'js/core/scenes/TitleScene.js',
 		'js/core/scenes/GameScene.js'

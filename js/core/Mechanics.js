@@ -264,9 +264,9 @@ function AlertIcon()
 		}
 
 		return {
-			POSITION: position,
-			ARROW: arrow,
-			OSCILLATION: oscillation
+			position: position,
+			arrow: arrow,
+			oscillation: oscillation
 		};
 	}
 
@@ -316,17 +316,17 @@ function AlertIcon()
 			.remove( Oscillation )
 			.add(
 				new Sprite( Assets.getImage( 'game/ui/alert/alert-box.png' ) )
-					.setXY( offsets.POSITION.x, offsets.POSITION.y )
+					.setXY( offsets.position.x, offsets.position.y )
 					.centerOrigin()
 			)
 			.add(
-				new Oscillation( offsets.OSCILLATION.W, offsets.OSCILLATION.H )
+				new Oscillation( offsets.oscillation.W, offsets.oscillation.H )
 					.setPeriod( 1 )
 			)
 			.addChild(
 				new Entity().add(
 					new Sprite( arrow )
-						.setXY( offsets.ARROW.x, offsets.ARROW.y )
+						.setXY( offsets.arrow.x, offsets.arrow.y )
 				),
 				new Entity().add(
 					new Sprite( graphic )

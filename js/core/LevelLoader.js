@@ -146,7 +146,7 @@
 					position.y = module.terminals[terminal].y + specs.y;
 
 					entities.push(
-						new Entity()
+						new Entity( 'hardware' )
 							.add(
 								new Sprite( Assets.getImage( specs.file ) )
 									.setXY( position.x, position.y )
@@ -181,7 +181,7 @@
 		/**
 		 * Returns the opposite docking side based on a string
 		 */
-		function opposite_side( side )
+		function get_opposite_side( side )
 		{
 			if ( side === 'top' ) return 'bottom';
 			if ( side === 'left' ) return 'right';
@@ -195,13 +195,13 @@
 		 */
 		function create_module( specs, position_X, position_Y )
 		{
-			var module = new Entity()
+			var module = new Entity( 'module' )
+				.add(
+					new Sprite( Assets.getImage( specs.file ) )
+				)
 				.add(
 					new Point()
 						.setPosition( position_X, position_Y )
-				)
-				.add(
-					new Sprite( Assets.getImage( specs.file ) )
 				);
 
 			return module;
@@ -229,14 +229,24 @@
 					offshoot.index = adjacents[side];
 
 					// Make sure adjacent index is within level layout bounds
-					if ( offshoot.index.x >= 0 && offshoot.index.y >= 0 && offshoot.index.x < width && offshoot.index.y < height ) {
+					if (
+						offshoot.index.x >= 0 &&
+						offshoot.index.y >= 0 &&
+						offshoot.index.x < width &&
+						offshoot.index.y < height
+					) {
 						offshoot.module = data.layout[offshoot.index.y][offshoot.index.x];
 						offshoot.specs = get_module_specs( offshoot.module );
 
+						// A valid new offshoot module:
 						if (
+							// 1. Has a proper module ID
 							offshoot.module !== 0 &&
+							// 2. Can dock to the parent module on this side
 							parent.docking.hasOwnProperty( side ) &&
-							offshoot.specs.docking.hasOwnProperty( opposite_side( side ) ) &&
+							// 3. Has its own docking port on the opposite joining side
+							offshoot.specs.docking.hasOwnProperty( get_opposite_side( side ) ) &&
+							// 4. And hasn't been built yet
 							!is_built[offshoot.index.y][offshoot.index.x]
 						) {
 							offshoots[side] = {
