@@ -243,6 +243,14 @@ function Sprite( _source )
 	};
 
 	/**
+	 * Returns the Sprite's source asset
+	 */
+	this.getSource = function()
+	{
+		return source;
+	};
+
+	/**
 	 * Returns the Sprite's bounding rectangle
 	 */
 	this.getBoundingBox = function()

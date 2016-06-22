@@ -82,8 +82,6 @@ function HUD()
 	var Data = {
 		// Player Drone component
 		drone: null,
-		// Camera Point component
-		camera: null,
 		// Space station group entity
 		station: null
 	};
@@ -216,14 +214,14 @@ function HUD()
 	{
 		Elements.radar.get( Radar ).scan(
 			Data.station,
-			Data.drone.owner.get( Point )
+			Data.drone.owner.get( Sprite )
 		);
 	}
 
 	/**
 	 * Update drone system state icons and stat meters
 	 */
-	function refresh_drone_HUD()
+	function refresh_drone_HUD( dt )
 	{
 		var system = Data.drone.getSystem();
 		var i = 0;
@@ -263,7 +261,7 @@ function HUD()
 	this.update = function( dt )
 	{
 		refresh_radar();
-		refresh_drone_HUD();
+		refresh_drone_HUD( dt );
 	};
 
 	this.onAdded = function()

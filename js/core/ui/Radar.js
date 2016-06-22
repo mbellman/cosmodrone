@@ -46,7 +46,7 @@ function Radar()
 	{
 		map.sprite.clear();
 
-		var offset = source.getPosition();
+		var offset = source.getBoundingBox();
 		var display;
 
 		station.forDirectChildren( function( module ) {
@@ -54,12 +54,12 @@ function Radar()
 
 			map.sprite
 				.draw.rectangle(
-					center.x - ( scale * offset.x ) + ( scale * display.x ),
-					center.y - ( scale * offset.y ) + ( scale * display.y ),
+					center.x + ( scale * ( display.x - offset.x ) ),
+					center.y + ( scale * ( display.y - offset.y ) ),
 					( scale * display.width ),
 					( scale * display.height )
 				)
-				.fill( '#fff' )
+				.fill( '#fff' );
 		} );
 
 		return _;

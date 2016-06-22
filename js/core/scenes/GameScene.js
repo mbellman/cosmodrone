@@ -254,7 +254,6 @@ function GameScene( controller )
 					.watch(
 						{
 							drone: drone.get( Drone ),
-							camera: camera.get( Point ),
 							station: station
 						}
 					)
@@ -566,8 +565,8 @@ function GameScene( controller )
 		// Safeguard for calling init() again on a loaded instance
 		_.unload();
 
-		create_background();
-		//init_complete();
+		//create_background();
+		init_complete();
 		return _;
 	};
 
