@@ -54,6 +54,15 @@ function Tweenable( value )
 	};
 
 	/**
+	 * Update the Tweenable value
+	 */
+	this.set = function( value )
+	{
+		_._ = value;
+		return _;
+	};
+
+	/**
 	 * Start a tween to [value] over [seconds] using [easing]
 	 */
 	this.tweenTo = function( value, seconds, easing, callback )

@@ -4,6 +4,7 @@
  * ----------------
  *
  * A static or moving [x, y] coordinate
+ * which can be coupled with Sprites
  */
 function Point()
 {
@@ -37,10 +38,14 @@ function Point()
 	 */
 	this.getPosition = function( is_rounded )
 	{
-		return {
-			x: ( !!is_rounded ? Math.floor( position.x ) : position.x ),
-			y: ( !!is_rounded ? Math.floor( position.y ) : position.y )
-		};
+		if ( !!is_rounded ) {
+			return {
+				x: Math.floor( position.x ),
+				y: Math.floor( position.y )
+			};
+		}
+
+		return position;
 	};
 
 	/**
@@ -48,14 +53,11 @@ function Point()
 	 */
 	this.getVelocity = function()
 	{
-		return {
-			x: velocity.x,
-			y: velocity.y
-		};
+		return velocity;
 	};
 
 	/**
-	 * Get the velocity's magnitude for a moving Point
+	 * Get the magnitude of the velocity of a moving Point
 	 */
 	this.getAbsoluteVelocity = function()
 	{
@@ -101,9 +103,10 @@ function HardwarePart()
 
 	// -- Private: --
 	var _ = this;
-	var x = 0;
-	var y = 0;
 	var specs = {};
+	var position = {x: 0, y: 0};
+	var sprite = null;
+	var point = null;
 	var moving = false;
 
 	/**
@@ -113,14 +116,31 @@ function HardwarePart()
 	 */
 	function update_coordinates()
 	{
-		if ( _.owner !== null && _.owner.parent !== null ) {
-			if ( _.owner.has( Sprite ) && _.owner.parent.has( Point ) ) {
-				var module = _.owner.parent.get( Point ).getPosition();
-				var sprite = _.owner.get( Sprite );
+		if ( point !== null && sprite !== null ) {
+			var module = point.getPosition();
 
-				x = module.x + sprite.x._;
-				y = module.y + sprite.y._;
-			}
+			position.x = module.x + sprite.x._;
+			position.y = module.y + sprite.y._;
+		}
+	}
+
+	/**
+	 * Save a reference to the owner entity's Sprite
+	 */
+	function update_sprite()
+	{
+		if ( _.owner.has( Sprite ) ) {
+			sprite = _.owner.get( Sprite );
+		}
+	}
+
+	/**
+	 * Save a reference to the owner's parent entity's Point
+	 */
+	function update_point()
+	{
+		if ( _.owner.parent.has( Point ) ) {
+			point = _.owner.parent.get( Point );
 		}
 	}
 
@@ -132,19 +152,27 @@ function HardwarePart()
 		}
 	};
 
+	this.onAdded = function()
+	{
+		update_sprite();
+	};
+
 	this.onOwnerAddedToParent = function()
 	{
+		update_sprite();
+		update_point();
 		update_coordinates();
 	};
 
 	/**
-	 * Return hardware part position
+	 * Return hardware part position (as a cloned
+	 * object to avoid external value overriding)
 	 */
 	this.getPosition = function()
 	{
 		return {
-			x: x,
-			y: y
+			x: position.x,
+			y: position.y
 		};
 	};
 

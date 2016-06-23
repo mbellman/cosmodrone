@@ -12,12 +12,6 @@ function Drone()
 	// -- Private: --
 	var _ = this;
 
-	var spin = 0;
-	var power = 500;
-	var fuel = 350;
-	var health = 100;
-	var stabilizing = false;
-
 	// Flags for automatic spin maneuvering
 	var spin_accelerate = false;
 	var spin_decelerate = false;
@@ -28,8 +22,6 @@ function Drone()
 
 	// Values/flags for automatic docking
 	var docking = {
-		// Docking state boolean
-		on: false,
 		// Docking target hardware part
 		target: null,
 		// Target hardware type
@@ -45,15 +37,33 @@ function Drone()
 		complete: function() {}
 	};
 
-	var is_docked = false;
+	// Drone stats object
+	var System = {
+		// Angular velocity
+		spin: 0,
+		// Spin stabilization state boolean
+		stabilizing: false,
+		// docking state boolean
+		docking: false,
+		// Power level
+		power: 500,
+		// Fuel level
+		fuel: 350,
+		// Drone health
+		health: 100,
+		// Instantaneous thrust speed
+		MAX_SPEED: 3,
+		// Upper bound for power
+		MAX_POWER: 500,
+		// Upper bound for fuel
+		MAX_FUEL: 350,
+		// Upper bound for health
+		MAX_HEALTH: 100
+	};
 
+	var is_docked = false;
 	var out_of_power = false;
 	var out_of_fuel = false;
-
-	var MAX_SPEED = 3;
-	var MAX_POWER = 500;
-	var MAX_FUEL = 350;
-	var MAX_HEALTH = 100;
 
 	var thrusters = new Entity();
 
@@ -70,8 +80,8 @@ function Drone()
 	 */
 	function system_shutdown()
 	{
-		stabilizing = false;
-		docking.on = false;
+		System.stabilizing = false;
+		System.docking = false;
 	}
 
 	/**
@@ -226,12 +236,12 @@ function Drone()
 	 */
 	function stabilize_spin()
 	{
-		stabilizing = true;
-		spin *= 0.9;
+		System.stabilizing = true;
+		System.spin *= 0.9;
 
-		if ( Math.abs( spin ) < 1 ) {
-			stabilizing = false;
-			spin = 0;
+		if ( Math.abs( System.spin ) < 1 ) {
+			System.stabilizing = false;
+			System.spin = 0;
 		}
 	}
 
@@ -253,12 +263,12 @@ function Drone()
 
 		var distance = get_spin_distance( _.owner.get( Sprite ).rotation._, angle );
 		var direction = get_spin_direction( angle );
-		var SPIN_VELOCITY = Math.abs( spin );
+		var SPIN_VELOCITY = Math.abs( System.spin );
 
 		if ( spin_decelerate ) {
 			stabilize_spin();
 
-			if ( spin === 0 || distance < 1 )
+			if ( System.spin === 0 || distance < 1 )
 			{
 				if ( SPIN_VELOCITY > 25 || distance > 3 ) {
 					// Either distance to angle is < 1 and spin velocity is too high,
@@ -268,8 +278,8 @@ function Drone()
 					return;
 				}
 
-				spin = 0;
-				stabilizing = false;
+				System.spin = 0;
+				System.stabilizing = false;
 				_.owner.get( Sprite ).rotation._ = angle;
 			}
 
@@ -277,7 +287,7 @@ function Drone()
 		}
 
 		if ( spin_accelerate && SPIN_VELOCITY < 200 ) {
-			_.addSpin( MAX_SPEED * direction );
+			_.addSpin( System.MAX_SPEED * direction );
 		}
 
 		if ( distance < ( 10 * SPIN_VELOCITY * dt ) ) {
@@ -287,15 +297,15 @@ function Drone()
 
 		// If the drone is spinning "away" from [angle]...
 		if (
-			( direction < 0 && spin > 0 ) ||
-			( direction > 0 && spin < 0 )
+			( direction < 0 && System.spin > 0 ) ||
+			( direction > 0 && System.spin < 0 )
 		) {
 			// ...and if it is spinning slowly enough,
 			// slow down and prepare to spin the other way
 			if ( SPIN_VELOCITY < 75 ) {
 				stabilize_spin();
 
-				if ( spin === 0 ) {
+				if ( System.spin === 0 ) {
 					spin_accelerate = true;
 					return;
 				}
@@ -313,9 +323,9 @@ function Drone()
 	{
 		var specs = target.get( HardwarePart ).getSpecs();
 
-		stabilizing = false;
+		System.stabilizing = false;
+		System.docking = true;
 
-		docking.on = true;
 		docking.target = target;
 		docking.hardware = specs.name;
 		docking.angle = get_docking_angle( specs.orientation );
@@ -362,9 +372,9 @@ function Drone()
 
 			// 2. Slow drone to 0 velocity
 			case 2:
-				if ( _.owner.get( Point ).getAbsoluteVelocity() > MAX_SPEED ) {
+				if ( _.owner.get( Point ).getAbsoluteVelocity() > System.MAX_SPEED ) {
 					// Fire thrusters retrograde
-					_.addVelocity( MAX_SPEED );
+					_.addVelocity( System.MAX_SPEED );
 					consume_fuel( dt );
 					return;
 				}
@@ -383,7 +393,7 @@ function Drone()
 
 				if ( _.owner.get( Sprite ).rotation._ === angle ) {
 					// Alignment approach angle reached; give a small forward pulse
-					_.addVelocity( 4 * MAX_SPEED );
+					_.addVelocity( 4 * System.MAX_SPEED );
 					consume_fuel( 4 * dt );
 
 					// Update [retrograde_angle] for next phase
@@ -417,9 +427,9 @@ function Drone()
 				);
 
 				if ( distance < 1 ) {
-					if ( _.owner.get( Point ).getAbsoluteVelocity() > MAX_SPEED ) {
+					if ( _.owner.get( Point ).getAbsoluteVelocity() > System.MAX_SPEED ) {
 						// Fire thrusters retrograde
-						_.addVelocity( MAX_SPEED );
+						_.addVelocity( System.MAX_SPEED );
 						consume_fuel( dt );
 						return;
 					}
@@ -445,7 +455,7 @@ function Drone()
 
 				if ( _.owner.get( Sprite ).rotation._ === docking.angle ) {
 					// Give a small forward pulse
-					_.addVelocity( 4 * MAX_SPEED );
+					_.addVelocity( 4 * System.MAX_SPEED );
 					consume_fuel( 4 * dt );
 					docking.phase = 7;
 				}
@@ -469,7 +479,7 @@ function Drone()
 					_.owner.get( Point ).setVelocity( 0, 0 );
 					docking.complete( docking.target.get( HardwarePart ).getSpecs() );
 
-					docking.on = false;
+					System.docking = false;
 					is_docked = true;
 				}
 
@@ -484,13 +494,13 @@ function Drone()
 	{
 		if ( out_of_power ) return;
 
-		power -= dt;
+		System.power -= dt;
 
-		if ( stabilizing ) power -= dt;
-		if ( docking.on ) power -= dt;
+		if ( System.stabilizing ) System.power -= dt;
+		if ( System.docking ) System.power -= dt;
 
-		if ( power < 0 ) {
-			power = 0;
+		if ( System.power < 0 ) {
+			System.power = 0;
 			out_of_power = true;
 
 			system_shutdown();
@@ -506,12 +516,12 @@ function Drone()
 	{
 		if ( out_of_fuel ) return;
 
-		fuel -= dt;
+		System.fuel -= dt;
 
-		if ( stabilizing ) fuel -= dt;
+		if ( System.stabilizing ) System.fuel -= dt;
 
-		if ( fuel < 0 ) {
-			fuel = 0;
+		if ( System.fuel < 0 ) {
+			System.fuel = 0;
 			out_of_fuel = true;
 
 			system_shutdown();
@@ -547,12 +557,12 @@ function Drone()
 
 	this.update = function( dt )
 	{
-		if ( docking.on && is_operational() ) {
+		if ( System.docking && is_operational() ) {
 			control_docking_procedure( dt );
 		}
 
-		if ( stabilizing && is_operational() ) {
-			if ( !docking.on ) {
+		if ( System.stabilizing && is_operational() ) {
+			if ( !System.docking ) {
 				// Only run stabilization here if the docking
 				// mode procedure isn't already managing it
 				stabilize_spin();
@@ -561,16 +571,16 @@ function Drone()
 			consume_fuel( dt );
 		}
 
-		_.owner.get( Sprite ).rotation._ += ( spin * dt );
+		_.owner.get( Sprite ).rotation._ += ( System.spin * dt );
 		consume_power( dt );
 
 		if ( is_docked ) {
 			switch ( docking.hardware ) {
 				case 'RECHARGER':
-					power = Math.min( power + 30 * dt, MAX_POWER );
+					System.power = Math.min( System.power + 30 * dt, System.MAX_POWER );
 					break;
 				case 'REFUELER':
-					fuel = Math.min( fuel + 20 * dt, MAX_FUEL );
+					System.fuel = Math.min( System.fuel + 20 * dt, System.MAX_FUEL );
 					break;
 			}
 		}
@@ -597,25 +607,15 @@ function Drone()
 	 */
 	this.getMaxSpeed = function()
 	{
-		return MAX_SPEED;
+		return System.MAX_SPEED;
 	};
 
 	/**
-	 * Get a report on the drone's standing
+	 * Get a report on the drone's stats
 	 */
 	this.getSystem = function()
 	{
-		return {
-			velocity: _.owner.get( Point ).getAbsoluteVelocity(),
-			stabilizing: stabilizing,
-			docking: docking.on,
-			power: power,
-			fuel: fuel,
-			health: health,
-			MAX_POWER: MAX_POWER,
-			MAX_FUEL: MAX_FUEL,
-			MAX_HEALTH: MAX_HEALTH,
-		};
+		return System;
 	};
 
 	/**
@@ -653,8 +653,8 @@ function Drone()
 	 */
 	this.addSpin = function( amount )
 	{
-		spin += amount;
-		stabilizing = false;
+		System.spin += amount;
+		System.stabilizing = false;
 		return _;
 	};
 
@@ -664,7 +664,7 @@ function Drone()
 	this.stabilize = function()
 	{
 		if ( is_operational() ) {
-			stabilizing = true;
+			System.stabilizing = true;
 		}
 
 		return _;
@@ -687,7 +687,7 @@ function Drone()
 	{
 		if ( is_docked ) {
 			docking.target.get( HardwarePart ).showAlert();
-			_.addVelocity( 2 * -MAX_SPEED );
+			_.addVelocity( 2 * -System.MAX_SPEED );
 			is_docked = false;
 		}
 	};
@@ -698,7 +698,7 @@ function Drone()
 	this.abortDocking = function()
 	{
 		docking.target.get( HardwarePart ).showAlert();
-		docking.on = false;
+		System.docking = false;
 		return _;
 	};
 
@@ -718,7 +718,7 @@ function Drone()
 	 */
 	this.isControllable = function()
 	{
-		return ( is_operational() && _.signal > 0 && !docking.on && !is_docked);
+		return ( is_operational() && _.signal > 0 && !System.docking && !is_docked);
 	};
 
 	/**
@@ -726,7 +726,7 @@ function Drone()
 	 */
 	this.isDocking = function()
 	{
-		return docking.on;
+		return System.docking;
 	};
 
 	/**

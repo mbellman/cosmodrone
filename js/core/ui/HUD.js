@@ -58,6 +58,7 @@ function HUD()
 					width: 232,
 					height: 10,
 					stat: 'health',
+					max_stat: 'MAX_HEALTH',
 					color: '#00ff30'
 				},
 				power: {
@@ -66,6 +67,7 @@ function HUD()
 					width: 640,
 					height: 18,
 					stat: 'power',
+					max_stat: 'MAX_POWER',
 					color: '#00b4cc'
 				},
 				charge: {
@@ -74,6 +76,7 @@ function HUD()
 					width: 640,
 					height: 18,
 					stat: 'power',
+					max_stat: 'MAX_POWER',
 					color: '#fff'
 				},
 				fuel: {
@@ -82,6 +85,7 @@ function HUD()
 					width: 640,
 					height: 6,
 					stat: 'fuel',
+					max_stat: 'MAX_FUEL',
 					color: '#ccd'
 				}
 			}
@@ -106,6 +110,7 @@ function HUD()
 	var stage = new Entity();                         // HUD stage
 	var frames = new FrameCounter();                  // FrameCounter component for noise cycle
 	var radio_signal = 4;                             // Radio signal strength (0 - 4)
+	var noise_level = 0;                              // Noise level value, expressed as ( 1 - ( radio_signal / 4 ) )
 	var radar_noise = 1;                              // Noise graphic to show for radar (cycles from 1 - 4)
 
 	// ------------------------------------------ //
@@ -269,27 +274,9 @@ function HUD()
 			radar_noise = 1;
 		}
 
+		// TODO: Use a SpriteSequence
 		Elements.radar.$( 'noise' ).get( Sprite )
 			.setSource( Graphics.noise[radar_noise] );
-	}
-
-	/**
-	 * Update the radio area, refreshing the
-	 * local radar and signal strength indicator
-	 */
-	function refresh_radio()
-	{
-		var noise = 1 - ( radio_signal / 4 );
-
-		Elements.radar.find( Radar )
-			.scan( Data.station )
-			.setClarity( 1 - ( noise / 2 ) );
-
-		Elements.radar.$( 'noise' ).get( Flicker )
-			.setAlphaRange( noise, noise + 0.1 );
-
-		Elements.signal.child( 0 ).get( Sprite )
-			.setSource( Assets.getImage( 'game/ui/radio/signal-' + radio_signal + '.png' ) );
 	}
 
 	/**
@@ -304,13 +291,14 @@ function HUD()
 			var state = ( system[indicator] ? 'on.png' : 'off.png' );
 			var file = 'game/ui/indicators/' + indicator + '-' + state;
 
+			// TODO: Use a SpriteSequence
 			Elements.drone.child( i++ ).get( Sprite )
 				.setSource( Assets.getImage( file ) );
 		}
 
 		for ( var meter in Coordinates.drone.meters ) {
 			var display = Coordinates.drone.meters[meter];
-			var depletion = ( system[display.stat] / system['MAX_' + display.stat.toUpperCase()] );
+			var depletion = ( system[display.stat] / system[display.max_stat] );
 			var width = Math.round( depletion * display.width );
 
 			Elements.drone.child( i++ ).get( FillSprite )
@@ -330,7 +318,7 @@ function HUD()
 	// -- Public: --
 	this.update = function( dt )
 	{
-		refresh_radio();
+		Elements.radar.find( Radar ).scan( Data.station );
 		refresh_drone_HUD( dt );
 	};
 
@@ -364,6 +352,18 @@ function HUD()
 	this.updateRadioSignal = function( strength )
 	{
 		radio_signal = strength;
+		noise_level = 1 - ( radio_signal / 4 );
+
+		Elements.radar.find( Radar )
+			.setClarity( 1 - ( noise_level / 2 ) );
+
+		Elements.radar.$( 'noise' ).get( Flicker )
+			.setAlphaRange( noise_level, noise_level + 0.1 );
+
+		// TODO: Use a SpriteSequence
+		Elements.signal.child( 0 ).get( Sprite )
+			.setSource( Assets.getImage( 'game/ui/radio/signal-' + radio_signal + '.png' ) );
+
 		return _;
 	};
 

@@ -448,17 +448,17 @@ function FillSprite( color, width, height )
 	};
 
 	/**
+	 * Inherit Sprite and set its source to this instance's Canvas
+	 */
+	Sprite.call( this, sprite.element );
+
+	/**
 	 * Draw the fill effect across the whole [sprite] canvas
 	 */
 	function redraw_fill()
 	{
 		sprite.draw.rectangle( 0, 0, size.width, size.height ).fill( color );
 	}
-
-	/**
-	 * Inherit Sprite and set its source to this instance's Canvas
-	 */
-	Sprite.call( this, sprite.element );
 
 	// -- Public: --
 	this.onAdded = function()

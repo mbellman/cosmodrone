@@ -26,6 +26,7 @@ function GameScene( controller )
 	var hud;                                  // HUD entity
 	var textbox;                              // Dialogue box entity
 	var frames;                               // FrameCounter component for periodic callbacks
+	var drone_signal = 4;                     // Strength of drone radio signal
 	var FLAGS = {};                           // Event flags
 	var DRONE_SPEED;                          // Drone acceleration rate
 
@@ -109,7 +110,7 @@ function GameScene( controller )
 							tileSize: 2,
 							lightAngle: 220,
 							hours: [12, 19, 20, 0, 4, 6],
-							//hours: [12],
+							//hours: [20],
 							cycleSpeed: 60,
 							scrollSpeed:
 							{
@@ -393,10 +394,8 @@ function GameScene( controller )
 		var radio = find_closest_hardware( 'COMM_DISH' );
 
 		if ( typeof radio.part !== 'undefined' ) {
-			var signal = 4 - Math.floor( clamp( radio.distance, 0, 4000 ) / 1000 );
-			drone.get( Drone ).signal = signal;
-
-			hud.get( HUD ).updateRadioSignal( signal );
+			drone_signal = 4 - Math.floor( clamp( radio.distance, 0, 4000 ) / 1000 );
+			hud.get( HUD ).updateRadioSignal( drone_signal );
 		}
 	}
 
@@ -512,7 +511,7 @@ function GameScene( controller )
 
 		// Docking mode
 		input.on( 'D', function() {
-			if ( _drone.signal > 0 ) {
+			if ( drone_signal > 0 ) {
 				if ( _drone.isDocked() ) {
 					_drone.undock();
 					hud.get( HUD ).hideChargeMeter();

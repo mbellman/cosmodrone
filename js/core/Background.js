@@ -245,7 +245,7 @@
 			// Prerendered cloud shadows, scaled based on [configuration.tileSize]
 			shadows: []
 		};
-		var camera;                                        // Scrolling background camera instance
+		var camera = new Point();                          // Scrolling background camera Point instance
 		var clouds = [];                                   // Active cloud objects on screen
 		var BG_stage;                                      // Top background is drawn here before being composited onto [screen.background] (see: render_BG())
 		var cloud_stage;                                   // Clouds are drawn here before being composited onto [screen.clouds]
@@ -346,6 +346,19 @@
 			},
 		];
 
+		var L = {                                          // Reusable rendering loop objects
+			// Parallax cloud displacement
+			offset: {},
+			// Cloud/shadow rendering position
+			draw: {},
+			// Spawned cloud dimensions
+			size: {},
+			// Base cloud spawn position
+			spawn: {},
+			// Cloud spawn position offset
+			spawn_offset: {},
+		};
+
 		/**
 		 * Default instance configuration
 		 */
@@ -433,8 +446,11 @@
 			BG_stage = new Canvas().setSize( Viewport.width, Viewport.height );
 			cloud_stage = new Canvas().setSize( Viewport.width, Viewport.height );
 
-			camera = new Point()
-				.setVelocity( -1 * configuration.scrollSpeed.x, -1 * configuration.scrollSpeed.y );
+			camera
+				.setVelocity(
+					-1 * configuration.scrollSpeed.x,
+					-1 * configuration.scrollSpeed.y
+				);
 
 			set_shadow_offset();
 			spawn_cloud_layer();
@@ -582,9 +598,10 @@
 
 			clouds.push(
 				new Entity()
-					.add( new Point()
-						.setVelocity( configuration.scrollSpeed.x, configuration.scrollSpeed.y )
-						.setPosition( x, y )
+					.add(
+						new Point()
+							.setVelocity( configuration.scrollSpeed.x, configuration.scrollSpeed.y )
+							.setPosition( x, y )
 					)
 					.add( cloud )
 			);
@@ -661,8 +678,6 @@
 		 */
 		function spawn_cloud_layer()
 		{
-			var tile_size = terrain.getTileSize();
-			var map_size = terrain.getSize();
 			var type, index, position = {};
 
 			for ( var c = 0 ; c < 28 ; c++ ) {
@@ -699,60 +714,64 @@
 				return;
 			}
 
-			var spawn = {
-				x: 0,
-				y: 0
-			};
+			L.spawn.x = 0;
+			L.spawn.y = 0;
 
-			var type, index, size, spawn_offset = {};
+			var type, index;
 
 			if ( Math.random() > 0.02 ) {
 				// 98% chance of generating a normal cloud
 				// (higher chance of picking cirrus clouds)
 				type = pickRandom( 'cumulus', 'heavy_cumulus', 'small_cumulus', 'cirrus', 'cirrus', 'cirrus' );
 				index = random_cloud_index( type );
-				size = renders.clouds[index].getSize();
-
-				spawn_offset.x = 0;
-				spawn_offset.y = 0;
+				L.size = renders.clouds[index].getSize();
+				L.spawn_offset.x = 0;
+				L.spawn_offset.y = 0;
 			} else {
 				// 2% chance of generating a cyclone
 				index = pickRandom( 'large', 'small' );
-
-				size = {
-					width: 0,
-					height: 0
-				};
-
-				spawn_offset.x = ( index === 'large' ? 1350 : 1200 );
-				spawn_offset.y = ( index === 'large' ? 1350 : 1200 );
-
+				L.size.width = 0;
+				L.size.height = 0;
+				L.spawn_offset.x = ( index === 'large' ? 1350 : 1200 );
+				L.spawn_offset.y = ( index === 'large' ? 1350 : 1200 );
 				cloud_cooldown = 2000;
 			}
 
 			// Determine where to place next cloud
 			if ( Math.abs( BG_velocity.x ) > Math.abs( BG_velocity.y ) ) {
 				// Background scrolling faster horizontally than vertically
-				spawn.y = random( 0 - size.height, Viewport.height );
+				L.spawn.y = random( 0 - L.size.height, Viewport.height );
+
 				// Scrolling right
-				if ( BG_velocity.x > 0 ) spawn.x = Viewport.width + spawn_offset.x;
+				if ( BG_velocity.x > 0 ) {
+					L.spawn.x = Viewport.width + L.spawn_offset.x;
+				}
+
 				// Scrolling left
-				if ( BG_velocity.x < 0 ) spawn.x = 0 - size.width - spawn_offset.x;
+				if ( BG_velocity.x < 0 ) {
+					L.spawn.x = 0 - L.size.width - L.spawn_offset.x;
+				}
 			} else {
 				// Background scrolling faster vertically than horizontally
-				spawn.x = random( 0 - size.width, Viewport.width );
+				L.spawn.x = random( 0 - L.size.width, Viewport.width );
+
 				// Scrolling down
-				if ( BG_velocity.y > 0 ) spawn.y = Viewport.height + spawn_offset.y;
+				if ( BG_velocity.y > 0 ) {
+					L.spawn.y = Viewport.height + L.spawn_offset.y;
+				}
+
 				// Scrolling up
-				if ( BG_velocity.y < 0 ) spawn.y = 0 - size.height - spawn_offset.y;
+				if ( BG_velocity.y < 0 ) {
+					L.spawn.y = 0 - L.size.height - L.spawn_offset.y;
+				}
 			}
 
 			if ( isNaN( index ) ) {
 				// Cyclone
-				spawn_cyclone( index, spawn.x, spawn.y );
+				spawn_cyclone( index, L.spawn.x, L.spawn.y );
 			} else {
 				// Normal cloud
-				spawn_cloud( index, spawn.x, spawn.y );
+				spawn_cloud( index, L.spawn.x, L.spawn.y );
 			}
 		}
 
@@ -840,8 +859,14 @@
 
 			hours.advance( 1 );
 
-			time_tween._ = 0;
-			time_tween.tweenTo( 1, configuration.cycleSpeed, Ease.linear, advance_bg_cycle );
+			time_tween
+				.set( 0 )
+				.tweenTo(
+					1,
+					configuration.cycleSpeed,
+					Ease.linear,
+					advance_bg_cycle
+				);
 		}
 
 		/**
@@ -903,7 +928,7 @@
 			var VIEWPORT_HALF_H = Viewport.height / 2;
 			var CIRRUS_PARALLAX = ( 40 / VIEWPORT_HALF_W );
 			var NORMAL_PARALLAX = ( 15 / VIEWPORT_HALF_H );
-			var cloud, position, image, shadow, parallax, offset = {}, draw = {};
+			var cloud, position, image, shadow, parallax;
 
 			for ( var c = 0 ; c < clouds.length ; c++ ) {
 				cloud = clouds[c];
@@ -914,22 +939,22 @@
 				parallax = ( cloud.type === 'cirrus' ? CIRRUS_PARALLAX : NORMAL_PARALLAX );
 
 				if ( shadow !== null ) {
-					draw.x = position.x + shadow_offset.x;
-					draw.y = position.y + shadow_offset.y;
+					L.draw.x = position.x + shadow_offset.x;
+					L.draw.y = position.y + shadow_offset.y;
 
-					if ( Sprite.isOnScreen( draw.x, draw.y, shadow.width, shadow.height ) ) {
-						screen.background.draw.image( shadow, draw.x, draw.y );
+					if ( Sprite.isOnScreen( L.draw.x, L.draw.y, shadow.width, shadow.height ) ) {
+						screen.background.draw.image( shadow, L.draw.x, L.draw.y );
 					}
 				}
 
-				offset.x = ( position.x + image.width / 2 - VIEWPORT_HALF_W ) * parallax;
-				offset.y = ( position.y + image.height / 2 - VIEWPORT_HALF_H ) * parallax;
+				L.offset.x = ( position.x + image.width / 2 - VIEWPORT_HALF_W ) * parallax;
+				L.offset.y = ( position.y + image.height / 2 - VIEWPORT_HALF_H ) * parallax;
 
-				draw.x = position.x + offset.x;
-				draw.y = position.y + offset.y;
+				L.draw.x = position.x + L.offset.x;
+				L.draw.y = position.y + L.offset.y;
 
-				if ( Sprite.isOnScreen( draw.x, draw.y, image.width, image.height ) ) {
-					cloud_stage.draw.image( image, draw.x, draw.y );
+				if ( Sprite.isOnScreen( L.draw.x, L.draw.y, image.width, image.height ) ) {
+					cloud_stage.draw.image( image, L.draw.x, L.draw.y );
 				}
 			}
 
@@ -952,9 +977,8 @@
 		this.update = function( dt )
 		{
 			if ( loaded ) {
-				camera.update( dt );
-
 				var c = 0;
+
 				while ( c < clouds.length ) {
 					if ( cloud_moved_offscreen( c ) ) {
 						clouds.splice( c, 1 );
@@ -972,14 +996,20 @@
 				render_all();
 				respawn_clouds();
 
-				// Lower cloud respawn cooldown so
+				// Reduce cloud respawn cooldown so
 				// clouds can continue generating
 				cloud_cooldown -= camera.getAbsoluteVelocity() * dt;
 			}
 		};
 
+		this.onAdded = function()
+		{
+			_.owner.add( camera );
+		};
+
 		this.onRemoved = function()
 		{
+			_.owner.remove( Point );
 			time_tween.stop();
 		};
 
