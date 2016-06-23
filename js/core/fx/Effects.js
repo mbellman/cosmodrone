@@ -40,8 +40,8 @@ function Flicker()
 	 */
 	this.setAlphaRange = function( low, high )
 	{
-		range.alpha.low = low;
-		range.alpha.high = high;
+		range.alpha.low = clamp( low, 0, 1 );
+		range.alpha.high = clamp( high, 0, 1 );
 		return _;
 	};
 

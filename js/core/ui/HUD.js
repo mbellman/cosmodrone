@@ -14,7 +14,13 @@ function HUD()
 
 	// Shorthand asset references
 	var Graphics = {
-		droneHUD: Assets.getImage( 'game/ui/drone.png' )
+		droneHUD: Assets.getImage( 'game/ui/drone.png' ),
+		noise: {
+			1: Assets.getImage( 'game/ui/radio/noise-1.png' ),
+			2: Assets.getImage( 'game/ui/radio/noise-2.png' ),
+			3: Assets.getImage( 'game/ui/radio/noise-3.png' ),
+			4: Assets.getImage( 'game/ui/radio/noise-4.png' )
+		}
 	};
 
 	// Major HUD element groups
@@ -32,9 +38,9 @@ function HUD()
 			width: 150,
 			height: 100
 		},
-		radio: {
+		signal: {
 			x: 72,
-			y: Viewport.height - Graphics.droneHUD.height + 95
+			y: Viewport.height - Graphics.droneHUD.height + 98
 		},
 		drone: {
 			HUD: {
@@ -51,6 +57,7 @@ function HUD()
 					y: 212,
 					width: 232,
 					height: 10,
+					stat: 'health',
 					color: '#00ff30'
 				},
 				power: {
@@ -58,6 +65,7 @@ function HUD()
 					y: 230,
 					width: 640,
 					height: 18,
+					stat: 'power',
 					color: '#00b4cc'
 				},
 				charge: {
@@ -65,6 +73,7 @@ function HUD()
 					y: 230,
 					width: 640,
 					height: 18,
+					stat: 'power',
 					color: '#fff'
 				},
 				fuel: {
@@ -72,6 +81,7 @@ function HUD()
 					y: 236,
 					width: 640,
 					height: 6,
+					stat: 'fuel',
 					color: '#ccd'
 				}
 			}
@@ -93,11 +103,33 @@ function HUD()
 		speed: 15
 	};
 
-	// HUD stage
-	var stage = new Entity();
+	var stage = new Entity();                         // HUD stage
+	var frames = new FrameCounter();                  // FrameCounter component for noise cycle
+	var radio_signal = 4;                             // Radio signal strength (0 - 4)
+	var radar_noise = 1;                              // Noise graphic to show for radar (cycles from 1 - 4)
+
+	// ------------------------------------------ //
+	// ------------- INITIALIZATION ------------- //
+	// ------------------------------------------ //
 
 	/**
-	 * Set up the local radar map entity
+	 * Set the radar signal source to the player
+	 * drone's coordinate point only if both exist
+	 */
+	function update_radar_source()
+	{
+		if (
+			Data.drone !== null &&
+			Data.drone.owner.has( Sprite ) &&
+			Elements.radar !== null
+		) {
+			Elements.radar.find( Radar )
+				.setSignalSource( Data.drone.owner.get( Sprite ) );
+		}
+	}
+
+	/**
+	 * Set up the local radar map
 	 */
 	function create_radar_map()
 	{
@@ -106,21 +138,33 @@ function HUD()
 				new Sprite()
 					.setXY( Coordinates.radar.x, Coordinates.radar.y )
 			)
-			.add(
-				new Radar()
-					.setSize( Coordinates.radar.width, Coordinates.radar.height )
+			.addChild(
+				new Entity( 'noise' )
+					.add(
+						new Sprite( Graphics.noise[1] )
+							.setAlpha( 0 )
+					)
+					.add(
+						new Flicker()
+							.setTimeRange( 0.25, 0.5 )
+					),
+				new Entity()
+					.add(
+						new Radar()
+							.setSize( Coordinates.radar.width, Coordinates.radar.height )
+					)
 			);
 	}
 
 	/**
-	 * Set up the radio signal indicator entity
+	 * Set up the radio signal indicator
 	 */
-	function create_radio_meter()
+	function create_signal_indicator()
 	{
-		Elements.radio = new Entity()
+		Elements.signal = new Entity()
 			.add(
 				new Sprite()
-					.setXY( Coordinates.radio.x, Coordinates.radio.y )
+					.setXY( Coordinates.signal.x, Coordinates.signal.y )
 			)
 			.addChild(
 				new Entity( 'signal' )
@@ -150,7 +194,7 @@ function HUD()
 	}
 
 	/**
-	 * Set up the drone stats meter area entity
+	 * Set up the drone stats meter group
 	 */
 	function create_drone_meters()
 	{
@@ -197,25 +241,55 @@ function HUD()
 	function generate_HUD_layout()
 	{
 		create_radar_map();
-		create_radio_meter();
+		create_signal_indicator();
 		create_drone_meters();
 
-		stage.addChild(
-			Elements.drone,
-			Elements.radar,
-			Elements.radio
-		);
+		frames.every( 3, refresh_radar_noise );
+
+		stage
+			.addChild(
+				Elements.drone,
+				Elements.radar,
+				Elements.signal
+			)
+			.add( frames );
+	}
+
+	// ---------------------------------------- //
+	// ------------- UPDATE CYCLE ------------- //
+	// ---------------------------------------- //
+
+	/**
+	 * Cycle through the various radar 'noise'
+	 * graphics to produce continuous distortion
+	 */
+	function refresh_radar_noise()
+	{
+		if ( ++radar_noise > 4 ) {
+			radar_noise = 1;
+		}
+
+		Elements.radar.$( 'noise' ).get( Sprite )
+			.setSource( Graphics.noise[radar_noise] );
 	}
 
 	/**
-	 * Update the local radar
+	 * Update the radio area, refreshing the
+	 * local radar and signal strength indicator
 	 */
-	function refresh_radar()
+	function refresh_radio()
 	{
-		Elements.radar.get( Radar ).scan(
-			Data.station,
-			Data.drone.owner.get( Sprite )
-		);
+		var noise = 1 - ( radio_signal / 4 );
+
+		Elements.radar.find( Radar )
+			.scan( Data.station )
+			.setClarity( 1 - ( noise / 2 ) );
+
+		Elements.radar.$( 'noise' ).get( Flicker )
+			.setAlphaRange( noise, noise + 0.1 );
+
+		Elements.signal.child( 0 ).get( Sprite )
+			.setSource( Assets.getImage( 'game/ui/radio/signal-' + radio_signal + '.png' ) );
 	}
 
 	/**
@@ -235,12 +309,8 @@ function HUD()
 		}
 
 		for ( var meter in Coordinates.drone.meters ) {
-			if ( meter === 'charge' ) {
-				meter = 'power';
-			}
-
 			var display = Coordinates.drone.meters[meter];
-			var depletion = ( system[meter] / system['MAX_' + meter.toUpperCase()] );
+			var depletion = ( system[display.stat] / system['MAX_' + display.stat.toUpperCase()] );
 			var width = Math.round( depletion * display.width );
 
 			Elements.drone.child( i++ ).get( FillSprite )
@@ -260,13 +330,14 @@ function HUD()
 	// -- Public: --
 	this.update = function( dt )
 	{
-		refresh_radar();
+		refresh_radio();
 		refresh_drone_HUD( dt );
 	};
 
 	this.onAdded = function()
 	{
 		generate_HUD_layout();
+		update_radar_source();
 		_.owner.addChild( stage );
 	};
 
@@ -282,17 +353,17 @@ function HUD()
 			}
 		}
 
+		update_radar_source();
 		return _;
 	};
 
 	/**
-	 * Display radio signal [strength], between 0 - 4
+	 * Control radar noise level and update signal
+	 * indicator via radio signal [strength] (0 - 4)
 	 */
 	this.updateRadioSignal = function( strength )
 	{
-		Elements.radio.$( 'signal' ).get( Sprite )
-			.setSource( Assets.getImage( 'game/ui/radio/signal-' + strength + '.png' ) );
-
+		radio_signal = strength;
 		return _;
 	};
 
