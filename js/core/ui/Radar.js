@@ -16,20 +16,47 @@ function Radar()
 	var blip_alpha = 1;                               // Alpha level for radar blips (drone, hardware parts, etc.)
 	var center = {x: 0, y: 0};                        // Map center coordinates (updated automatically in [setSize()])
 	var source;                                       // Radar signal source Sprite for distance comparisons with surrounding Sprites
+	var display = {};                                 // Reusable bounding box object for surrounding Sprites
+
+	/**
+	 * Check to see if the current [display] bounding box is in view
+	 */
+	function is_in_view()
+	{
+		return (
+			( display.x + display.width ) > 0 &&
+			( display.y + display.height ) > 0 &&
+			display.x < map.width() &&
+			display.y < map.height()
+		);
+	}
+
+	/**
+	 * Receives a [bounds] bounding box and updates the internal
+	 * [display] bounds based on centering/scaling/etc. variables
+	 */
+	function transform( bounds )
+	{
+		var offset = source.getBoundingBox();
+
+		display.x = center.x + ( scale * ( bounds.x - offset.x ) );
+		display.y = center.y + ( scale * ( bounds.y - offset.y ) );
+		display.width = scale * bounds.width;
+		display.height = scale * bounds.height;
+	}
 
 	/**
 	 * Renders a single hardware part to the radar map
 	 */
 	function draw_hardware( hardware ) {
-		var display = hardware.get( Sprite ).getBoundingBox();
-		var offset = source.getBoundingBox();
+		transform( hardware.get( Sprite ).getBoundingBox() );
+
+		if ( !is_in_view() ) {
+			return;
+		}
 
 		map.sprite
-			.draw.circle(
-				center.x + ( scale * ( display.x - offset.x ) ),
-				center.y + ( scale * ( display.y - offset.y ) ),
-				3
-			)
+			.draw.circle( display.x, display.y, 3 )
 			.fill( '#ff0' );
 	}
 
@@ -39,17 +66,15 @@ function Radar()
 	 */
 	function draw_module( module )
 	{
-		var display = module.get( Sprite ).getBoundingBox();
-		var offset = source.getBoundingBox();
+		transform( module.get( Sprite ).getBoundingBox() );
+
+		if ( !is_in_view() ) {
+			return;
+		}
 
 		map.sprite
 			.setAlpha( 1 )
-			.draw.rectangle(
-				center.x + ( scale * ( display.x - offset.x ) ),
-				center.y + ( scale * ( display.y - offset.y ) ),
-				( scale * display.width ),
-				( scale * display.height )
-			)
+			.draw.rectangle( display.x, display.y, display.width, display.height )
 			.stroke( '#fff' );
 
 		map.sprite.setAlpha( blip_alpha );

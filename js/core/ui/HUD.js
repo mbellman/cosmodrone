@@ -244,7 +244,7 @@ function HUD()
 		create_signal_indicator();
 		create_drone_meters();
 
-		frames.every( 3, refresh_radar_noise );
+		frames.every( 3, update_radar_noise );
 
 		stage
 			.addChild(
@@ -261,9 +261,9 @@ function HUD()
 
 	/**
 	 * Cycle through the various radar 'noise'
-	 * graphics to produce continuous distortion
+	 * graphics to produce continuous disruption
 	 */
-	function refresh_radar_noise()
+	function update_radar_noise()
 	{
 		if ( ++radar_noise > 4 ) {
 			radar_noise = 1;

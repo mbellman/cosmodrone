@@ -11,15 +11,26 @@
 	{
 		// -- Private: --
 		var _ = this;
-		var TEXTURE_W = 0;
-		var TEXTURE_H = 0;
-		var divisions = 1;
-		var chunks = [];
-		var CHUNK_W = TEXTURE_W / divisions;
-		var CHUNK_H = TEXTURE_H / divisions;
+		var TEXTURE_W = 0;                                     // Whole texture width
+		var TEXTURE_H = 0;                                     // Whole texture height
+		var divisions = 1;                                     // Texture subdivisions (along both axes)
+		var chunks = [];                                       // 2D clipped texture chunk array
+		var CHUNK_W = TEXTURE_W / divisions;                   // Clipped chunk width
+		var CHUNK_H = TEXTURE_H / divisions;                   // Clipped chunk height
+		var buffer = 1;                                        // Extra space to add to each chunk to mitigate sub-pixel gaps
 
-		// Extra space to add to each chunk to mitigate sub-pixel gaps
-		var buffer = 1;
+		var L = {                                              // Reusable tiling loop objects
+			pixel: {},
+			coords: {},
+			chunk: {},
+			draw: {},
+			clip: {}
+		};
+
+		var ALT = {                                            // Secondary TextureCache/canvas to tile in this instance's tiling loop (see: [alongWith()])
+			cache: null,
+			canvas: null
+		};
 
 		/**
 		 * Set up texture [chunks] array
@@ -34,6 +45,14 @@
 		}
 
 		// -- Public: --
+		/**
+		 * Retrieve a clipped texture chunk at index [x, y]
+		 */
+		this.getChunk = function( y, x )
+		{
+			return chunks[y][x];
+		};
+
 		/**
 		 * Divide a large source [texture] into a
 		 * grid of [divisions] x [divisions] chunks
@@ -76,6 +95,17 @@
 		}
 
 		/**
+		 * Bring a completely separate texture [cache] into the fray to
+		 * be tiled onto [canvas] within this TextureCache's tiling loop
+		 */
+		this.alongWith = function( cache, canvas )
+		{
+			ALT.cache = cache;
+			ALT.canvas = canvas;
+			return _;
+		};
+
+		/**
 		 * Draw the texture [chunks] onto a target [canvas],
 		 * beginning at clip position [clip_X, clip_Y] and
 		 * tiling over the region [x, y, region_W, region_H]
@@ -86,18 +116,14 @@
 			clip_Y = clip_Y || 0;
 			x = x || 0;
 			y = y || 0;
-			region_W = region_W || canvas.getSize().width;
-			region_H = region_H || canvas.getSize().height;
+			region_W = region_W || canvas.element.width;
+			region_H = region_H || canvas.element.height;
 
 			clip_X = Round.toDecimal( clip_X, 2 );
 			clip_Y = Round.toDecimal( clip_Y, 2 );
 
-			var pixel = {
-				x: 0,
-				y: 0
-			};
-
-			var coords = {}, chunk = {}, draw = {}, clip = {};
+			L.pixel.x = 0;
+			L.pixel.y = 0;
 			var loops = 0;
 
 			// Steps:
@@ -110,7 +136,7 @@
 			// 6. Render the clipped texture
 			// 7. Advance pixel offset and continue
 			// -----
-			while ( pixel.x < region_W || pixel.y < region_H ) {
+			while ( L.pixel.x < region_W || L.pixel.y < region_H ) {
 				if ( ++loops > 5000 ) {
 					// Failsafe against infinite looping (only
 					// occurs in the case of unusual [divisions]
@@ -118,40 +144,50 @@
 					break;
 				}
 
-				pixel.x = Round.upToDecimal( pixel.x, 2 );
-				pixel.y = Round.upToDecimal( pixel.y, 2 );
+				L.pixel.x = Round.upToDecimal( L.pixel.x, 2 );
+				L.pixel.y = Round.upToDecimal( L.pixel.y, 2 );
 
-				coords.x = mod( pixel.x + clip_X, TEXTURE_W );
-				coords.y = mod( pixel.y + clip_Y, TEXTURE_H );
+				L.coords.x = mod( L.pixel.x + clip_X, TEXTURE_W );
+				L.coords.y = mod( L.pixel.y + clip_Y, TEXTURE_H );
 
-				chunk.x = Math.floor( coords.x / CHUNK_W );
-				chunk.y = Math.floor( coords.y / CHUNK_H );
-				chunk.texture = chunks[chunk.y][chunk.x];
+				L.chunk.x = Math.floor( L.coords.x / CHUNK_W );
+				L.chunk.y = Math.floor( L.coords.y / CHUNK_H );
+				L.chunk.texture = chunks[L.chunk.y][L.chunk.x];
 
-				clip.x = ( coords.x % CHUNK_W ) - 1;
-				clip.y = ( coords.y % CHUNK_H ) - 1;
+				L.clip.x = ( L.coords.x % CHUNK_W ) - 1;
+				L.clip.y = ( L.coords.y % CHUNK_H ) - 1;
 
-				draw.x = x + pixel.x,
-				draw.y = y + pixel.y;
+				L.draw.x = x + L.pixel.x,
+				L.draw.y = y + L.pixel.y;
 
 				// Clip width/height should stop either at the edge
 				// of the chunk or the edge of the draw region
-				clip.width = Round.upToDecimal( Math.min( CHUNK_W - clip.x, region_W - draw.x ), 2 );
-				clip.height = Round.upToDecimal( Math.min( CHUNK_H - clip.y, region_H - draw.y ), 2 );
+				L.clip.width = Round.upToDecimal( Math.min( CHUNK_W - L.clip.x, region_W - L.draw.x ), 2 );
+				L.clip.height = Round.upToDecimal( Math.min( CHUNK_H - L.clip.y, region_H - L.draw.y ), 2 );
 
 				canvas.draw.image(
-					chunk.texture,
-					clip.x, clip.y, clip.width + buffer, clip.height + buffer,
-					draw.x, draw.y, clip.width + buffer, clip.height + buffer
+					L.chunk.texture,
+					L.clip.x, L.clip.y, L.clip.width + buffer, L.clip.height + buffer,
+					L.draw.x, L.draw.y, L.clip.width + buffer, L.clip.height + buffer
 				);
 
-				pixel.x += clip.width;
+				// See if a secondary texture cache/destination canvas
+				// has been specified, and tile onto that too if so
+				if ( ALT.cache !== null && ALT.canvas !== null ) {
+					ALT.canvas.draw.image(
+						ALT.cache.getChunk( L.chunk.y, L.chunk.x ),
+						L.clip.x, L.clip.y, L.clip.width + buffer, L.clip.height + buffer,
+						L.draw.x, L.draw.y, L.clip.width + buffer, L.clip.height + buffer
+					);
+				}
 
-				if ( pixel.x >= region_W ) {
-					pixel.y += clip.height;
+				L.pixel.x += L.clip.width;
 
-					if ( pixel.y < region_H ) {
-						pixel.x = 0;
+				if ( L.pixel.x >= region_W ) {
+					L.pixel.y += L.clip.height;
+
+					if ( L.pixel.y < region_H ) {
+						L.pixel.x = 0;
 					}
 				}
 			}
@@ -760,13 +796,13 @@
 			var last_hour = hours.previous();
 			var next_hour = hours.current();
 
-			var transition_gap = (
+			var transition_length = (
 				next_hour >= last_hour ?
 					( next_hour - last_hour )
 				:
 					( 24 - last_hour + next_hour )
 			);
-			var granular_time = ( last_hour + time_tween.progress() * transition_gap ) % 24;
+			var granular_time = ( last_hour + time_tween.progress() * transition_length ) % 24;
 
 			light_level = Math.abs( 12 - granular_time );
 		}
@@ -834,9 +870,10 @@
 			// resolve this we draw the upper layer at full opacity
 			// to a separate stage Canvas, and then draw that to
 			// [screen.background] with the appropriate alpha value.
-			top_BG.tileOnto( BG_stage, camera_X, camera_Y );
+			top_BG
+				.alongWith( bottom_BG, screen.background )
+				.tileOnto( BG_stage, camera_X, camera_Y );
 
-			bottom_BG.tileOnto( screen.background, camera_X, camera_Y );
 			screen.background.setAlpha( time_tween.progress() );
 			screen.background.draw.image( BG_stage.element );
 			screen.background.setAlpha( 1 );
