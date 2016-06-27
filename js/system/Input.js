@@ -33,7 +33,9 @@
 		var enable_time = timestamp;
 		var bound = false;
 		var disabled = false;
-		var events = {};
+		var events = {
+			input: [function() {}]
+		};
 
 		/**
 		 * Returns a uniquely namespaced [event] string
@@ -41,6 +43,20 @@
 		function get_namespaced_event( event )
 		{
 			return event + '.InputHandler-' + timestamp;
+		}
+
+		/**
+		 * Fire all event handlers for a specific key input [event]
+		 */
+		function dispatch_events( event, data )
+		{
+			var handlers = events[event];
+
+			if ( typeof handlers !== 'undefined' ) {
+				for ( var h = 0 ; h < handlers.length ; h++) {
+					handlers[h]( data );
+				}
+			}
 		}
 
 		/**
@@ -52,14 +68,9 @@
 				return;
 			}
 
-			var key = KeyCodes[event.keyCode];
-			var handlers = events[key];
-
-			if ( !!handlers ) {
-				for ( var h = 0 ; h < handlers.length ; h++ ) {
-					handlers[h]( key );
-				}
-			}
+			// Dispatch base input event by default
+			dispatch_events( 'input', event.keyCode );
+			dispatch_events( KeyCodes[event.keyCode] );
 		}
 
 		// -- Public: --
@@ -112,6 +123,7 @@
 		this.unbindKey = function( key )
 		{
 			if ( events.hasOwnProperty( key ) ) {
+				events[key].length = 0;
 				delete events[key];
 			}
 		};

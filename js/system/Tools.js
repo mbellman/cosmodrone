@@ -11,6 +11,14 @@ Math.TAU = 2 * Math.PI;
 // -------------------------------------- //
 
 /**
+ * Return a positive sine-like value oscillating between 0 and 1
+ */
+Math.wave = function( input )
+{
+	return ( 1 + Math.sin( input ) ) / 2;
+};
+
+/**
  * Return a pseudo-random integer between two limits
  */
 function random( low, high )

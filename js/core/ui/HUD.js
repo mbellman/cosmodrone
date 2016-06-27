@@ -14,8 +14,12 @@ function HUD()
 
 	// Shorthand asset references
 	var Graphics = {
-		droneHUD: Assets.getImage( 'game/ui/drone.png' ),
-		noise: {
+		DRONE_PANE: Assets.getImage( 'game/ui/panes/drone.png' ),
+		DRONE_PANE_GLOW: Assets.getImage( 'game/ui/panes/drone-glow.png' ),
+		DRONE_PANE_SHADOW: Assets.getImage( 'game/ui/panes/drone-shadow.png' ),
+		DRONE_HEALTH: Assets.getImage( 'game/ui/health.png' ),
+		STATION_PANE: Assets.getImage( 'game/ui/panes/station.png' ),
+		NOISE: {
 			1: Assets.getImage( 'game/ui/radio/noise-1.png' ),
 			2: Assets.getImage( 'game/ui/radio/noise-2.png' ),
 			3: Assets.getImage( 'game/ui/radio/noise-3.png' ),
@@ -23,76 +27,79 @@ function HUD()
 		}
 	};
 
-	// Major HUD element groups
-	var Elements = {
-		radar: null,
-		radio: null,
-		drone: null
-	};
-
-	// HUD element group display coordinates
+	// HUD element coordinates
 	var Coordinates = {
 		radar: {
-			x: 72,
-			y: Viewport.height - Graphics.droneHUD.height - 10,
-			width: 150,
-			height: 100
+			x: 15,
+			y: 15,
+			width: 220,
+			height: 150
 		},
 		signal: {
-			x: 72,
-			y: Viewport.height - Graphics.droneHUD.height + 98
+			x: 30,
+			y: 30
 		},
 		drone: {
 			HUD: {
-				x: 10,
-				y: Viewport.height - Graphics.droneHUD.height - 20
+				x: 0,
+				y: Viewport.height - Graphics.DRONE_PANE.height
 			},
 			system: {
-				stabilizing: {x: 50, y: 156},
-				docking: {x: 80, y: 162}
+				stabilizing: {x: 575, y: 40},
+				docking: {x: 605, y: 45}
 			},
 			meters: {
-				health: {
-					x: 56,
-					y: 212,
-					width: 232,
-					height: 10,
-					stat: 'health',
-					max_stat: 'MAX_HEALTH',
-					color: '#00ff30'
-				},
 				power: {
-					x: 56,
-					y: 230,
-					width: 640,
-					height: 18,
+					x: 102,
+					y: 12,
+					width: 560,
+					height: 24,
 					stat: 'power',
 					max_stat: 'MAX_POWER',
-					color: '#00b4cc'
+					color: '#0df'
 				},
 				charge: {
-					x: 56,
-					y: 230,
-					width: 640,
-					height: 18,
+					x: 102,
+					y: 12,
+					width: 560,
+					height: 24,
 					stat: 'power',
 					max_stat: 'MAX_POWER',
 					color: '#fff'
 				},
 				fuel: {
-					x: 56,
-					y: 236,
-					width: 640,
-					height: 6,
+					x: 102,
+					y: 40,
+					width: 560,
+					height: 10,
 					stat: 'fuel',
 					max_stat: 'MAX_FUEL',
-					color: '#ccd'
+					color: '#eee'
 				}
+			}
+		},
+		station: {
+			HUD: {
+				x: Viewport.width - 250,
+				y: 0
 			}
 		}
 	};
 
-	// Important game objects
+	// HUD pane elements
+	var Panes = {
+		drone: null,
+		station: null
+	};
+
+	// Entity cache
+	var Elements = {
+		health: null,
+		radar: null,
+		signal: null
+	};
+
+	// Game objects
 	var Data = {
 		// Player Drone component
 		drone: null,
@@ -109,9 +116,11 @@ function HUD()
 
 	var stage = new Entity();                         // HUD stage
 	var frames = new FrameCounter();                  // FrameCounter component for noise cycle
+	var countdown = new Countdown();                  // Countdown for automatic pane reveal
 	var radio_signal = 4;                             // Radio signal strength (0 - 4)
 	var noise_level = 0;                              // Noise level value, expressed as ( 1 - ( radio_signal / 4 ) )
 	var radar_noise = 1;                              // Noise graphic to show for radar (cycles from 1 - 4)
+	var timer = 0;                                    // dt counter
 
 	// ------------------------------------------ //
 	// ------------- INITIALIZATION ------------- //
@@ -119,7 +128,7 @@ function HUD()
 
 	/**
 	 * Set the radar signal source to the player
-	 * drone's coordinate point only if both exist
+	 * drone's Sprite coordinates once both exist
 	 */
 	function update_radar_source()
 	{
@@ -131,6 +140,94 @@ function HUD()
 			Elements.radar.find( Radar )
 				.setSignalSource( Data.drone.owner.get( Sprite ) );
 		}
+	}
+
+	/**
+	 * Set up the drone stats pane
+	 */
+	function create_drone_pane()
+	{
+		var display;
+
+		// Shadow + glowing background
+		Panes.drone = new Entity()
+			.add(
+				new Sprite( Graphics.DRONE_PANE_SHADOW )
+					.setXY( Coordinates.drone.HUD.x, Coordinates.drone.HUD.y )
+			)
+			.addChild(
+				new Entity()
+					.add(
+						new Sprite( Graphics.DRONE_PANE_GLOW )
+							.setXY( 0, -14 )
+					)
+					.add(
+						new Flicker()
+							.setAlphaRange( 0.1, 0.8 )
+							.oscillate( 1.5 )
+					)
+			);
+
+		// Stat meters
+		for ( var meter in Coordinates.drone.meters )
+		{
+			display = Coordinates.drone.meters[meter];
+
+			Panes.drone
+				.addChild(
+					new Entity( meter )
+						.add(
+							new FillSprite( display.color, display.width, display.height )
+								.setXY( display.x, display.y )
+						)
+				);
+		}
+
+		// System indicator icons
+		for ( var indicator in Coordinates.drone.system ) {
+			display = Coordinates.drone.system[indicator];
+
+			Panes.drone
+				.addChild(
+					new Entity()
+						.add(
+							new Sprite()
+								.setXY( display.x, display.y )
+						)
+				);
+		}
+
+		// Glass pane cover
+		Panes.drone
+			.addChild(
+				new Entity()
+					.add(
+						new Sprite( Graphics.DRONE_PANE )
+					)
+			);
+
+		// Health meter
+		Elements.health = new Entity()
+			.add(
+				new Sprite()
+					.setXY( 20, 68 )
+			)
+			.addToParent( Panes.drone );
+
+		for ( var i = 0 ; i < 28 ; i++ ) {
+			Elements.health
+				.addChild(
+					new Entity()
+						.add(
+							new Sprite( Graphics.DRONE_HEALTH )
+								.setXY( i * 20, 0 )
+								.centerOrigin()
+						)
+				);
+		}
+
+		// Set charge meter to invisible by default
+		Panes.drone.$( 'charge' ).get( FillSprite ).setAlpha( 0 );
 	}
 
 	/**
@@ -146,7 +243,7 @@ function HUD()
 			.addChild(
 				new Entity( 'noise' )
 					.add(
-						new Sprite( Graphics.noise[1] )
+						new Sprite( Graphics.NOISE[1] )
 							.setAlpha( 0 )
 					)
 					.add(
@@ -199,45 +296,23 @@ function HUD()
 	}
 
 	/**
-	 * Set up the drone stats meter group
+	 * Set up the station information pane, detailing
+	 * the radar map, hardware list, and additional info
 	 */
-	function create_drone_meters()
+	function create_station_pane()
 	{
-		var display;
+		create_radar_map();
+		create_signal_indicator();
 
-		Elements.drone = new Entity()
+		Panes.station = new Entity()
 			.add(
-				new Sprite( Graphics.droneHUD )
-					.setXY( Coordinates.drone.HUD.x, Coordinates.drone.HUD.y )
+				new Sprite( Graphics.STATION_PANE )
+					.setXY( Coordinates.station.HUD.x, Coordinates.station.HUD.y )
+			)
+			.addChild(
+				Elements.radar,
+				Elements.signal
 			);
-
-		for ( var indicator in Coordinates.drone.system ) {
-			display = Coordinates.drone.system[indicator];
-
-			Elements.drone.addChild(
-				new Entity()
-					.add(
-						new Sprite()
-							.setXY( display.x, display.y )
-					)
-			);
-		}
-
-		for ( var meter in Coordinates.drone.meters )
-		{
-			display = Coordinates.drone.meters[meter];
-
-			Elements.drone.addChild(
-				new Entity( meter )
-					.add(
-						new FillSprite( display.color, display.width, display.height )
-							.setXY( display.x, display.y )
-					)
-			);
-		}
-
-		// Charge meter is invisible by default
-		Elements.drone.$( 'charge' ).get( FillSprite ).setAlpha( 0 );
 	}
 
 	/**
@@ -245,19 +320,15 @@ function HUD()
 	 */
 	function generate_HUD_layout()
 	{
-		create_radar_map();
-		create_signal_indicator();
-		create_drone_meters();
+		create_drone_pane();
+		create_station_pane();
 
 		frames.every( 3, update_radar_noise );
 
 		stage
-			.addChild(
-				Elements.drone,
-				Elements.radar,
-				Elements.signal
-			)
-			.add( frames );
+			.addChild( Panes.drone, Panes.station )
+			.add( frames )
+			.add( countdown );
 	}
 
 	// ---------------------------------------- //
@@ -276,41 +347,53 @@ function HUD()
 
 		// TODO: Use a SpriteSequence
 		Elements.radar.$( 'noise' ).get( Sprite )
-			.setSource( Graphics.noise[radar_noise] );
+			.setSource( Graphics.NOISE[radar_noise] );
 	}
 
 	/**
-	 * Update drone system state icons and stat meters
+	 * Update drone pane area
 	 */
-	function refresh_drone_HUD( dt )
+	function refresh_drone_pane( dt )
 	{
 		var system = Data.drone.getSystem();
-		var i = 0;
+		var i = 1;
 
-		for ( var indicator in Coordinates.drone.system ) {
-			var state = ( system[indicator] ? 'on.png' : 'off.png' );
-			var file = 'game/ui/indicators/' + indicator + '-' + state;
-
-			// TODO: Use a SpriteSequence
-			Elements.drone.child( i++ ).get( Sprite )
-				.setSource( Assets.getImage( file ) );
-		}
-
+		// Stat meters
 		for ( var meter in Coordinates.drone.meters ) {
 			var display = Coordinates.drone.meters[meter];
 			var depletion = ( system[display.stat] / system[display.max_stat] );
 			var width = Math.round( depletion * display.width );
 
-			Elements.drone.child( i++ ).get( FillSprite )
+			Panes.drone.child( i++ ).get( FillSprite )
 				.setSize( width, display.height )
 		}
 
+		// System indicators
+		for ( var indicator in Coordinates.drone.system ) {
+			var state = ( system[indicator] ? 'on.png' : 'off.png' );
+			var file = 'game/ui/indicators/' + indicator + '-' + state;
+
+			// TODO: Use a SpriteSequence
+			Panes.drone.child( i++ ).get( Sprite )
+				.setSource( Assets.getImage( file ) );
+		}
+
+		// Health meter
+		for ( var i = 0 ; i < 28 ; i++ ) {
+			var health_orb = Elements.health.child( i );
+
+			if ( health_orb.name !== 'off' ) {
+				health_orb.get( Sprite ).alpha._ = 0.66 + Math.wave( 7 * timer - i ) / 3;
+			}
+		}
+
+		// Power charging effect
 		if ( charging.on ) {
 			charging.timer += dt;
 
-			var flash = ( 1 + Math.sin( charging.speed * charging.timer ) ) / 2;
+			var flash = Math.wave( charging.speed * charging.timer );
 
-			Elements.drone.$( 'charge' ).get( FillSprite )
+			Panes.drone.$( 'charge' ).get( FillSprite )
 				.setAlpha( flash );
 		}
 	}
@@ -318,8 +401,10 @@ function HUD()
 	// -- Public: --
 	this.update = function( dt )
 	{
+		timer += dt;
+
 		Elements.radar.find( Radar ).scan( Data.station );
-		refresh_drone_HUD( dt );
+		refresh_drone_pane( dt );
 	};
 
 	this.onAdded = function()
@@ -368,6 +453,40 @@ function HUD()
 	};
 
 	/**
+	 * Reveal the full drone pane
+	 */
+	this.showDronePane = function()
+	{
+		Panes.drone.get( Sprite )
+			.y.tweenTo(
+				Viewport.height - Graphics.DRONE_PANE.height,
+				1.0,
+				Ease.quad.inOut
+			);
+
+		return _;
+	};
+
+	/**
+	 * Cause the drone pane to swivel down and
+	 * become partially hidden. After a delay
+	 * the pane will swivel back up again.
+	 */
+	this.hideDronePane = function()
+	{
+		if ( !Panes.drone.get( Sprite ).y.isTweening() ) {
+			Panes.drone.get( Sprite ).y.tweenTo(
+				Viewport.height - 85,
+				0.5,
+				Ease.quad.inOut
+			);
+		}
+
+		countdown.wait( 5 ).fire( _.showDronePane );
+		return _;
+	};
+
+	/**
 	 * Fade charge meter in
 	 */
 	this.showChargeMeter = function()
@@ -384,7 +503,7 @@ function HUD()
 	{
 		charging.on = false;
 
-		Elements.drone.$( 'charge' ).get( Sprite )
+		Panes.drone.$( 'charge' ).get( Sprite )
 			.alpha.tweenTo( 0, 0.5, Ease.quad.out);
 
 		return _;

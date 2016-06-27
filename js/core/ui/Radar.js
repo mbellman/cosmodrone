@@ -74,7 +74,12 @@ function Radar()
 
 		map.sprite
 			.setAlpha( 1 )
-			.draw.rectangle( display.x, display.y, display.width, display.height )
+			.draw.rectangle(
+				display.x,
+				display.y,
+				display.width,
+				display.height
+			)
 			.stroke( '#fff' );
 
 		map.sprite.setAlpha( blip_alpha );

@@ -722,7 +722,11 @@ function Terrain()
 	}
 
 	// -- Public: --
-	this.canvas;         // Public render of the terrain map at the most recent specified hour
+	/**
+	 * Canvas element of the terrain map
+	 * at the most recent specified hour
+	 */
+	this.canvas;
 
 	/**
 	 * Generate base elevation and temperature maps with custom [settings]

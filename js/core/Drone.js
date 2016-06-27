@@ -553,7 +553,10 @@ function Drone()
 	}
 
 	// -- Public: --
-	this.signal = 4;                  // Radio signal strength
+	/**
+	 * Radio signal strength
+	 */
+	this.signal = 4;
 
 	this.update = function( dt )
 	{

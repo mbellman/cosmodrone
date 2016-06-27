@@ -26,7 +26,6 @@ function GameScene( controller )
 	var hud;                                  // HUD entity
 	var textbox;                              // Dialogue box entity
 	var frames;                               // FrameCounter component for periodic callbacks
-	var drone_signal = 4;                     // Strength of drone radio signal
 	var FLAGS = {};                           // Event flags
 	var DRONE_SPEED;                          // Drone acceleration rate
 
@@ -109,8 +108,8 @@ function GameScene( controller )
 							maxCitySize: 45,
 							tileSize: 2,
 							lightAngle: 220,
-							hours: [12, 19, 20, 0, 4, 6],
-							//hours: [20],
+							//hours: [12, 19, 20, 0, 4, 6],
+							hours: [12],
 							cycleSpeed: 60,
 							scrollSpeed:
 							{
@@ -391,12 +390,16 @@ function GameScene( controller )
 	 */
 	function check_radio_signal()
 	{
+		var _drone = drone.get( Drone );
 		var radio = find_closest_hardware( 'COMM_DISH' );
 
 		if ( typeof radio.part !== 'undefined' ) {
-			drone_signal = 4 - Math.floor( clamp( radio.distance, 0, 4000 ) / 1000 );
-			hud.get( HUD ).updateRadioSignal( drone_signal );
+			drone.get( Drone ).signal = 4 - Math.floor( clamp( radio.distance, 0, 4000 ) / 1000 );
+		} else {
+			drone.get( Drone ).signal = 0;
 		}
+
+		hud.get( HUD ).updateRadioSignal( drone.get( Drone ).signal );
 	}
 
 	/**
@@ -500,26 +503,31 @@ function GameScene( controller )
 	 */
 	function bind_input_handlers()
 	{
-		var _drone = drone.get( Drone );
+		var _Drone = drone.get( Drone );
+
+		// Partially hide drone HUD pane while maneuvering
+		input.on( 'input', function() {
+			hud.get( HUD ).hideDronePane();
+		} );
 
 		// Spin stabilization
 		input.on( 'S', function() {
-			if ( _drone.isControllable() ) {
-				_drone.stabilize();
+			if ( _Drone.isControllable() ) {
+				_Drone.stabilize();
 			}
 		} );
 
-		// Docking mode
+		// Docking-related actions
 		input.on( 'D', function() {
-			if ( drone_signal > 0 ) {
-				if ( _drone.isDocked() ) {
-					_drone.undock();
+			if ( _Drone.signal > 0 ) {
+				if ( _Drone.isDocked() ) {
+					_Drone.undock();
 					hud.get( HUD ).hideChargeMeter();
 				} else
-				if ( !_drone.isDocking() ) {
+				if ( !_Drone.isDocking() ) {
 					enter_docking_mode();
 				} else {
-					_drone.abortDocking();
+					_Drone.abortDocking();
 				}
 			}
 		} );
@@ -564,8 +572,8 @@ function GameScene( controller )
 		// Safeguard for calling init() again on a loaded instance
 		_.unload();
 
-		create_background();
-		//init_complete();
+		//create_background();
+		init_complete();
 		return _;
 	};
 

@@ -12,21 +12,35 @@ function Flicker()
 	// -- Private: --
 	var _ = this;
 	var sprite;
+
+	var oscillation = {
+		on: false,
+		speed: 0,
+		counter: 0
+	};
+
 	var range = {
-		alpha: {low: 0, high: 1},
+		alpha: {low: 0, high: 1, delta: 1},
 		time: {low: 0.5, high: 1.0}
 	};
 
 	// Public:
 	this.update = function( dt )
 	{
-		if ( !sprite.alpha.isTweening() ) {
+		if ( !oscillation.on && !sprite.alpha.isTweening() ) {
 			// Start new flicker tween
 			sprite.alpha.tweenTo(
 				randomFloat( range.alpha.low, range.alpha.high ),
 				randomFloat( range.time.low, range.time.high ),
 				Ease.quad.inOut
 			);
+		} else {
+			if ( oscillation.on ) {
+				oscillation.counter += ( oscillation.speed * dt );
+
+				var value = ( 1 + Math.sin( oscillation.counter ) ) / 2;
+				sprite.alpha._ = range.alpha.low + value * range.alpha.delta;
+			}
 		}
 	};
 
@@ -42,6 +56,7 @@ function Flicker()
 	{
 		range.alpha.low = clamp( low, 0, 1 );
 		range.alpha.high = clamp( high, 0, 1 );
+		range.alpha.delta = range.alpha.high - range.alpha.low;
 		return _;
 	};
 
@@ -52,6 +67,16 @@ function Flicker()
 	{
 		range.time.low = low;
 		range.time.high = high;
+		return _;
+	};
+
+	/**
+	 * Turn on alpha sine oscillation with a custom [speed]
+	 */
+	this.oscillate = function( speed )
+	{
+		oscillation.on = true;
+		oscillation.speed = speed || 1;
 		return _;
 	};
 }
