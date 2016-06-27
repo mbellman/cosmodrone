@@ -82,6 +82,7 @@ var AssetManifest =
 			'game/ui/panes/drone-glow.png',
 			'game/ui/panes/drone-shadow.png',
 			'game/ui/panes/drone.png',
+			'game/ui/panes/station-glow.png',
 			'game/ui/panes/station.png',
 			'game/ui/radio/base.png',
 			'game/ui/radio/dish.png',

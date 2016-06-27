@@ -104,6 +104,9 @@ function loadGame()
 	.progress( function( percent ) {
 		console.log( 'Loading...' + percent + '%' );
 	} )
+	.catch( function( file ) {
+		console.warn( 'AssetLoader error: ' + file );
+	} )
 	.then( function() {
 		var controller = new Controller();
 		controller.showGame();

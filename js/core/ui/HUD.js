@@ -19,6 +19,7 @@ function HUD()
 		DRONE_PANE_SHADOW: Assets.getImage( 'game/ui/panes/drone-shadow.png' ),
 		DRONE_HEALTH: Assets.getImage( 'game/ui/health.png' ),
 		STATION_PANE: Assets.getImage( 'game/ui/panes/station.png' ),
+		STATION_PANE_GLOW: Assets.getImage( 'game/ui/panes/station-glow.png' ),
 		NOISE: {
 			1: Assets.getImage( 'game/ui/radio/noise-1.png' ),
 			2: Assets.getImage( 'game/ui/radio/noise-2.png' ),
@@ -29,16 +30,6 @@ function HUD()
 
 	// HUD element coordinates
 	var Coordinates = {
-		radar: {
-			x: 15,
-			y: 15,
-			width: 220,
-			height: 150
-		},
-		signal: {
-			x: 30,
-			y: 30
-		},
 		drone: {
 			HUD: {
 				x: 0,
@@ -81,8 +72,18 @@ function HUD()
 		station: {
 			HUD: {
 				x: Viewport.width - 250,
-				y: 0
-			}
+				y: 75
+			},
+			radar: {
+				x: 16,
+				y: 336,
+				width: 220,
+				height: 150
+			},
+			signal: {
+				x: 18,
+				y: 340
+			},
 		}
 	};
 
@@ -238,7 +239,7 @@ function HUD()
 		Elements.radar = new Entity()
 			.add(
 				new Sprite()
-					.setXY( Coordinates.radar.x, Coordinates.radar.y )
+					.setXY( Coordinates.station.radar.x, Coordinates.station.radar.y )
 			)
 			.addChild(
 				new Entity( 'noise' )
@@ -253,7 +254,7 @@ function HUD()
 				new Entity()
 					.add(
 						new Radar()
-							.setSize( Coordinates.radar.width, Coordinates.radar.height )
+							.setSize( Coordinates.station.radar.width, Coordinates.station.radar.height )
 					)
 			);
 	}
@@ -266,7 +267,7 @@ function HUD()
 		Elements.signal = new Entity()
 			.add(
 				new Sprite()
-					.setXY( Coordinates.signal.x, Coordinates.signal.y )
+					.setXY( Coordinates.station.signal.x, Coordinates.station.signal.y )
 			)
 			.addChild(
 				new Entity( 'signal' )
@@ -306,10 +307,24 @@ function HUD()
 
 		Panes.station = new Entity()
 			.add(
-				new Sprite( Graphics.STATION_PANE )
+				new Sprite()
 					.setXY( Coordinates.station.HUD.x, Coordinates.station.HUD.y )
 			)
 			.addChild(
+				new Entity()
+					.add(
+						new Sprite( Graphics.STATION_PANE_GLOW )
+							.setXY( -16, -16 )
+					)
+					.add(
+						new Flicker()
+							.setAlphaRange( 0.1, 0.25 )
+							.oscillate( 1.5 )
+					),
+				new Entity()
+					.add(
+						new Sprite( Graphics.STATION_PANE)
+					),
 				Elements.radar,
 				Elements.signal
 			);

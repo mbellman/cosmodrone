@@ -48,7 +48,7 @@
 		/**
 		 * Fire all event handlers for a specific key input [event]
 		 */
-		function dispatch_events( event, data )
+		function dispatch_event( event, data )
 		{
 			var handlers = events[event];
 
@@ -69,8 +69,8 @@
 			}
 
 			// Dispatch base input event by default
-			dispatch_events( 'input', event.keyCode );
-			dispatch_events( KeyCodes[event.keyCode] );
+			dispatch_event( 'input', event.keyCode );
+			dispatch_event( KeyCodes[event.keyCode] );
 		}
 
 		// -- Public: --
