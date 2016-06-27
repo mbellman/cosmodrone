@@ -505,9 +505,9 @@ function GameScene( controller )
 	{
 		var _Drone = drone.get( Drone );
 
-		// Partially hide drone HUD pane while maneuvering
+		// Partially hide HUD while maneuvering
 		input.on( 'input', function() {
-			hud.get( HUD ).hideDronePane();
+			hud.get( HUD ).hide();
 		} );
 
 		// Spin stabilization

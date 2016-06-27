@@ -34,7 +34,7 @@
 		var bound = false;
 		var disabled = false;
 		var events = {
-			input: [function() {}]
+			input: []
 		};
 
 		/**

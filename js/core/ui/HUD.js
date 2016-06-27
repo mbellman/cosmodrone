@@ -97,7 +97,16 @@ function HUD()
 	var Elements = {
 		health: null,
 		radar: null,
-		signal: null
+		signal: null,
+		panes: {
+			drone: {
+				shadow: null,
+				pane: null
+			},
+			station: {
+				pane: null
+			}
+		}
 	};
 
 	// Game objects
@@ -153,11 +162,15 @@ function HUD()
 		// Shadow + glowing background
 		Panes.drone = new Entity()
 			.add(
-				new Sprite( Graphics.DRONE_PANE_SHADOW )
+				new Sprite()
 					.setXY( Coordinates.drone.HUD.x, Coordinates.drone.HUD.y )
 			)
 			.addChild(
-				new Entity()
+				new Entity( 'shadow' )
+					.add(
+						new Sprite( Graphics.DRONE_PANE_SHADOW )
+					),
+				new Entity( 'glow' )
 					.add(
 						new Sprite( Graphics.DRONE_PANE_GLOW )
 							.setXY( 0, -14 )
@@ -201,7 +214,7 @@ function HUD()
 		// Glass pane cover
 		Panes.drone
 			.addChild(
-				new Entity()
+				new Entity( 'pane' )
 					.add(
 						new Sprite( Graphics.DRONE_PANE )
 					)
@@ -226,6 +239,9 @@ function HUD()
 						)
 				);
 		}
+
+		Elements.panes.drone.shadow = Panes.drone.$( 'shadow' ).get( Sprite );
+		Elements.panes.drone.pane = Panes.drone.$( 'pane' ).get( Sprite );
 
 		// Set charge meter to invisible by default
 		Panes.drone.$( 'charge' ).get( FillSprite ).setAlpha( 0 );
@@ -321,13 +337,15 @@ function HUD()
 							.setAlphaRange( 0.1, 0.25 )
 							.oscillate( 1.5 )
 					),
-				new Entity()
+				new Entity( 'pane' )
 					.add(
 						new Sprite( Graphics.STATION_PANE)
 					),
 				Elements.radar,
 				Elements.signal
 			);
+
+		Elements.panes.station.pane = Panes.station.$( 'pane' ).get( Sprite );
 	}
 
 	/**
@@ -344,6 +362,64 @@ function HUD()
 			.addChild( Panes.drone, Panes.station )
 			.add( frames )
 			.add( countdown );
+	}
+
+	// --------------------------------------------- //
+	// ------------- UI CHANGE ACTIONS ------------- //
+	// --------------------------------------------- //
+
+	/**
+	 * Restore the drone pane's normal view
+	 */
+	function reveal_drone_pane()
+	{
+		Panes.drone.get( Sprite )
+			.y.tweenTo( Viewport.height - Graphics.DRONE_PANE.height, 1.0, Ease.quad.inOut );
+
+		Elements.panes.drone.shadow
+			.alpha.tweenTo( 1, 1.0, Ease.quad.out );
+
+		Elements.panes.drone.pane
+			.alpha.tweenTo( 1, 1.0, Ease.quad.out );
+	}
+
+	/**
+	 * Partially hide the drone pane
+	 */
+	function hide_drone_pane()
+	{
+		if ( !Panes.drone.get( Sprite ).y.isTweening() ) {
+			Panes.drone.get( Sprite )
+				.y.tweenTo( Viewport.height - 85, 0.5, Ease.quad.inOut );
+		}
+
+		if ( !Elements.panes.drone.shadow.alpha.isTweening() ) {
+			Elements.panes.drone.shadow
+				.alpha.tweenTo( 0.75, 0.5, Ease.quad.out );
+		}
+
+		if ( !Elements.panes.drone.pane.alpha.isTweening() ) {
+			Elements.panes.drone.pane
+				.alpha.tweenTo( 0.25, 0.5, Ease.quad.out );
+		}
+	}
+
+	/**
+	 * Restore the station pane's normal view
+	 */
+	function reveal_station_pane()
+	{
+		Elements.panes.station.pane
+			.alpha.tweenTo( 1, 1.0, Ease.quad.out );
+	}
+
+	/**
+	 * Partially hide the station pane
+	 */
+	function hide_station_pane()
+	{
+		Elements.panes.station.pane
+			.alpha.tweenTo( 0.5, 0.5, Ease.quad.out );
 	}
 
 	// ---------------------------------------- //
@@ -371,7 +447,10 @@ function HUD()
 	function refresh_drone_pane( dt )
 	{
 		var system = Data.drone.getSystem();
-		var i = 1;
+
+		// Offset child entity counter by 2 to account
+		// for the pane shadow and glow entities
+		var i = 2;
 
 		// Stat meters
 		for ( var meter in Coordinates.drone.meters ) {
@@ -468,36 +547,24 @@ function HUD()
 	};
 
 	/**
-	 * Reveal the full drone pane
+	 * Reveal the full HUD
 	 */
-	this.showDronePane = function()
+	this.reveal = function()
 	{
-		Panes.drone.get( Sprite )
-			.y.tweenTo(
-				Viewport.height - Graphics.DRONE_PANE.height,
-				1.0,
-				Ease.quad.inOut
-			);
-
+		reveal_drone_pane();
+		reveal_station_pane();
 		return _;
 	};
 
 	/**
-	 * Cause the drone pane to swivel down and
-	 * become partially hidden. After a delay
-	 * the pane will swivel back up again.
+	 * Cause the HUD to partially hide
+	 * itself for a temporary duration
 	 */
-	this.hideDronePane = function()
+	this.hide = function()
 	{
-		if ( !Panes.drone.get( Sprite ).y.isTweening() ) {
-			Panes.drone.get( Sprite ).y.tweenTo(
-				Viewport.height - 85,
-				0.5,
-				Ease.quad.inOut
-			);
-		}
-
-		countdown.wait( 5 ).fire( _.showDronePane );
+		hide_drone_pane();
+		hide_station_pane();
+		countdown.wait( 5 ).fire( _.reveal );
 		return _;
 	};
 

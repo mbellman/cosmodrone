@@ -39,7 +39,7 @@ div#game {
 
 div#game #bg {
 	z-index: 1;
-	opacity: 0.95;
+	opacity: 0.85;
 }
 
 canvas#game {

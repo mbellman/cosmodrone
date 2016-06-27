@@ -12,6 +12,7 @@ function Flicker()
 	// -- Private: --
 	var _ = this;
 	var sprite;
+	var is_flickering = true;
 
 	var oscillation = {
 		on: false,
@@ -27,19 +28,21 @@ function Flicker()
 	// Public:
 	this.update = function( dt )
 	{
-		if ( !oscillation.on && !sprite.alpha.isTweening() ) {
-			// Start new flicker tween
-			sprite.alpha.tweenTo(
-				randomFloat( range.alpha.low, range.alpha.high ),
-				randomFloat( range.time.low, range.time.high ),
-				Ease.quad.inOut
-			);
-		} else {
-			if ( oscillation.on ) {
-				oscillation.counter += ( oscillation.speed * dt );
+		if ( is_flickering ) {
+			if ( !oscillation.on && !sprite.alpha.isTweening() ) {
+				// Start new flicker tween
+				sprite.alpha.tweenTo(
+					randomFloat( range.alpha.low, range.alpha.high ),
+					randomFloat( range.time.low, range.time.high ),
+					Ease.quad.inOut
+				);
+			} else {
+				if ( oscillation.on ) {
+					oscillation.counter += ( oscillation.speed * dt );
 
-				var value = ( 1 + Math.sin( oscillation.counter ) ) / 2;
-				sprite.alpha._ = range.alpha.low + value * range.alpha.delta;
+					var value = ( 1 + Math.sin( oscillation.counter ) ) / 2;
+					sprite.alpha._ = range.alpha.low + value * range.alpha.delta;
+				}
 			}
 		}
 	};
@@ -77,6 +80,25 @@ function Flicker()
 	{
 		oscillation.on = true;
 		oscillation.speed = speed || 1;
+		return _;
+	};
+
+	/**
+	 * Enable flicker effect
+	 */
+	this.enable = function()
+	{
+		is_flickering = true;
+		return _;
+	};
+
+	/**
+	 * Disable flicker effect and stop alpha tween
+	 */
+	this.disable = function()
+	{
+		is_flickering = false;
+		sprite.alpha.stop();
 		return _;
 	};
 }
