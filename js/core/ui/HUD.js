@@ -72,7 +72,7 @@ function HUD()
 		station: {
 			HUD: {
 				x: Viewport.width - 250,
-				y: 75
+				y: 50
 			},
 			radar: {
 				x: 16,
@@ -131,6 +131,7 @@ function HUD()
 	var noise_level = 0;                              // Noise level value, expressed as ( 1 - ( radio_signal / 4 ) )
 	var radar_noise = 1;                              // Noise graphic to show for radar (cycles from 1 - 4)
 	var timer = 0;                                    // dt counter
+	var is_expanded = false;                          // Boolean for station pane expansion state
 
 	// ------------------------------------------ //
 	// ------------- INITIALIZATION ------------- //
@@ -371,7 +372,7 @@ function HUD()
 	/**
 	 * Restore the drone pane's normal view
 	 */
-	function reveal_drone_pane()
+	function unfade_drone_pane()
 	{
 		Panes.drone.get( Sprite )
 			.y.tweenTo( Viewport.height - Graphics.DRONE_PANE.height, 1.0, Ease.quad.inOut );
@@ -384,9 +385,9 @@ function HUD()
 	}
 
 	/**
-	 * Partially hide the drone pane
+	 * Partially fade out the drone pane
 	 */
-	function hide_drone_pane()
+	function fade_drone_pane()
 	{
 		if ( !Panes.drone.get( Sprite ).y.isTweening() ) {
 			Panes.drone.get( Sprite )
@@ -400,23 +401,23 @@ function HUD()
 
 		if ( !Elements.panes.drone.pane.alpha.isTweening() ) {
 			Elements.panes.drone.pane
-				.alpha.tweenTo( 0.25, 0.5, Ease.quad.out );
+				.alpha.tweenTo( 0.5, 0.5, Ease.quad.out );
 		}
 	}
 
 	/**
 	 * Restore the station pane's normal view
 	 */
-	function reveal_station_pane()
+	function unfade_station_pane()
 	{
 		Elements.panes.station.pane
 			.alpha.tweenTo( 1, 1.0, Ease.quad.out );
 	}
 
 	/**
-	 * Partially hide the station pane
+	 * Partially fade out the station pane
 	 */
-	function hide_station_pane()
+	function fade_station_pane()
 	{
 		Elements.panes.station.pane
 			.alpha.tweenTo( 0.5, 0.5, Ease.quad.out );
@@ -547,24 +548,60 @@ function HUD()
 	};
 
 	/**
-	 * Reveal the full HUD
+	 * Remove HUD fade-out effects
 	 */
-	this.reveal = function()
+	this.unfade = function()
 	{
-		reveal_drone_pane();
-		reveal_station_pane();
+		unfade_drone_pane();
+		unfade_station_pane();
 		return _;
 	};
 
 	/**
-	 * Cause the HUD to partially hide
-	 * itself for a temporary duration
+	 * Cause the HUD to partially fade
+	 * out for a temporary duration
 	 */
-	this.hide = function()
+	this.fade = function()
 	{
-		hide_drone_pane();
-		hide_station_pane();
-		countdown.wait( 5 ).fire( _.reveal );
+		fade_drone_pane();
+		fade_station_pane();
+		countdown.wait( 5 ).fire( _.unfade );
+		return _;
+	};
+
+	/**
+	 * Bring out the full station pane interface
+	 */
+	this.expandStationPane = function()
+	{
+		is_expanded = true;
+
+		_.unfade();
+		countdown.stop();
+
+		Panes.drone.get( Sprite )
+			.y.tweenTo( Viewport.height - 85, 0.75, Ease.quad.inOut );
+
+		if ( Data.drone.isDocked() ) {
+			Panes.station.get( Sprite )
+				.x.tweenTo( 50, 1.5, Ease.quad.inOut );
+		}
+
+		return _;
+	};
+
+	/**
+	 * Collapse the station pane interface
+	 */
+	this.closeStationPane = function()
+	{
+		is_expanded = false;
+
+		Panes.station.get( Sprite )
+			.x.tweenTo( Coordinates.station.HUD.x, 1.5, Ease.quad.inOut );
+
+		countdown.wait( 5 ).fire( _.unfade );
+
 		return _;
 	};
 

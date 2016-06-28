@@ -9,23 +9,25 @@ A game about space station maintenance!
 * Loading bar/indicator of some kind
 
 ##### GAME
-* Truss modules
-* Solar panels
-* Additional modules/parts as seen fit
+* Numerical power/fuel value
+* Extended dialogue chunks
+* Alerts screen with ability to select hardware maintenance jobs
+* Hardware interface screen (video view within station pane)
 * Collisions/drone damage
 * Random event docking alignment minigame
 * Components with update cycles/architecture for various hardware parts
-* Alerts screen with ability to select hardware maintenance jobs
-* Hardware interface panels
+* Specific terminal coordinates for precision docking
+* Truss modules
+* Solar panels
+* Additional modules/parts as needed
 * First-level tutorial
 * Handler for drone running out of power/fuel
-* Ability to move drone above or below the station
+* Ability to move drone above or below the station (*)
 * Moving docking targets (later-stage development) (*)
 * Scene zoom-out when speeding up (*)
 * Replace jQuery with vanilla JS (*)
 
 ##### HUD
-* Enlarge radar map + place radio signal indicator inside it
 * "Autospin" system indicator
 * Indicate when docking mode is usable
 * Show data readout for docking target

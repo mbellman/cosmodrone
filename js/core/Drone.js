@@ -34,7 +34,9 @@ function Drone()
 		phase: 1,
 		// Docking completion handler; automatically receives
 		// the target HardwarePart specs as an argument
-		complete: function() {}
+		onComplete: function() {},
+		// Undocking handler
+		onDetach: function() {}
 	};
 
 	// Drone stats object
@@ -295,23 +297,24 @@ function Drone()
 			return;
 		}
 
-		// If the drone is spinning "away" from [angle]...
+		// If the drone is spinning "away" from [angle]
+		// at a slow enough rate, slow down and prepare
+		// to spin faster in the opposite direction.
 		if (
-			( direction < 0 && System.spin > 0 ) ||
-			( direction > 0 && System.spin < 0 )
+			(
+				( direction < 0 && System.spin > 0 ) ||
+				( direction > 0 && System.spin < 0 )
+			) &&
+			SPIN_VELOCITY < 75
 		) {
-			// ...and if it is spinning slowly enough,
-			// slow down and prepare to spin the other way
-			if ( SPIN_VELOCITY < 75 ) {
-				stabilize_spin();
+			stabilize_spin();
 
-				if ( System.spin === 0 ) {
-					spin_accelerate = true;
-					return;
-				}
+			if ( System.spin === 0 ) {
+				spin_accelerate = true;
+				return;
 			}
 		} else {
-			// ...otherwise, speed up for [angle] approach
+			// Otherwise, speed up for [angle] approach
 			spin_accelerate = true;
 		}
 	}
@@ -476,11 +479,11 @@ function Drone()
 				if ( distance < 1 )
 				{
 					// Docked!
-					_.owner.get( Point ).setVelocity( 0, 0 );
-					docking.complete( docking.target.get( HardwarePart ).getSpecs() );
-
 					System.docking = false;
 					is_docked = true;
+
+					_.owner.get( Point ).setVelocity( 0, 0 );
+					docking.onComplete( docking.target.get( HardwarePart ).getSpecs() );
 				}
 
 				break;
@@ -691,6 +694,8 @@ function Drone()
 		if ( is_docked ) {
 			docking.target.get( HardwarePart ).showAlert();
 			_.addVelocity( 2 * -System.MAX_SPEED );
+			docking.onDetach();
+
 			is_docked = false;
 		}
 	};
@@ -712,7 +717,16 @@ function Drone()
 	 */
 	this.onDocking = function( handler )
 	{
-		docking.complete = handler;
+		docking.onComplete = handler;
+		return _;
+	};
+
+	/**
+	 * Set a handler to be run upon undocking
+	 */
+	this.onUnDocking = function( handler )
+	{
+		docking.onDetach = handler;
 		return _;
 	};
 
@@ -721,7 +735,12 @@ function Drone()
 	 */
 	this.isControllable = function()
 	{
-		return ( is_operational() && _.signal > 0 && !System.docking && !is_docked);
+		return (
+			is_operational() &&
+			_.signal > 0 &&
+			!System.docking &&
+			!is_docked
+		);
 	};
 
 	/**

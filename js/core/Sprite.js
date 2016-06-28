@@ -65,14 +65,18 @@ function Sprite( _source )
 	function update_transform()
 	{
 		if ( parent !== null && parent.getProperRotation() !== 0 ) {
-			var theta = parent.getProperRotation() * Math.DEG_TO_RAD;
+			var rotation_P = parent.getProperRotation();
+			var origin_P = parent.getProperOrigin();
+
+			var theta = rotation_P * Math.DEG_TO_RAD;
 			var SIN_THETA = Math.sin( theta );
 			var COS_THETA = Math.cos( theta );
 
-			T.origin.x = origin.x + parent.getProperOrigin().x;
-			T.origin.y = origin.y + parent.getProperOrigin().y;
-			T.x = ( _.x._ * COS_THETA - _.y._ * SIN_THETA ) + parent.getProperOrigin().x;
-			T.y = ( _.x._ * SIN_THETA + _.y._ * COS_THETA ) + parent.getProperOrigin().y;
+			T.origin.x = origin.x + origin_P.x;
+			T.origin.y = origin.y + origin_P.y;
+			T.x = ( _.x._ * COS_THETA - _.y._ * SIN_THETA ) + origin_P.x;
+			T.y = ( _.x._ * SIN_THETA + _.y._ * COS_THETA ) + origin_P.y;
+
 			return;
 		}
 
@@ -182,7 +186,12 @@ function Sprite( _source )
 		update_proper_rotation();
 		update_bounding_box();
 
-		if (source === null || alpha === 0 || !_.isOnScreen() ) {
+		if ( source === null ||
+			alpha === 0 ||
+			!_.isOnScreen() ||
+			bounds.width === 0 ||
+			bounds.height === 0
+		) {
 			return;
 		}
 

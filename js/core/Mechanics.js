@@ -424,6 +424,15 @@ function Countdown()
 		fire = handler;
 		return _;
 	};
+
+	/**
+	 * Stop countdown
+	 */
+	this.stop = function()
+	{
+		timer = 0;
+		return _;
+	};
 }
 
 /**

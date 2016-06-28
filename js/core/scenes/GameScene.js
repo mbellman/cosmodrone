@@ -12,10 +12,17 @@ function GameScene( controller )
 	// -- Private: --
 	var _ = this;
 
+	// Game mode definitions
+	var Modes = {
+		PILOT_MODE: 1,
+		DOCK_MODE: 2
+	};
+
 	// General variables
 	var running = true;                       // Boolean for game active state
 	var initialized = false;                  // Boolean for game session loaded state
 	var level = 1;                            // Current level
+	var mode = Modes.PILOT_MODE;              // Current gameplay mode
 	var input = new InputHandler();           // Input event manager
 	var keys = new Keys();                    // Key state manager
 	var stage = new Entity();                 // Game entity hierarchy
@@ -159,7 +166,9 @@ function GameScene( controller )
 			.add( new Point() )
 			.add( new Countdown() )
 			.add(
-				new Drone().onDocking( handle_docking )
+				new Drone()
+					.onDocking( handle_docking )
+					.onUnDocking( handle_undocking )
 			)
 			.add(
 				new Sprite( Assets.getImage( 'game/drone/1.png' ) )
@@ -313,21 +322,6 @@ function GameScene( controller )
 	// -------------------------------------------- //
 
 	/**
-	 * Set the [camera] position to a value between
-	 * its current position and the drone position
-	 */
-	function update_camera()
-	{
-		var view = camera.get( Point ).getPosition();
-		var player = drone.get( Point ).getPosition();
-
-		camera.get( Point ).setPosition(
-			lerp( view.x, player.x, 0.075 ),
-			lerp( view.y, player.y, 0.075 )
-		);
-	}
-
-	/**
 	 * Ascertains the closest hardware part of [type] and
 	 * returns an object with its owner entity and distance
 	 */
@@ -423,6 +417,8 @@ function GameScene( controller )
 	 */
 	function handle_docking( specs )
 	{
+		mode = Modes.DOCK_MODE;
+
 		switch ( specs.name ) {
 			case 'RECHARGER':
 				print_dialogue( 'This is a recharger unit. Use it to recharge your power!' );
@@ -432,8 +428,18 @@ function GameScene( controller )
 				print_dialogue( 'This is a refueler unit. Use it to refuel your propellant!' );
 				break;
 			default:
+				hud.get( HUD ).expandStationPane();
 				break;
 		}
+	}
+
+	/**
+	 * Undocking event handler
+	 */
+	function handle_undocking()
+	{
+		hud.get( HUD ).closeStationPane();
+		mode = Modes.PILOT_MODE;
 	}
 
 	/**
@@ -466,6 +472,17 @@ function GameScene( controller )
 
 		textbox.find( TextPrinter ).print( string );
 		textbox.find( Countdown ).wait( hide_delay );
+	}
+
+	/**
+	 * Print a succession of dialogue strings
+	 *
+	 * TODO: Set up external dialogue bank and
+	 * load [text] in from the global object
+	 */
+	function print_dialogue_chunk( text )
+	{
+
 	}
 
 	// ----------------------------------------- //
@@ -505,9 +522,11 @@ function GameScene( controller )
 	{
 		var _Drone = drone.get( Drone );
 
-		// Partially hide HUD while maneuvering
-		input.on( 'input', function() {
-			hud.get( HUD ).hide();
+		// Handler for any keyboard input
+		input.on( 'input', function( key ) {
+			if ( mode === Modes.PILOT_MODE) {
+				hud.get( HUD ).fade();
+			}
 		} );
 
 		// Spin stabilization
@@ -533,7 +552,26 @@ function GameScene( controller )
 		} );
 	}
 
-	// Public:
+	// ---------------------------------------- //
+	// ------------- UPDATE CYCLE ------------- //
+	// ---------------------------------------- //
+
+	/**
+	 * Set the [camera] position to a value between
+	 * its current position and the drone position
+	 */
+	function update_camera()
+	{
+		var view = camera.get( Point ).getPosition();
+		var player = drone.get( Point ).getPosition();
+
+		camera.get( Point ).setPosition(
+			lerp( view.x, player.x, 0.075 ),
+			lerp( view.y, player.y, 0.075 )
+		);
+	}
+
+	// -- Public: --
 	this.update = function( dt )
 	{
 		if ( initialized && running ) {
@@ -613,6 +651,7 @@ function GameScene( controller )
 		input.unlisten().unbindEvents();
 		destroy_background();
 		stage.disposeAll();
+
 		return _;
 	};
 
