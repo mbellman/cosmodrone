@@ -135,7 +135,7 @@ function GameScene( controller )
 							complete: function()
 							{
 								console.log('Total init time: ' + ( Date.now() - t ) + 'ms');
-								init_complete();
+								initialize_game();
 							}
 						}
 					)
@@ -285,9 +285,9 @@ function GameScene( controller )
 	}
 
 	/**
-	 * Finish initialization (background generation) and start game
+	 * Instantiate game objects
 	 */
-	function init_complete()
+	function initialize_game()
 	{
 		initialized = true;
 
@@ -438,7 +438,7 @@ function GameScene( controller )
 	 */
 	function handle_undocking()
 	{
-		hud.get( HUD ).closeStationPane();
+		hud.get( HUD ).collapseStationPane();
 		mode = Modes.PILOT_MODE;
 	}
 
@@ -611,7 +611,7 @@ function GameScene( controller )
 		_.unload();
 
 		create_background();
-		//init_complete();
+		//initialize_game();
 		return _;
 	};
 

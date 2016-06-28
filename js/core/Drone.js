@@ -578,7 +578,6 @@ function Drone()
 		}
 
 		_.owner.get( Sprite ).rotation._ += ( System.spin * dt );
-		consume_power( dt );
 
 		if ( is_docked ) {
 			switch ( docking.hardware ) {
@@ -589,6 +588,8 @@ function Drone()
 					System.fuel = Math.min( System.fuel + 20 * dt, System.MAX_FUEL );
 					break;
 			}
+		} else {
+			consume_power( dt );
 		}
 	};
 

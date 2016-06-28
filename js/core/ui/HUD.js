@@ -18,8 +18,10 @@ function HUD()
 		DRONE_PANE_GLOW: Assets.getImage( 'game/ui/panes/drone-glow.png' ),
 		DRONE_PANE_SHADOW: Assets.getImage( 'game/ui/panes/drone-shadow.png' ),
 		DRONE_HEALTH: Assets.getImage( 'game/ui/health.png' ),
-		STATION_PANE: Assets.getImage( 'game/ui/panes/station.png' ),
+		STATION_PANE_CLOSED: Assets.getImage( 'game/ui/panes/station-closed.png' ),
+		STATION_PANE_OPEN: Assets.getImage( 'game/ui/panes/station-open.png' ),
 		STATION_PANE_GLOW: Assets.getImage( 'game/ui/panes/station-glow.png' ),
+		STATION_PANE_SHADOW: Assets.getImage( 'game/ui/panes/station-shadow.png' ),
 		NOISE: {
 			1: Assets.getImage( 'game/ui/radio/noise-1.png' ),
 			2: Assets.getImage( 'game/ui/radio/noise-2.png' ),
@@ -324,10 +326,12 @@ function HUD()
 
 		Panes.station = new Entity()
 			.add(
+				// Coordinates
 				new Sprite()
 					.setXY( Coordinates.station.HUD.x, Coordinates.station.HUD.y )
 			)
 			.addChild(
+				// Blue glow
 				new Entity()
 					.add(
 						new Sprite( Graphics.STATION_PANE_GLOW )
@@ -335,18 +339,36 @@ function HUD()
 					)
 					.add(
 						new Flicker()
-							.setAlphaRange( 0.1, 0.25 )
+							.setAlphaRange( 0.2, 0.4 )
 							.oscillate( 1.5 )
 					),
 				new Entity( 'pane' )
 					.add(
-						new Sprite( Graphics.STATION_PANE)
+						new Sprite()
+					)
+					.addChild(
+						// Shadow
+						new Entity()
+							.add(
+								new Sprite( Graphics.STATION_PANE_SHADOW )
+							),
+						// Graphic for expanded mode
+						new Entity( 'open' )
+							.add(
+								new Sprite ( Graphics.STATION_PANE_OPEN )
+									.setAlpha( 0 )
+							),
+						// Graphic for collapsed mode
+						new Entity( 'closed' )
+							.add(
+								new Sprite( Graphics.STATION_PANE_CLOSED )
+							)
 					),
 				Elements.radar,
 				Elements.signal
 			);
 
-		Elements.panes.station.pane = Panes.station.$( 'pane' ).get( Sprite );
+		Elements.panes.station.pane = Panes.station.$( 'pane' );
 	}
 
 	/**
@@ -410,7 +432,7 @@ function HUD()
 	 */
 	function unfade_station_pane()
 	{
-		Elements.panes.station.pane
+		Elements.panes.station.pane.get( Sprite )
 			.alpha.tweenTo( 1, 1.0, Ease.quad.out );
 	}
 
@@ -419,7 +441,7 @@ function HUD()
 	 */
 	function fade_station_pane()
 	{
-		Elements.panes.station.pane
+		Elements.panes.station.pane.get( Sprite )
 			.alpha.tweenTo( 0.5, 0.5, Ease.quad.out );
 	}
 
@@ -584,8 +606,14 @@ function HUD()
 
 		if ( Data.drone.isDocked() ) {
 			Panes.station.get( Sprite )
-				.x.tweenTo( 50, 1.5, Ease.quad.inOut );
+				.x.tweenTo( 8, 1.25, Ease.quad.inOut );
 		}
+
+		Elements.panes.station.pane.$( 'open' ).get( Sprite )
+			.alpha.tweenTo( 1, 1.0, Ease.quad.out );
+
+		Elements.panes.station.pane.$( 'closed' ).get( Sprite )
+			.alpha.tweenTo( 0, 1.0, Ease.quad.in );
 
 		return _;
 	};
@@ -593,12 +621,18 @@ function HUD()
 	/**
 	 * Collapse the station pane interface
 	 */
-	this.closeStationPane = function()
+	this.collapseStationPane = function()
 	{
 		is_expanded = false;
 
 		Panes.station.get( Sprite )
-			.x.tweenTo( Coordinates.station.HUD.x, 1.5, Ease.quad.inOut );
+			.x.tweenTo( Coordinates.station.HUD.x, 1.25, Ease.quad.inOut );
+
+		Elements.panes.station.pane.$( 'open' ).get( Sprite )
+			.alpha.tweenTo( 0, 1.0, Ease.quad.in );
+
+		Elements.panes.station.pane.$( 'closed' ).get( Sprite )
+			.alpha.tweenTo( 1, 1.0, Ease.quad.out );
 
 		countdown.wait( 5 ).fire( _.unfade );
 
