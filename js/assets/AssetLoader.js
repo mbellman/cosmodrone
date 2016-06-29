@@ -12,7 +12,7 @@
 	 * Class: AudioBuffer
 	 * ------------------
 	 *
-	 * Special WebAudio buffer asset for audio playback
+	 * (INTERNAL) Special WebAudio buffer asset for audio playback
 	 */
 	function AudioBuffer( buffer )
 	{
@@ -48,7 +48,7 @@
 	 * Class: Asset
 	 * ------------
 	 *
-	 * Instance of an image or audio asset
+	 * (INTERNAL) Instance of an image or audio asset
 	 */
 	function Asset( type )
 	{
@@ -160,8 +160,8 @@
 	 * Class: AssetManager
 	 * -------------------
 	 *
-	 * Instance of a loaded asset library,
-	 * used to retrieve assets during game
+	 * (INTERNAL) Instance of a loaded asset library,
+	 * used to retrieve image/audio assets during game
 	 */
 	function AssetManager( _root )
 	{

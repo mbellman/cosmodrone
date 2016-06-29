@@ -4,7 +4,7 @@
 	 * Component: GridMenu
 	 * -------------------
 	 *
-	 * A grid of selectable options
+	 * (INTERNAL) A grid of selectable options
 	 */
 	function GridMenu()
 	{
@@ -209,7 +209,7 @@
 	 * Class: ListMenu
 	 * ---------------
 	 *
-	 * A list of selectable option strings
+	 * (INTERNAL) A list of selectable option strings
 	 */
 	function ListMenu()
 	{

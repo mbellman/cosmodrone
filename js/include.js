@@ -4,7 +4,7 @@
 	 * Class: IncludeManager
 	 * ---------------------
 	 *
-	 * Script loader resource
+	 * (INTERNAL) Script loader resource
 	 */
 	function IncludeManager( includes )
 	{

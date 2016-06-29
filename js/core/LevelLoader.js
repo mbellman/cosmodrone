@@ -4,7 +4,7 @@
 	 * Object: LevelData
 	 * -----------------
 	 *
-	 * Layouts for the various levels
+	 * (INTERNAL) Layouts for the various levels
 	 *
 	 * TODO: Move this to its own file
 	 */

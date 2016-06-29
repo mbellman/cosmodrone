@@ -4,8 +4,9 @@
 	 * Class: TextureCache
 	 * -------------------
 	 *
-	 * A group of prerendered equal-sized contiguous
+	 * (INTERNAL) A group of equal-sized contiguous
 	 * texture chunks comprising a larger texture
+	 * which can be tiled onto a destination Canvas
 	 */
 	function TextureCache()
 	{
@@ -199,7 +200,7 @@
 	 * Component: Cloud
 	 * ----------------
 	 *
-	 * Clouds above the terrain layer
+	 * (INTERNAL) Clouds above the terrain layer
 	 */
 	function Cloud()
 	{

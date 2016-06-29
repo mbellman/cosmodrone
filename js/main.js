@@ -1,6 +1,6 @@
 // Script imports
 //
-// TODO: Eventually compactify all scripts into one and minify it
+// TODO: Eventually consolidate all scripts and minify the result
 include(
 	[
 		'js/dependencies/jquery-2.2.3.js',

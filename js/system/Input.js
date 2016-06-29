@@ -4,7 +4,7 @@
 	 * Object: KeyCodes
 	 * ----------------
 	 *
-	 * Key code -> Key name map
+	 * (INTERNAL) Key code -> Key name map
 	 */
 	var KeyCodes = {
 		13: 'ENTER',
@@ -34,6 +34,7 @@
 		var enable_time = timestamp;
 		var bound = false;
 		var disabled = false;
+
 		var events = {
 			input: []
 		};

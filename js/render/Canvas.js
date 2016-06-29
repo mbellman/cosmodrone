@@ -4,7 +4,8 @@
 	 * Class: Shape
 	 * ------------
 	 *
-	 * Provides chainable extension methods for Canvas draw operations
+	 * (INTERNAL) Provides chainable extension
+	 * methods for Canvas draw operations
 	 */
 	function Shape( ctx )
 	{
@@ -47,7 +48,7 @@
 	 * Class: DrawOperation
 	 * --------------------
 	 *
-	 * Resource for Canvas vector graphics rendering
+	 * (INTERNAL) Resource for Canvas vector graphics rendering
 	 */
 	function DrawOperation( ctx )
 	{
@@ -130,7 +131,7 @@
 	 * Class: PixelDataOperation
 	 * -------------------------
 	 *
-	 * Resource for Canvas pixel data manipulation
+	 * (INTERNAL) Resource for Canvas pixel data manipulation
 	 */
 	function PixelDataOperation( ctx, element )
 	{
@@ -248,7 +249,12 @@
 				// Update each 'scaled pixel' with the original color
 				for ( var sy = 0 ; sy < scalar ; sy++ ) {
 					for ( var sx = 0 ; sx < scalar ; sx++ ) {
-						var pixel = S_pixel + ( 4 * sx ) + ( 4 * sy * width * scalar );
+						//var pixel = S_pixel + ( 4 * sx ) + ( 4 * sy * width * scalar );
+						var pixel = self.getPixelIndex(
+							x * scalar + sx,
+							y * scalar + sy
+						);
+
 						self.write( pixel, C_color );
 					}
 				}

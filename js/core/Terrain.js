@@ -564,11 +564,13 @@ function Terrain()
 	function render_landscape()
 	{
 		var terrain_IMG = terrain_canvas.data.create();
+		
 		var height = {
 			map: height_map.data(),
 			range: height_map.getHeightRange(),
 			size: height_map.getSize()
 		};
+
 		var climate = {
 			map: temp_map.data(),
 			size: temp_map.getSize()
@@ -670,6 +672,7 @@ function Terrain()
 		for ( var p = 0 ; p < terrain_IMG.data.length ; p += 4 ) {
 			var terrain_RGB = terrain_IMG.read( p );
 			var city_RGB = city_IMG.read( p );
+
 			var composite_RGB = {
 				red: 0,
 				green: 0,
@@ -680,7 +683,7 @@ function Terrain()
 			var is_city = ( city_RGB.red > 0 );
 
 			if ( is_night && is_city ) {
-				// City lights
+				// Rendering city lights at nighttime
 				var density_light_reduction = Math.pow( clamp( DENSITY_LIGHT_LIMIT - city_RGB.red, 0, DENSITY_LIGHT_LIMIT ), 2 );
 				var blue_DLR = Math.round( 0.75 * density_light_reduction );
 
@@ -688,14 +691,16 @@ function Terrain()
 				composite_RGB.green = color.presets.city2.g - CITY_LIGHT_REDUCTION - density_light_reduction - Generator.random( 0, 60 );
 				composite_RGB.blue = color.presets.city2.b - BLUE_CLR - blue_DLR - Generator.random( 0, 75 );
 			} else {
-				// Normal terrain
+				// Rendering normal terrain
 				var RGB = {
 					red: ( is_city ? city_RGB.red : terrain_RGB.red ),
 					green: ( is_city ? city_RGB.green : terrain_RGB.green ),
 					blue: ( is_city ? city_RGB.blue : terrain_RGB.blue )
 				};
+
 				var RGB_average = roundedAverage( RGB.red, RGB.green, RGB.blue );
 				var rgb_modifier = RGB_average - EVENING_LIGHT_MODIFIER;
+
 				var time_color = {
 					red: ( is_twilight ? roundedAverage( RGB.red, rgb_modifier ) : ( is_night ? rgb_modifier : RGB.red ) ),
 					green: ( is_twilight ? roundedAverage( RGB.green, rgb_modifier ) : ( is_night ? rgb_modifier : RGB.green ) ),
@@ -708,11 +713,14 @@ function Terrain()
 			}
 
 			var T_pixel = terrain_IMG.getPixelXY( p );
-			var C_pixel = composite_IMG.getPixelIndex( T_pixel.x * tile_size, T_pixel.y * tile_size );
 
 			for ( var py = 0 ; py < tile_size ; py++ ) {
 				for ( var px = 0 ; px < tile_size ; px++ ) {
-					var pixel = C_pixel + ( 4 * px ) + ( 4 * py * map_size * tile_size );
+					var pixel = composite_IMG.getPixelIndex(
+						T_pixel.x * tile_size + px,
+						T_pixel.y * tile_size + py
+					);
+
 					composite_IMG.write( pixel, composite_RGB );
 				}
 			}
