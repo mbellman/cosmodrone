@@ -438,8 +438,24 @@ function GameScene( controller )
 	 */
 	function handle_undocking()
 	{
-		hud.get( HUD ).collapseStationPane();
+		hud.get( HUD )
+			.hideChargeMeter()
+			.collapseStationPane();
+
 		mode = Modes.PILOT_MODE;
+	}
+
+	/**
+	 * Scroll the hardware menu either
+	 * up or down based on [direction]
+	 */
+	function scroll_hardware_menu( direction )
+	{
+		if ( direction === 'up' ) {
+			console.log( 'up test' );
+		} else {
+			console.log( 'down test' );
+		}
 	}
 
 	/**
@@ -490,28 +506,44 @@ function GameScene( controller )
 	// ----------------------------------------- //
 
 	/**
+	 * Check to see whether the player is scrolling
+	 * through the hardware part list with SHIFT
+	 */
+	function is_scrolling_hardware()
+	{
+		return (
+			keys.holding( 'SHIFT' ) &&
+			mode === Modes.PILOT_MODE
+		);
+	}
+
+	/**
 	 * Continually listen for held keys
 	 */
 	function poll_input( dt )
 	{
-		if ( drone.get( Drone ).isControllable() ) {
-			if ( keys.holding( 'UP' ) ) {
-				drone.get( Drone )
-					.consumeFuel( 3 * dt )
-					.addVelocity( DRONE_SPEED );
-			}
+		if ( !is_scrolling_hardware() ) {
+			if ( drone.get( Drone ).isControllable() ) {
+				if ( keys.holding( 'UP' ) ) {
+					drone.get( Drone )
+						.consumeFuel( 3 * dt )
+						.addVelocity( DRONE_SPEED );
+				}
 
-			if ( keys.holding( 'LEFT' ) ) {
-				drone.get( Drone )
-					.consumeFuel( 2 * dt )
-					.addSpin( -DRONE_SPEED );
-			}
+				if ( keys.holding( 'LEFT' ) ) {
+					drone.get( Drone )
+						.consumeFuel( 2 * dt )
+						.addSpin( -DRONE_SPEED );
+				}
 
-			if ( keys.holding( 'RIGHT' ) ) {
-				drone.get( Drone )
-					.consumeFuel( 2 * dt )
-					.addSpin( DRONE_SPEED );
+				if ( keys.holding( 'RIGHT' ) ) {
+					drone.get( Drone )
+						.consumeFuel( 2 * dt )
+						.addSpin( DRONE_SPEED );
+				}
 			}
+		} else {
+			hud.get( HUD ).unfade();
 		}
 	}
 
@@ -522,9 +554,16 @@ function GameScene( controller )
 	{
 		var _Drone = drone.get( Drone );
 
-		// Handler for any keyboard input
+		// Partially hide HUD on input...
 		input.on( 'input', function( key ) {
-			if ( mode === Modes.PILOT_MODE) {
+			if (
+				// ...if in pilot mode...
+				mode === Modes.PILOT_MODE &&
+				// ...and the pressed key is not SHIFT...
+				key !== 16 &&
+				// ...and the player isn't scrolling through hardware
+				!is_scrolling_hardware()
+			) {
 				hud.get( HUD ).fade();
 			}
 		} );
@@ -541,13 +580,25 @@ function GameScene( controller )
 			if ( _Drone.signal > 0 ) {
 				if ( _Drone.isDocked() ) {
 					_Drone.undock();
-					hud.get( HUD ).hideChargeMeter();
 				} else
 				if ( !_Drone.isDocking() ) {
 					enter_docking_mode();
 				} else {
 					_Drone.abortDocking();
 				}
+			}
+		} );
+
+		// Hardware menu navigation
+		input.on( 'UP', function() {
+			if ( is_scrolling_hardware() ) {
+				scroll_hardware_menu( 'up' );
+			}
+		} );
+
+		input.on( 'DOWN', function() {
+			if ( is_scrolling_hardware() ) {
+				scroll_hardware_menu( 'down' );
 			}
 		} );
 	}

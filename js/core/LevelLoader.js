@@ -238,15 +238,15 @@
 						offshoot.module = data.layout[offshoot.index.y][offshoot.index.x];
 						offshoot.specs = get_module_specs( offshoot.module );
 
-						// A valid new offshoot module:
+						// Valid new offshot modules:
 						if (
-							// 1. Has a proper module ID
+							// 1. Have a proper module ID
 							offshoot.module !== 0 &&
 							// 2. Can dock to the parent module on this side
 							parent.docking.hasOwnProperty( side ) &&
-							// 3. Has its own docking port on the opposite joining side
+							// 3. Have their own docking port on the opposite joining side
 							offshoot.specs.docking.hasOwnProperty( get_opposite_side( side ) ) &&
-							// 4. And hasn't been built yet
+							// 4. And haven't been built yet
 							!is_built[offshoot.index.y][offshoot.index.x]
 						) {
 							offshoots[side] = {
@@ -264,7 +264,8 @@
 		}
 
 		/**
-		 * Build a station module and its offshoot modules
+		 * Build a station module and recurse
+		 * to construct its offshoot modules
 		 */
 		function build_module_recursive( y, x, position_X, position_Y )
 		{

@@ -8,6 +8,7 @@
 	 */
 	var KeyCodes = {
 		13: 'ENTER',
+		16: 'SHIFT',
 		37: 'LEFT',
 		38: 'UP',
 		39: 'RIGHT',
@@ -178,8 +179,10 @@
 		var timestamp = Date.now();
 		var bound = false;
 		var listener = new InputHandler();
+
 		var state = {
 			ENTER: false,
+			SHIFT: false,
 			UP: false,
 			RIGHT: false,
 			DOWN: false,
@@ -206,7 +209,8 @@
 		}
 
 		/**
-		 * Toggle the key state to true/false depending on the [event] type
+		 * Toggle the key [state] to true/false depending
+		 * on whether the [event] is 'keydown' or 'keyup'
 		 */
 		function set_state( event )
 		{
