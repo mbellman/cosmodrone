@@ -11,7 +11,6 @@ A game about space station maintenance!
 ##### GAME
 * Numerical power/fuel value
 * Extended dialogue chunks
-* Alerts screen with ability to select hardware maintenance jobs
 * Hardware interface screen (video view within station pane)
 * Collisions/drone damage
 * Random event docking alignment minigame
@@ -38,6 +37,7 @@ A game about space station maintenance!
 
 ##### CODE
 * Retrofit SpriteSequence component to allow pausing/resuming/specific frame selection
+* Have scrolling background use a pool of Cloud instances rather than re-instantiating new ones
 * Consolidate major framework elements (Canvas, WebAudio, AssetLoader, Entity/Component, Sprite, Text, etc.)
 * Docs for framework stuff
 * Terrain and HeightMap classes need some tidying

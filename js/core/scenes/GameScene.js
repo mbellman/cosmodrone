@@ -446,19 +446,6 @@ function GameScene( controller )
 	}
 
 	/**
-	 * Scroll the hardware menu either
-	 * up or down based on [direction]
-	 */
-	function scroll_hardware_menu( direction )
-	{
-		if ( direction === 'up' ) {
-			console.log( 'up test' );
-		} else {
-			console.log( 'down test' );
-		}
-	}
-
-	/**
 	 * Swivel the dialogue box into view
 	 */
 	function show_dialogue()
@@ -543,6 +530,8 @@ function GameScene( controller )
 				}
 			}
 		} else {
+			// Immediately restore HUD visibility
+			// when navigating hardware menu
 			hud.get( HUD ).unfade();
 		}
 	}
@@ -592,13 +581,13 @@ function GameScene( controller )
 		// Hardware menu navigation
 		input.on( 'UP', function() {
 			if ( is_scrolling_hardware() ) {
-				scroll_hardware_menu( 'up' );
+				hud.get( HUD ).scrollHardware( 'up' );
 			}
 		} );
 
 		input.on( 'DOWN', function() {
 			if ( is_scrolling_hardware() ) {
-				scroll_hardware_menu( 'down' );
+				hud.get( HUD ).scrollHardware( 'down' );
 			}
 		} );
 	}

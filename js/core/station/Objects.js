@@ -94,24 +94,28 @@ var ModuleNames = {
  */
 var HardwareParts = {
 	RECHARGER: {
+		listName: 'Recharger',
 		width: 76,
 		height: 36,
 		x: -18,
 		y: 2
 	},
 	REFUELER: {
+		listName: 'Refueler',
 		width: 76,
 		height: 40,
 		x: -18,
 		y: 2
 	},
 	SMALL_DISH: {
+		listName: 'Sm. Radio Dish',
 		width: 76,
 		height: 86,
 		x: -18,
 		y: 2
 	},
 	COMM_DISH: {
+		listName: 'Comm. Dish',
 		width: 112,
 		height: 110,
 		x: -36,

@@ -68,7 +68,7 @@
 		var width;                  // Width of the level in station modules
 		var height;                 // Height of the level in station modules
 		var level;                  // The level to be loaded
-		var data = {};              // Level data
+		var data = {};              // Level data as referenced from LevelData number entries
 		var is_built = [];          // Module build completion flags
 		var entities = [];          // List of entities to be created
 
@@ -87,6 +87,7 @@
 			var rotated_specs = {};
 
 			specs.file = 'game/station/parts/' + part + '/';
+			rotated_specs.listName = specs.listName;
 
 			switch ( side ) {
 				case 'top':

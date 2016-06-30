@@ -141,6 +141,10 @@ function Radar()
 	 */
 	this.scan = function( station )
 	{
+		if ( station === null ) {
+			return;
+		}
+
 		map.sprite
 			.clear()
 			.setAlpha( 0.5 )

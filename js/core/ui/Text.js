@@ -244,7 +244,9 @@ function TextString( _font )
 	{
 		font = _font;
 		bitmap = Assets.getImage( Fonts[font].file );
+
 		_.setString( string );
+		
 		return _;
 	};
 
@@ -253,9 +255,11 @@ function TextString( _font )
 	 */
 	this.setString = function( _string )
 	{
-		string = _string;
+		string = _string || '';
+
 		set_canvas_size();
 		feed_string( true );
+
 		return _;
 	};
 

@@ -29,8 +29,9 @@ include(
 		'js/core/ui/Fonts.js',
 		'js/core/ui/Text.js',
 		'js/core/ui/Menu.js',
-		'js/core/ui/HUD.js',
-		'js/core/ui/Radar.js',
+		'js/core/ui/HUD/HUD.js',
+		'js/core/ui/HUD/Radar.js',
+		'js/core/ui/HUD/HardwareMenu.js',
 		'js/core/station/Objects.js',
 		'js/core/scenes/TitleScene.js',
 		'js/core/scenes/GameScene.js'

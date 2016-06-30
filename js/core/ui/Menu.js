@@ -16,11 +16,13 @@
 		var total = 0;
 		var builder;
 		var selection = 0;
+
 		var events = {
 			focus: function() {},
 			unfocus: function() {},
 			select: function() {}
 		};
+
 		var sounds = {
 			cursor: null,
 			select: null,
