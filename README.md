@@ -10,6 +10,7 @@ A game about space station maintenance!
 
 ##### GAME
 * Numerical power/fuel value
+* HardwareMenu scroll bar, icons, and hardware stats
 * Extended dialogue chunks
 * Hardware interface screen (video view within station pane)
 * Collisions/drone damage

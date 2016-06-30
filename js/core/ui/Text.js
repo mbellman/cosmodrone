@@ -64,24 +64,25 @@ function TextString( _font )
 
 	/**
 	 * Update Canvas [size] based on new [offset]
+	 * as recalculated via a new character [clip]
 	 */
 	function update_canvas_size( clip )
 	{
-		var char_height = offset.y + clip.height + clip.top;
+		var clip_bottom = offset.y + clip.height + clip.top;
 		offset.x += ( clip.width + letter_spacing );
 
-		if (offset.x > size.width) {
+		if ( offset.x > size.width ) {
 			size.width = offset.x;
 		}
 
-		if (char_height > size.height) {
-			size.height = char_height;
+		if ( clip_bottom > size.height ) {
+			size.height = clip_bottom;
 		}
 	}
 
 	/**
-	 * Checks the data inside a special variable instruction
-	 * block and returns it after advancing the output buffer
+	 * Checks the data inside the latest encountered special instruction
+	 * block, advances the character output buffer, and returns the data
 	 */
 	function parse_special_instruction()
 	{
@@ -246,7 +247,7 @@ function TextString( _font )
 		bitmap = Assets.getImage( Fonts[font].file );
 
 		_.setString( string );
-		
+
 		return _;
 	};
 
