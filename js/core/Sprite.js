@@ -18,16 +18,18 @@ function Sprite( _source )
 	var parent = null;                     // Parent or ancestor entity Sprite
 	var pivot;                             // A Point component for movement pivoting (motion away from)
 
-	var alpha = 1;                         // Proper Sprite alpha, influenced by parent sprite alpha (update internally)
-	var rotation = 0;                      // Proper Sprite rotation, influenced by parent sprite rotation (updated internally)
-
-	var T = {                              // Transformed coordinates/origin based on parent sprite's coordinate system
+	var T = {                              // Transformed coordinates/origin based on parent sprite's coordinate system (updated internally)
 		x: 0,
 		y: 0,
 		origin: {
 			x: 0,
 			y: 0
 		}
+	};
+
+	var proper = {                         // Proper (visible) alpha & rotation values as influenced by parent (updated internally)
+		alpha: 1,
+		rotation: 0
 	};
 
 	var bounds = {                         // Sprite's on-screen bounding rectangle (updated internally)
@@ -110,21 +112,21 @@ function Sprite( _source )
 	}
 
 	/**
-	 * Updates the Sprite's true [alpha]
+	 * Updates the Sprite's [proper.alpha]
 	 * as influenced by parent Sprite
 	 */
 	function update_proper_alpha()
 	{
 		if ( parent !== null ) {
-			alpha = _.alpha._ * parent.getProperAlpha();
+			proper.alpha = _.alpha._ * parent.getProperAlpha();
 			return;
 		}
 
-		alpha = _.alpha._;
+		proper.alpha = _.alpha._;
 	}
 
 	/**
-	 * Updates the Sprite's true [rotation]
+	 * Updates the Sprite's [proper.rotation]
 	 * as influenced by parent Sprite
 	 */
 	function update_proper_rotation()
@@ -132,11 +134,11 @@ function Sprite( _source )
 		_.rotation._ = mod( _.rotation._, 360 );
 
 		if ( parent !== null ) {
-			rotation = mod( _.rotation._ + parent.getProperRotation(), 360 );
+			proper.rotation = mod( _.rotation._ + parent.getProperRotation(), 360 );
 			return;
 		}
 
-		rotation = mod( _.rotation._, 360 );
+		proper.rotation = mod( _.rotation._, 360 );
 	}
 
 	/**
@@ -144,8 +146,8 @@ function Sprite( _source )
 	 */
 	function apply_alpha()
 	{
-		if ( alpha < 1 ) {
-			screen.game.setAlpha( alpha );
+		if ( proper.alpha < 1 ) {
+			screen.game.setAlpha( proper.alpha );
 		}
 	}
 
@@ -154,10 +156,10 @@ function Sprite( _source )
 	 */
 	function apply_rotation()
 	{
-		if ( rotation > 0 ) {
+		if ( proper.rotation > 0 ) {
 			screen.game
 				.translate( bounds.x + T.origin.x, bounds.y + T.origin.y )
-				.rotate( rotation * Math.DEG_TO_RAD );
+				.rotate( proper.rotation * Math.DEG_TO_RAD );
 		}
 	}
 
@@ -166,7 +168,7 @@ function Sprite( _source )
 	 */
 	function has_effects()
 	{
-		return ( alpha < 1 || rotation != 0 );
+		return ( proper.alpha < 1 || proper.rotation != 0 );
 	}
 
 	// -- Public: --
@@ -186,8 +188,9 @@ function Sprite( _source )
 		update_proper_rotation();
 		update_bounding_box();
 
-		if ( source === null ||
-			alpha === 0 ||
+		if (
+			source === null ||
+			proper.alpha === 0 ||
 			!_.isOnScreen() ||
 			bounds.width === 0 ||
 			bounds.height === 0
@@ -202,8 +205,8 @@ function Sprite( _source )
 
 		screen.game.draw.image(
 			source,
-			( rotation > 0 ? ( -T.origin.x * _.scale._ ) : bounds.x ),
-			( rotation > 0 ? ( -T.origin.y * _.scale._ ) : bounds.y ),
+			( proper.rotation > 0 ? ( -T.origin.x * _.scale._ ) : bounds.x ),
+			( proper.rotation > 0 ? ( -T.origin.y * _.scale._ ) : bounds.y ),
 			bounds.width,
 			bounds.height
 		);
@@ -272,15 +275,15 @@ function Sprite( _source )
 	 */
 	this.getProperAlpha = function()
 	{
-		return alpha;
+		return proper.alpha;
 	};
 
 	/**
-	 * Returns the transformed parent-influenced [rotation] of the Sprite
+	 * Returns the transformed, parent-influenced [proper.rotation] of the Sprite
 	 */
 	this.getProperRotation = function()
 	{
-		return rotation;
+		return proper.rotation;
 	};
 
 	/**
@@ -451,6 +454,7 @@ function FillSprite( color, width, height )
 	// -- Private: --
 	var _ = this;
 	var sprite = new Canvas().setSize( width, height );
+
 	var size = {
 		width: width,
 		height: height
@@ -466,7 +470,9 @@ function FillSprite( color, width, height )
 	 */
 	function redraw_fill()
 	{
-		sprite.draw.rectangle( 0, 0, size.width, size.height ).fill( color );
+		sprite.draw
+			.rectangle( 0, 0, size.width, size.height )
+			.fill( color );
 	}
 
 	// -- Public: --
@@ -485,6 +491,7 @@ function FillSprite( color, width, height )
 
 		sprite.setSize( width, height );
 		redraw_fill();
+
 		return _;
 	};
 }

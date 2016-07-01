@@ -238,14 +238,6 @@
 
 		var loaded = false;                                // Whether or not prerendering has finished, enabling the background cycle to start
 		var terrain;                                       // Landscape instance
-		var renders = {
-			// Prerendered time-of-day terrain variants
-			terrain: [],
-			// Prerendered cloud types, scaled based on [configuration.tileSize]
-			clouds: [],
-			// Prerendered cloud shadows, scaled based on [configuration.tileSize]
-			shadows: []
-		};
 		var camera = new Point();                          // Scrolling background camera Point instance
 		var clouds = [];                                   // Active cloud objects on screen
 		var BG_stage;                                      // Top background is drawn here before being composited onto [screen.background] (see: render_BG())
@@ -260,7 +252,19 @@
 		var build_steps = 0;                               // Determined in build() by various configuration parameters
 		var build_steps_complete = 0;                      // For passing back into the progress handler
 		var configuration = default_configuration();       // Store default settings
-		var cloud_bank = [                                 // Bank of information on cloud assets + types
+
+		// Render bank
+		var renders = {
+			// Prerendered time-of-day terrain variants
+			terrain: [],
+			// Prerendered cloud types, scaled based on [configuration.tileSize]
+			clouds: [],
+			// Prerendered cloud shadows, scaled based on [configuration.tileSize]
+			shadows: []
+		};
+
+		// Bank of information on cloud assets + types
+		var cloud_bank = [
 			{
 				file: 'cumulus-1',
 				type: 'cumulus'
@@ -347,7 +351,8 @@
 			},
 		];
 
-		var L = {                                          // Reusable rendering loop objects
+		// Reusable rendering loop objects
+		var L = {
 			// Parallax cloud displacement
 			offset: {},
 			// Cloud/shadow rendering position

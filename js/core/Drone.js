@@ -563,18 +563,20 @@ function Drone()
 
 	this.update = function( dt )
 	{
-		if ( System.docking && is_operational() ) {
-			control_docking_procedure( dt );
-		}
-
-		if ( System.stabilizing && is_operational() ) {
-			if ( !System.docking ) {
-				// Only run stabilization here if the docking
-				// mode procedure isn't already managing it
-				stabilize_spin();
+		if ( is_operational() ) {
+			if ( System.docking ) {
+				control_docking_procedure( dt );
 			}
 
-			consume_fuel( dt );
+			if ( System.stabilizing ) {
+				consume_fuel( dt );
+
+				if ( !System.docking ) {
+					// Only run stabilization here if the docking
+					// mode procedure isn't already managing it
+					stabilize_spin();
+				}
+			}
 		}
 
 		_.owner.get( Sprite ).rotation._ += ( System.spin * dt );
