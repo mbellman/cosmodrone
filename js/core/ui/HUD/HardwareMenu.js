@@ -21,7 +21,7 @@ function HardwareMenu()
 		invalid: null
 	};
 
-	// Menu list data
+	// Menu list data/methods
 	var List = {
 		// HardwarePart component instances
 		parts: [],
@@ -40,32 +40,26 @@ function HardwareMenu()
 		// Index of topmost visible menu item for current view
 		scroll: 0,
 		// Current selected menu item
-		selection: 0
+		selection: 0,
+		/**
+		 * Menu height in pixels
+		 */
+		pixel_height: function() {
+			return this.height * this.spacing;
+		},
+		/**
+		 * Ratio between visible and total items
+		 */
+		view_ratio: function() {
+			return clamp( this.height / this.items.length, 0, 1 );
+		},
+		/**
+		 * Maximum scroll position
+		 */
+		max_scroll: function() {
+			return this.items.length - this.height;
+		}
 	};
-
-	/**
-	 * Return the menu height in pixels
-	 */
-	function menu_height()
-	{
-		return List.height * List.spacing;
-	}
-
-	/**
-	 * Return the ratio between visible and total items
-	 */
-	function view_ratio()
-	{
-		return clamp( List.height / List.items.length, 0, 1 );
-	}
-
-	/**
-	 * Return the maximum [List.scroll] position
-	 */
-	function max_scroll()
-	{
-		return List.items.length - List.height;
-	}
 
 	/**
 	 * Check to see if the item at [index]
@@ -126,7 +120,7 @@ function HardwareMenu()
 
 		List.scrollbar = new Entity()
 			.add(
-				new FillSprite( '#fff', 12, view_ratio() * menu_height() )
+				new FillSprite( '#fff', 12, List.view_ratio() * List.pixel_height() )
 					.setAlpha( 0.75 )
 					.setXY( List.width + 2, 0 )
 			);
@@ -144,8 +138,8 @@ function HardwareMenu()
 		}
 
 		var bar = List.scrollbar.get( Sprite );
-		var gap = menu_height() - bar.height();
-		var scroll_ratio = List.scroll / max_scroll();
+		var gap = List.pixel_height() - bar.height();
+		var scroll_ratio = List.scroll / List.max_scroll();
 
 		bar.y.tweenTo(
 			Math.round( gap * scroll_ratio ),
