@@ -269,6 +269,13 @@ function HUD()
 			.add(
 				new HardwareMenu()
 					.loadFromStation( Data.station )
+					.setSounds(
+						{
+							cursor: Assets.getAudio( 'ui/blip2.wav' ),
+							select: Assets.getAudio( 'ui/select2.wav' ),
+							invalid: Assets.getAudio( 'ui/error1.wav' )
+						}
+					)
 			);
 	}
 
@@ -614,6 +621,15 @@ function HUD()
 			Elements.hardwareMenu.get( HardwareMenu )[direction]();
 		}
 
+		return _;
+	};
+
+	/**
+	 * Select the current focused hardware menu item
+	 */
+	this.selectHardware = function()
+	{
+		Elements.hardwareMenu.get( HardwareMenu ).select();
 		return _;
 	};
 

@@ -11,7 +11,8 @@ function HardwareMenu()
 
 	// -- Private: --
 	var _ = this;
-	var stage = new Entity();                        // Container for all menu elements
+	var stage = new Entity();                                                      // Container for all menu elements
+	var HARDWARE_ICONS = Assets.getImage( 'game/ui/hardware-icons.png' );          // Hardware icons spritesheet
 
 	// Menu sound effects
 	var sounds = {
@@ -26,8 +27,10 @@ function HardwareMenu()
 		parts: [],
 		// Menu item entities
 		items: [],
-		// Selection highlight indicator
+		// Selection highlight entity
 		highlight: null,
+		// Scroll bar entity
+		scrollbar: null,
 		// Number of menu items visible at a time
 		height: 10,
 		// Pixel width of menu area
@@ -41,12 +44,39 @@ function HardwareMenu()
 	};
 
 	/**
-	 * Check to see whether an [index] item
+	 * Return the menu height in pixels
+	 */
+	function menu_height()
+	{
+		return List.height * List.spacing;
+	}
+
+	/**
+	 * Return the ratio between visible and total items
+	 */
+	function view_ratio()
+	{
+		return clamp( List.height / List.items.length, 0, 1 );
+	}
+
+	/**
+	 * Return the maximum [List.scroll] position
+	 */
+	function max_scroll()
+	{
+		return List.items.length - List.height;
+	}
+
+	/**
+	 * Check to see if the item at [index]
 	 * is within the current visible area
 	 */
 	function is_in_view( index )
 	{
-		return ( index >= List.scroll && index < ( List.scroll + List.height ) );
+		return (
+			index >= List.scroll &&
+			index < ( List.scroll + List.height )
+		);
 	}
 
 	/**
@@ -54,7 +84,10 @@ function HardwareMenu()
 	 */
 	function play_sound( sound )
 	{
-		if ( sounds[sound] !== null ) {
+		if (
+			typeof sounds[sound] !== 'undefined' &&
+			sounds[sound] !== null
+		) {
 			sounds[sound].play();
 		}
 	}
@@ -64,6 +97,10 @@ function HardwareMenu()
 	 */
 	function create_highlight()
 	{
+		if ( List.highlight !== null ) {
+			return;
+		}
+
 		List.highlight = new Entity()
 			.add(
 				new FillSprite( '#fff', List.width, List.spacing )
@@ -75,6 +112,46 @@ function HardwareMenu()
 			);
 
 		stage.addChild( List.highlight );
+	}
+
+	/**
+	 * Create the scroll bar element after
+	 * hardware items have been loaded
+	 */
+	function create_scrollbar()
+	{
+		if ( List.scrollbar !== null ) {
+			return;
+		}
+
+		List.scrollbar = new Entity()
+			.add(
+				new FillSprite( '#fff', 12, view_ratio() * menu_height() )
+					.setAlpha( 0.75 )
+					.setXY( List.width + 2, 0 )
+			);
+
+		stage.addChild( List.scrollbar );
+	}
+
+	/**
+	 * Reposition the scroll bar based on the current scroll position
+	 */
+	function update_scrollbar()
+	{
+		if ( List.items.length < List.height ) {
+			return;
+		}
+
+		var bar = List.scrollbar.get( Sprite );
+		var gap = menu_height() - bar.height();
+		var scroll_ratio = List.scroll / max_scroll();
+
+		bar.y.tweenTo(
+			Math.round( gap * scroll_ratio ),
+			0.2,
+			Ease.quad.out
+		);
 	}
 
 	/**
@@ -102,11 +179,27 @@ function HardwareMenu()
 				}
 			}
 		}
+
+		update_scrollbar();
 	}
 
 	/**
-	 * Update the current menu [selection] index, also adjusting
-	 * scroll position to ensure the selected item is in view
+	 * Recalculate [List.scroll] to ensure
+	 * that the selected item is in view
+	 */
+	function update_scroll_position()
+	{
+		if ( List.selection < List.scroll ) {
+			List.scroll = List.selection;
+		}
+
+		if ( List.selection >= ( List.scroll + List.height ) ) {
+			List.scroll = 1 + List.selection - List.height;
+		}
+	}
+
+	/**
+	 * Update the current menu [selection] index
 	 */
 	function set_selection( selection )
 	{
@@ -117,15 +210,9 @@ function HardwareMenu()
 
 		List.selection = selection;
 
-		if ( List.selection < List.scroll ) {
-			List.scroll = List.selection;
-		}
-
-		if ( List.selection >= ( List.scroll + List.height ) ) {
-			List.scroll = 1 + List.selection - List.height;
-		}
-
+		update_scroll_position();
 		update_view();
+		play_sound( 'cursor' );
 	}
 
 	/**
@@ -133,17 +220,32 @@ function HardwareMenu()
 	 */
 	function load_hardware( part )
 	{
-		var name = part.getSpecs().listName;
+		var specs = part.getSpecs();
 
 		var item = new Entity()
 			.add(
 				new Sprite()
 			)
 			.addChild(
-				new Entity( 'icon' ),
+				// Hardware icon
+				new Entity( 'icon' )
+					.add(
+						new SpriteSequence( HARDWARE_ICONS )
+							.setOptions(
+								{
+									frameWidth: 18,
+									frameHeight: 18,
+									frames: 4,
+									vertical: true
+								}
+							)
+							.pause()
+							.setFrame( specs.list.icon - 1 )
+					),
+				// Hardware name
 				new Entity( 'name' )
 					.add(
-						new Sprite().setXY( 20, 0 )
+						new Sprite().setXY( 25, 0 )
 					)
 					.add(
 						new TextString( 'MonitorMini' )
@@ -152,7 +254,7 @@ function HardwareMenu()
 									spaceSize: 6
 								}
 							)
-							.setString( name )
+							.setString( specs.list.name )
 					)
 			);
 
@@ -181,7 +283,23 @@ function HardwareMenu()
 				load_hardware( part );
 			} );
 
+
+			create_scrollbar();
 			update_view();
+		}
+
+		return _;
+	};
+
+	/**
+	 * Update sounds with a new [object] list
+	 */
+	this.setSounds = function( object )
+	{
+		for ( var o in object ) {
+			if ( sounds.hasOwnProperty( o ) ) {
+				sounds[o] = object[o];
+			}
 		}
 
 		return _;
@@ -208,6 +326,7 @@ function HardwareMenu()
 	 */
 	this.select = function()
 	{
+		play_sound( 'select' );
 		// ...
 	};
 }

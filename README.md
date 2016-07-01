@@ -37,7 +37,6 @@ A game about space station maintenance!
 * Rivers
 
 ##### CODE
-* Retrofit SpriteSequence component to allow pausing/resuming/specific frame selection
 * Have scrolling background use a pool of Cloud instances rather than re-instantiating new ones
 * Consolidate major framework elements (Canvas, WebAudio, AssetLoader, Entity/Component, Sprite, Text, etc.)
 * Docs for framework stuff

@@ -84,43 +84,49 @@
 			side = side || 'top';
 
 			var specs = HardwareParts[part];
-			var rotated_specs = {};
+			var _specs = {};
+			var path = 'game/station/parts/' + part + '/';
 
-			specs.file = 'game/station/parts/' + part + '/';
-			rotated_specs.listName = specs.listName;
+			_specs.list = {
+				name: specs.listName,
+				icon: specs.listIcon
+			};
+
+			_specs.name = part;
+			_specs.orientation = side;
 
 			switch ( side ) {
 				case 'top':
-					rotated_specs.file = specs.file + 'top.png';
-					rotated_specs.width = specs.width;
-					rotated_specs.height = specs.height;
-					rotated_specs.x = specs.x;
-					rotated_specs.y = specs.y;
+					_specs.file = path + 'top.png';
+					_specs.width = specs.width;
+					_specs.height = specs.height;
+					_specs.x = specs.x;
+					_specs.y = specs.y;
 					break;
 				case 'right':
-					rotated_specs.file = specs.file + 'right.png';
-					rotated_specs.width = specs.height;
-					rotated_specs.height = specs.width;
-					rotated_specs.x = -specs.height - specs.y;
-					rotated_specs.y = specs.x;
+					_specs.file = path + 'right.png';
+					_specs.width = specs.height;
+					_specs.height = specs.width;
+					_specs.x = -specs.height - specs.y;
+					_specs.y = specs.x;
 					break;
 				case 'bottom':
-					rotated_specs.file = specs.file + 'bottom.png';
-					rotated_specs.width = specs.width;
-					rotated_specs.height = specs.height;
-					rotated_specs.x = specs.x;
-					rotated_specs.y = -specs.height - specs.y;
+					_specs.file = path + 'bottom.png';
+					_specs.width = specs.width;
+					_specs.height = specs.height;
+					_specs.x = specs.x;
+					_specs.y = -specs.height - specs.y;
 					break;
 				case 'left':
-					rotated_specs.file = specs.file + 'left.png';
-					rotated_specs.width = specs.height;
-					rotated_specs.height = specs.width;
-					rotated_specs.x = specs.y;
-					rotated_specs.y = specs.x;
+					_specs.file = path + 'left.png';
+					_specs.width = specs.height;
+					_specs.height = specs.width;
+					_specs.x = specs.y;
+					_specs.y = specs.x;
 					break;
 			}
 
-			return rotated_specs;
+			return _specs;
 		}
 
 		/**
@@ -140,8 +146,6 @@
 
 				if ( module.terminals.hasOwnProperty( terminal ) ) {
 					specs = get_part_specs( part.name, part.side );
-					specs.name = part.name;
-					specs.orientation = part.side;
 
 					position.x = module.terminals[terminal].x + specs.x;
 					position.y = module.terminals[terminal].y + specs.y;

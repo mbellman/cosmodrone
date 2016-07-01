@@ -225,58 +225,110 @@ function SpriteSequence( asset )
 
 	// -- Private: --
 	var _ = this;
-	var spritesheet = asset;
-	var vertical = false;
-	var animation;
-	var timer = 0;
+	var spritesheet = asset;                          // Spritesheet source image
+	var is_vertical = false;                          // Boolean state for vertical orientation of spritesheet
+	var is_playing = true;                            // Boolean state for continual playback
+	var animation;                                    // RasterSprite instance for sprite sequence to be rendered to
+	var timer = 0;                                    // Time counter for frame advancing
+	var clip = {};                                    // Reusable frame clipping object
+
+	// Animation data
 	var frame = {
+		// Playback rate
 		speed: 50,
+		// Frame clipping width
 		width: 0,
+		// Frame clipping height
 		height: 0,
+		// Current frame
 		current: 0,
-		MAX: 0
+		// Total frames
+		total: 0
 	};
+
+	/**
+	 * Update the sprite rendering
+	 */
+	function update_sprite()
+	{
+		if ( typeof animation === 'undefined' ) {
+			return;
+		}
+
+		clip.x = ( is_vertical ? 0 : frame.current * frame.width );
+		clip.y = ( is_vertical ? frame.current * frame.height : 0 );
+
+		animation.sprite
+			.clear()
+			.draw.image(
+				spritesheet,
+				clip.x, clip.y, frame.width, frame.height,
+				0, 0, frame.width, frame.height
+			);
+	}
 
 	// -- Public: --
 	this.update = function( dt )
 	{
-		timer += ( dt * 1000 );
+		if ( is_playing ) {
+			timer += ( dt * 1000 );
 
-		if ( timer > frame.speed ) {
-			timer = 0;
-			frame.current = ( frame.current + 1 ) % frame.MAX;
+			if ( timer > frame.speed ) {
+				timer = 0;
+				frame.current = ( frame.current + 1 ) % frame.total;
 
-			var clip_X = ( vertical ? 0 : frame.current * frame.width );
-			var clip_Y = ( vertical ? frame.current * frame.height : 0 );
-
-			animation.sprite
-				.clear()
-				.draw.image(
-					spritesheet,
-					clip_X, clip_Y, frame.width, frame.height,
-					0, 0, frame.width, frame.height
-				);
+				update_sprite();
+			}
 		}
 	};
 
 	this.onAdded = function()
 	{
 		animation = new RasterSprite();
-		animation.sprite.setSize( frame.width, frame.height );
 
+		animation.sprite.setSize( frame.width, frame.height );
+		update_sprite();
 		_.owner.add( animation );
 	};
 
 	/**
-	 * Configure animation/spritesheet properties
+	 * Configure animation properties
 	 */
 	this.setOptions = function( options )
 	{
 		frame.speed = options.speed || 50;
 		frame.width = options.frameWidth || 0;
 		frame.height = options.frameHeight || 0;
-		frame.MAX = options.frames || 0;
-		vertical = !!options.vertical;
+		frame.total = options.frames || 0;
+		is_vertical = !!options.vertical;
+		return _;
+	};
+
+	/**
+	 * Start/resume playback
+	 */
+	this.play = function()
+	{
+		is_playing = true;
+		return _;
+	};
+
+	/**
+	 * Pause playback
+	 */
+	this.pause = function()
+	{
+		is_playing = false;
+		return _;
+	};
+
+	/**
+	 * Jump to a specific frame in the sequence
+	 */
+	this.setFrame = function( _frame )
+	{
+		frame.current = _frame % frame.total;
+		update_sprite();
 		return _;
 	};
 }

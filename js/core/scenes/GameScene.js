@@ -590,6 +590,12 @@ function GameScene( controller )
 				hud.get( HUD ).scrollHardware( 'down' );
 			}
 		} );
+
+		input.on( 'ENTER', function() {
+			if ( is_scrolling_hardware() ) {
+				hud.get( HUD ).selectHardware();
+			}
+		} );
 	}
 
 	// ---------------------------------------- //

@@ -74,6 +74,7 @@ var AssetManifest =
 			'game/ui/alert/arrow-T.png',
 			'game/ui/alert/recharger.png',
 			'game/ui/alert/refueler.png',
+			'game/ui/hardware-icons.png',
 			'game/ui/health.png',
 			'game/ui/indicators/docking-off.png',
 			'game/ui/indicators/docking-on.png',
