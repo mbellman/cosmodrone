@@ -22,12 +22,8 @@ function HUD()
 		STATION_PANE_OPEN: Assets.getImage( 'game/ui/panes/station-open.png' ),
 		STATION_PANE_GLOW: Assets.getImage( 'game/ui/panes/station-glow.png' ),
 		STATION_PANE_SHADOW: Assets.getImage( 'game/ui/panes/station-shadow.png' ),
-		NOISE: {
-			1: Assets.getImage( 'game/ui/radio/noise-1.png' ),
-			2: Assets.getImage( 'game/ui/radio/noise-2.png' ),
-			3: Assets.getImage( 'game/ui/radio/noise-3.png' ),
-			4: Assets.getImage( 'game/ui/radio/noise-4.png' )
-		}
+		NOISE: Assets.getImage( 'game/ui/radio/noise.png' ),
+		SIGNAL: Assets.getImage( 'game/ui/radio/signal.png' )
 	};
 
 	// HUD element coordinates
@@ -292,8 +288,17 @@ function HUD()
 			.addChild(
 				new Entity( 'noise' )
 					.add(
-						new Sprite( Graphics.NOISE[1] )
-							.setAlpha( 0 )
+						new SpriteSequence( Graphics.NOISE )
+							.setOptions(
+								{
+									frames: 4,
+									frameWidth: 220,
+									frameHeight: 150,
+									vertical: true
+								}
+							)
+							.pause()
+							.setFrame( 1 )
 					)
 					.add(
 						new Flicker()
@@ -320,7 +325,17 @@ function HUD()
 			.addChild(
 				new Entity( 'signal' )
 					.add(
-						new Sprite( Assets.getImage( 'game/ui/radio/signal-4.png' ) )
+						new SpriteSequence( Graphics.SIGNAL )
+							.setOptions(
+								{
+									frames: 5,
+									frameWidth: 30,
+									frameHeight: 24,
+									vertical: true
+								}
+							)
+							.pause()
+							.setFrame( 1 )
 							.setXY( 30, 2 )
 					),
 				new Entity()
@@ -490,9 +505,8 @@ function HUD()
 			radar_noise = 1;
 		}
 
-		// TODO: Use a SpriteSequence
-		Elements.radar.$( 'noise' ).get( Sprite )
-			.setSource( Graphics.NOISE[radar_noise] );
+		Elements.radar.$( 'noise' ).get( SpriteSequence )
+			.setFrame( radar_noise );
 	}
 
 	/**
@@ -605,9 +619,8 @@ function HUD()
 		Elements.radar.$( 'noise' ).get( Flicker )
 			.setAlphaRange( noise_level, noise_level + 0.1 );
 
-		// TODO: Use a SpriteSequence
-		Elements.signal.child( 0 ).get( Sprite )
-			.setSource( Assets.getImage( 'game/ui/radio/signal-' + radio_signal + '.png' ) );
+		Elements.signal.child( 0 ).get( SpriteSequence )
+			.setFrame( 1 + ( 4 - radio_signal ) );
 
 		return _;
 	};

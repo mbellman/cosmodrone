@@ -228,7 +228,7 @@ function SpriteSequence( asset )
 	var spritesheet = asset;                          // Spritesheet source image
 	var is_vertical = false;                          // Boolean state for vertical orientation of spritesheet
 	var is_playing = true;                            // Boolean state for continual playback
-	var animation;                                    // RasterSprite instance for sprite sequence to be rendered to
+	var animation = new RasterSprite();               // RasterSprite instance for animation frames to be rendered to
 	var timer = 0;                                    // Time counter for frame advancing
 	var clip = {};                                    // Reusable frame clipping object
 
@@ -284,11 +284,9 @@ function SpriteSequence( asset )
 
 	this.onAdded = function()
 	{
-		animation = new RasterSprite();
-
 		animation.sprite.setSize( frame.width, frame.height );
-		update_sprite();
 		_.owner.add( animation );
+		update_sprite();
 	};
 
 	/**
@@ -301,6 +299,25 @@ function SpriteSequence( asset )
 		frame.height = options.frameHeight || 0;
 		frame.total = options.frames || 0;
 		is_vertical = !!options.vertical;
+		return _;
+	};
+
+	/**
+	 * Jump to a specific frame in the sequence
+	 */
+	this.setFrame = function( _frame )
+	{
+		frame.current = ( _frame - 1 ) % frame.total;
+		update_sprite();
+		return _;
+	};
+
+	/**
+	 * Set the SpriteSequence [x, y] coordinates
+	 */
+	this.setXY = function( x, y )
+	{
+		animation.setXY( x, y );
 		return _;
 	};
 
@@ -319,16 +336,6 @@ function SpriteSequence( asset )
 	this.pause = function()
 	{
 		is_playing = false;
-		return _;
-	};
-
-	/**
-	 * Jump to a specific frame in the sequence
-	 */
-	this.setFrame = function( _frame )
-	{
-		frame.current = _frame % frame.total;
-		update_sprite();
 		return _;
 	};
 }

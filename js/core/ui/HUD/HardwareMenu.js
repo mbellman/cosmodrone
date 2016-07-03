@@ -234,7 +234,7 @@ function HardwareMenu()
 								}
 							)
 							.pause()
-							.setFrame( specs.list.icon - 1 )
+							.setFrame( specs.list.icon )
 					),
 				// Hardware name
 				new Entity( 'name' )
